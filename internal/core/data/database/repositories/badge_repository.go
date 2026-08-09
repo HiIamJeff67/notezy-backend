@@ -41,8 +41,8 @@ func (r *BadgeRepository) GetOneById(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&badge)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Badge.NotFound().WithOrigin(result.Error)},
-		{First: badge.Id == uuid.Nil, Second: apiexceptions.Badge.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewBadgeException().NotFound().WithOrigin(result.Error)},
+		{First: badge.Id == uuid.Nil, Second: apiexceptions.NewBadgeException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}

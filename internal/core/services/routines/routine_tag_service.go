@@ -98,10 +98,10 @@ func (s *RoutineTagService) GetMyRoutineTagById(
 	requestDto *apicontract.GetMyRoutineTagByIdRequestDto,
 ) (*apicontract.GetMyRoutineTagByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTagException().InvalidDto().WithOrigin(err)
 	}
 	if requestDto.Param.IsDeleted != nil && *requestDto.Param.IsDeleted {
-		return nil, apiexceptions.RoutineTag.NotFound()
+		return nil, apiexceptions.NewRoutineTagException().NotFound()
 	}
 
 	db := s.db.WithContext(ctx)
@@ -129,7 +129,7 @@ func (s *RoutineTagService) GetAllMyRoutineTags(
 	requestDto *apicontract.GetAllMyRoutineTagsRequestDto,
 ) (*apicontract.GetAllMyRoutineTagsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTagException().InvalidDto().WithOrigin(err)
 	}
 	if requestDto.Param.AreDeleted != nil && *requestDto.Param.AreDeleted {
 		responseDto := apicontract.GetAllMyRoutineTagsResponseDto{}
@@ -164,7 +164,7 @@ func (s *RoutineTagService) CreateRoutineTag(
 	requestDto *apicontract.CreateRoutineTagRequestDto,
 ) (*apicontract.CreateRoutineTagResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTagException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -202,7 +202,7 @@ func (s *RoutineTagService) CreateRoutineTags(
 	requestDto *apicontract.CreateRoutineTagsRequestDto,
 ) (*apicontract.CreateRoutineTagsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTagException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -244,7 +244,7 @@ func (s *RoutineTagService) UpdateMyRoutineTagById(
 	requestDto *apicontract.UpdateMyRoutineTagByIdRequestDto,
 ) (*apicontract.UpdateMyRoutineTagByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTagException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -284,7 +284,7 @@ func (s *RoutineTagService) UpdateMyRoutineTagsByIds(
 	requestDto *apicontract.UpdateMyRoutineTagsByIdsRequestDto,
 ) (*apicontract.UpdateMyRoutineTagsByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTagException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -330,7 +330,7 @@ func (s *RoutineTagService) HardDeleteMyRoutineTagById(
 	requestDto *apicontract.HardDeleteMyRoutineTagByIdRequestDto,
 ) (*apicontract.HardDeleteMyRoutineTagByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTagException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -358,7 +358,7 @@ func (s *RoutineTagService) HardDeleteMyRoutineTagsByIds(
 	requestDto *apicontract.HardDeleteMyRoutineTagsByIdsRequestDto,
 ) (*apicontract.HardDeleteMyRoutineTagsByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTagException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -402,7 +402,7 @@ func (s *RoutineTagService) SearchPrivateRoutineTags(
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
 		searchCursor, err := searchcursor.Decode[gqlmodels.SearchRoutineTagCursorFields](*gqlInput.After)
 		if err != nil {
-			return nil, apiexceptions.Search.FailedToDecode().WithOrigin(err)
+			return nil, apiexceptions.NewSearchException().FailedToDecode().WithOrigin(err)
 		}
 
 		query = query.Where("id > ?", searchCursor.Fields.ID)
@@ -443,7 +443,7 @@ func (s *RoutineTagService) SearchPrivateRoutineTags(
 
 	var routineTags []schemas.RoutineTag
 	if err := query.Find(&routineTags).Error; err != nil {
-		return nil, apiexceptions.RoutineTag.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTagException().NotFound().WithOrigin(err)
 	}
 
 	hasNextPage := len(routineTags) > limit
@@ -457,10 +457,10 @@ func (s *RoutineTagService) SearchPrivateRoutineTags(
 		}
 		encodedSearchCursor, err := searchCursor.Encode()
 		if err != nil {
-			return nil, apiexceptions.Search.FailedToEncode().WithOrigin(err)
+			return nil, apiexceptions.NewSearchException().FailedToEncode().WithOrigin(err)
 		}
 		if encodedSearchCursor == nil {
-			return nil, apiexceptions.Search.FailedToUnmarshalSearchCursor()
+			return nil, apiexceptions.NewSearchException().FailedToUnmarshalSearchCursor()
 		}
 
 		searchEdges[index] = &gqlmodels.SearchRoutineTagEdge{

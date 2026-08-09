@@ -83,7 +83,7 @@ func (s *BlockPackService) GetMyBlockPackById(
 	ctx context.Context, requestDto *apicontract.GetMyBlockPackByIdRequestDto,
 ) (*apicontract.GetMyBlockPackByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.BlockPack.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -144,7 +144,7 @@ func (s *BlockPackService) GetMyBlockPackAndItsParentById(
 	ctx context.Context, requestDto *apicontract.GetMyBlockPackAndItsParentByIdRequestDto,
 ) (*apicontract.GetMyBlockPackAndItsParentByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.BlockPack.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -193,7 +193,7 @@ func (s *BlockPackService) GetMyBlockPackAndItsParentById(
 			&resDto.ParentSubShelfUpdatedAt,
 			&resDto.ParentSubShelfCreatedAt)
 	if err != nil {
-		return nil, apiexceptions.BlockPack.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().NotFound().WithOrigin(err)
 	}
 
 	return &resDto, nil
@@ -203,7 +203,7 @@ func (s *BlockPackService) GetMyBlockPacksByParentSubShelfId(
 	ctx context.Context, requestDto *apicontract.GetMyBlockPacksByParentSubShelfIdRequestDto,
 ) (*apicontract.GetMyBlockPacksByParentSubShelfIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.BlockPack.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -247,7 +247,7 @@ func (s *BlockPackService) GetMyBlockPacksByParentSubShelfId(
 		Limit(int(data.MaxBlockPackOfSubShelf)).
 		Scan(&resDto)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.BlockPack.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().NotFound().WithOrigin(err)
 	}
 
 	return &resDto, nil
@@ -257,7 +257,7 @@ func (s *BlockPackService) GetAllMyBlockPacksByRootShelfId(
 	ctx context.Context, requestDto *apicontract.GetAllMyBlockPacksByRootShelfIdRequestDto,
 ) (*apicontract.GetAllMyBlockPacksByRootShelfIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.BlockPack.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -299,7 +299,7 @@ func (s *BlockPackService) GetAllMyBlockPacksByRootShelfId(
 		Order("name ASC").
 		Scan(&resDto)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.BlockPack.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().NotFound().WithOrigin(err)
 	}
 
 	return &resDto, nil
@@ -309,7 +309,7 @@ func (s *BlockPackService) CreateBlockPack(
 	ctx context.Context, requestDto *apicontract.CreateBlockPackRequestDto,
 ) (*apicontract.CreateBlockPackResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.BlockPack.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().InvalidDto().WithOrigin(err)
 	}
 
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
@@ -344,7 +344,7 @@ func (s *BlockPackService) CreateBlockPack(
 	document := schemas.BlockPackYjsDocument{BlockPackId: *newBlockPackId}
 	if err := tx.Create(&document).Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.BlockPack.FailedToCreate().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().FailedToCreate().WithOrigin(err)
 	}
 	if err := repositories.NewOutboxEventRepository().EnqueueYjsMaintenanceHint(
 		tx,
@@ -353,12 +353,12 @@ func (s *BlockPackService) CreateBlockPack(
 		"block_pack_created",
 	); err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.BlockPack.FailedToCreate().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().FailedToCreate().WithOrigin(err)
 	}
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &apicontract.CreateBlockPackResponseDto{
@@ -371,7 +371,7 @@ func (s *BlockPackService) CreateBlockPacks(
 	ctx context.Context, requestDto *apicontract.CreateBlockPacksRequestDto,
 ) (*apicontract.CreateBlockPacksResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.BlockPack.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().InvalidDto().WithOrigin(err)
 	}
 
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
@@ -414,7 +414,7 @@ func (s *BlockPackService) CreateBlockPacks(
 	if err := tx.CreateInBatches(&documents, constants.MaxBatchCreateBlockSize).Error; err != nil {
 		tx.Rollback()
 
-		return nil, apiexceptions.BlockPack.FailedToCreate().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().FailedToCreate().WithOrigin(err)
 	}
 	if err := repositories.NewOutboxEventRepository().EnqueueManyYjsMaintenanceHints(
 		tx,
@@ -424,13 +424,13 @@ func (s *BlockPackService) CreateBlockPacks(
 	); err != nil {
 		tx.Rollback()
 
-		return nil, apiexceptions.BlockPack.FailedToCreate().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().FailedToCreate().WithOrigin(err)
 	}
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 
-		return nil, apiexceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &apicontract.CreateBlockPacksResponseDto{
@@ -443,12 +443,12 @@ func (s *BlockPackService) UpdateMyBlockPackById(
 	ctx context.Context, requestDto *apicontract.UpdateMyBlockPackByIdRequestDto,
 ) (*apicontract.UpdateMyBlockPackByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.BlockPack.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().InvalidDto().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
-		return nil, apiexceptions.BlockPack.FailedToUpdate().WithOrigin(tx.Error)
+		return nil, apiexceptions.NewBlockPackException().FailedToUpdate().WithOrigin(tx.Error)
 	}
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
 	if exception != nil {
@@ -485,11 +485,11 @@ func (s *BlockPackService) UpdateMyBlockPackById(
 		[]uuid.UUID{requestDto.Param.BlockPackId},
 	); err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.BlockPack.FailedToCreate().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().FailedToCreate().WithOrigin(err)
 	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &apicontract.UpdateMyBlockPackByIdResponseDto{
@@ -501,12 +501,12 @@ func (s *BlockPackService) UpdateMyBlockPacksByIds(
 	ctx context.Context, requestDto *apicontract.UpdateMyBlockPacksByIdsRequestDto,
 ) (*apicontract.UpdateMyBlockPacksByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.BlockPack.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().InvalidDto().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
-		return nil, apiexceptions.BlockPack.FailedToUpdate().WithOrigin(tx.Error)
+		return nil, apiexceptions.NewBlockPackException().FailedToUpdate().WithOrigin(tx.Error)
 	}
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
 	if exception != nil {
@@ -552,11 +552,11 @@ func (s *BlockPackService) UpdateMyBlockPacksByIds(
 		blockPackIds,
 	); err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.BlockPack.FailedToCreate().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().FailedToCreate().WithOrigin(err)
 	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &apicontract.UpdateMyBlockPacksByIdsResponseDto{
@@ -568,7 +568,7 @@ func (s *BlockPackService) MoveMyBlockPackByParentSubShelfId(
 	ctx context.Context, requestDto *apicontract.MoveMyBlockPackByParentSubShelfIdRequestDto,
 ) (*apicontract.MoveMyBlockPackByParentSubShelfIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.BlockPack.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().InvalidDto().WithOrigin(err)
 	}
 
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
@@ -660,7 +660,7 @@ func (s *BlockPackService) MoveMyBlockPacksByParentSubShelfId(
 	ctx context.Context, requestDto *apicontract.MoveMyBlockPacksByParentSubShelfIdRequestDto,
 ) (*apicontract.MoveMyBlockPacksByParentSubShelfIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.BlockPack.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().InvalidDto().WithOrigin(err)
 	}
 
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
@@ -757,7 +757,7 @@ func (s *BlockPackService) MoveMyBlockPacksByParentSubShelfIds(
 	ctx context.Context, requestDto *apicontract.MoveMyBlockPacksByParentSubShelfIdsRequestDto,
 ) (*apicontract.MoveMyBlockPacksByParentSubShelfIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.BlockPack.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().InvalidDto().WithOrigin(err)
 	}
 
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
@@ -845,7 +845,7 @@ func (s *BlockPackService) RestoreMyBlockPackById(
 	ctx context.Context, requestDto *apicontract.RestoreMyBlockPackByIdRequestDto,
 ) (*apicontract.RestoreMyBlockPackByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.BlockPack.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -885,7 +885,7 @@ func (s *BlockPackService) RestoreMyBlockPacksByIds(
 	ctx context.Context, requestDto *apicontract.RestoreMyBlockPacksByIdsRequestDto,
 ) (*apicontract.RestoreMyBlockPacksByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.BlockPack.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -930,7 +930,7 @@ func (s *BlockPackService) DeleteMyBlockPackById(
 	ctx context.Context, requestDto *apicontract.DeleteMyBlockPackByIdRequestDto,
 ) (*apicontract.DeleteMyBlockPackByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.BlockPack.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().InvalidDto().WithOrigin(err)
 	}
 
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
@@ -1015,7 +1015,7 @@ func (s *BlockPackService) DeleteMyBlockPacksByIds(
 	ctx context.Context, requestDto *apicontract.DeleteMyBlockPacksByIdsRequestDto,
 ) (*apicontract.DeleteMyBlockPacksByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.BlockPack.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().InvalidDto().WithOrigin(err)
 	}
 
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
@@ -1138,7 +1138,7 @@ func (s *BlockPackService) SearchPrivateBlockPacks(
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
 		searchCursor, err := searchcursor.Decode[gqlmodels.SearchBlockPackCursorFields](*gqlInput.After)
 		if err != nil {
-			return nil, apiexceptions.Search.FailedToDecode().WithOrigin(err)
+			return nil, apiexceptions.NewSearchException().FailedToDecode().WithOrigin(err)
 		}
 
 		query = query.Where(`"BlockPackTable".id > ?`, searchCursor.Fields.ID)
@@ -1188,7 +1188,7 @@ func (s *BlockPackService) SearchPrivateBlockPacks(
 			schemas.BlockPackRelation_Blocks,
 		},
 	)).Find(&blockPacks).Error; err != nil {
-		return nil, apiexceptions.BlockPack.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().NotFound().WithOrigin(err)
 	}
 
 	hasNextPage := len(blockPacks) > limit
@@ -1202,10 +1202,10 @@ func (s *BlockPackService) SearchPrivateBlockPacks(
 		}
 		encodedSearchCursor, err := searchCursor.Encode()
 		if err != nil {
-			return nil, apiexceptions.Search.FailedToEncode().WithOrigin(err)
+			return nil, apiexceptions.NewSearchException().FailedToEncode().WithOrigin(err)
 		}
 		if encodedSearchCursor == nil {
-			return nil, apiexceptions.Search.FailedToUnmarshalSearchCursor()
+			return nil, apiexceptions.NewSearchException().FailedToUnmarshalSearchCursor()
 		}
 
 		searchEdges[index] = &gqlmodels.SearchBlockPackEdge{

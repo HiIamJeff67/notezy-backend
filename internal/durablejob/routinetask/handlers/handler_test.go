@@ -10,6 +10,7 @@ import (
 	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
 	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	validation "github.com/HiIamJeff67/notezy-backend/internal/durablejob/validations"
 )
 
@@ -48,5 +49,26 @@ func TestPurposeHandlerPreparesAssignmentWithoutDatabaseAccess(t *testing.T) {
 	}
 	if preparedPayload.Name != "Daily 2026-08-05" {
 		t.Fatalf("prepared name = %q", preparedPayload.Name)
+	}
+}
+
+func TestPurposeHandlerReturnsLocalErrorForInvalidPayload(t *testing.T) {
+	assignment := routinetasktypes.RoutineTaskAssignment{
+		RoutineTaskId:       uuid.New(),
+		RoutineTaskRecordId: uuid.New(),
+		RoutineId:           uuid.New(),
+		ActorUserId:         uuid.New(),
+		Purpose:             enums.RoutineTaskPurpose_CreateRootShelf,
+		Payload:             []byte("{"),
+	}
+
+	prepared, err := NewPurposeHandler(validation.New()).HandlerFunc(t.Context(), assignment)
+	if prepared != nil {
+		t.Fatalf("prepared task = %#v, want nil", prepared)
+	}
+	if durableJobError, ok := err.(*exceptions.Exception); !ok {
+		t.Fatalf("error type = %T, want *exceptions.Exception", err)
+	} else if durableJobError.Reason != "InvalidRoutineTaskPayload" || durableJobError.Domain != "RoutineTask" {
+		t.Fatalf("error = %#v, want InvalidRoutineTaskPayload/RoutineTask", durableJobError)
 	}
 }

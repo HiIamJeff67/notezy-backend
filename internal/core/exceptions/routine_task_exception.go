@@ -1,9 +1,11 @@
 package apiexceptions
 
-type routineTaskExceptionDomain struct {
-	domainException
+type RoutineTaskException struct {
+	CoreException
 }
 
-var RoutineTask = routineTaskExceptionDomain{
-	domainException: newDomainException("RoutineTask"),
+func NewRoutineTaskException() RoutineTaskException {
+	return RoutineTaskException{
+		CoreException: NewCoreException("RoutineTask"),
+	}
 }

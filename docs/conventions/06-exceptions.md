@@ -3,22 +3,42 @@
 ## Ownership and envelope
 
 - `contracts/types/exceptions` is a pure application envelope. It may use the standard
-  library and `shared`, but must not import Gateway, a microservice,
+  library, but must not import `shared`, Gateway, a microservice,
   platform observability, Gin, GORM, or generated GraphQL code.
 - `contracts/types/exceptions` creates the shared envelope with `exceptions.New()`.
   Its optional final `isInternal ...bool` accepts only the first value and
   cannot be changed after construction. It must not own a domain factory or a
   numeric code registry.
 - Gateway and each microservice may define a local factory in their own
-  `exceptions/` package when two or more callers share the same domain error
-  semantics. Examples are `internal/gateway/exceptions/` and
-  `internal/core/exceptions/`. A component with its own operational
-  failure semantics may do the same beneath its own owned package.
-- A local factory returns `*exceptions.Exception`, contains no numeric code
-  registry, and is never imported across a Gateway/service boundary. Gateway
-  never imports an API local factory, and one service never imports another
-  service's factory. One-off errors, including generic utility failures, use
-  `exceptions.New()` at the call site.
+  `exceptions/` package when two or more callers share the same domain or
+  operational error semantics. Core domain factories remain in
+  `internal/core/exceptions/`; worker, cache, renderer, delivery and
+  notification factories are runtime-local helpers. A local helper is never
+  imported across a Gateway/service boundary.
+- Runtime-local exception packages follow the Core shape: one file per owned
+  domain, an `exception.go` base helper type, and categorized operation files
+  when the domain has multiple concerns. Each package exposes an exported
+  runtime-specific helper type and a
+  `New<Runtime>Exception(domain)` factory. Named helper methods such as
+  `PayloadDecodeFailed` or `InvalidPayload` must return
+  `*contracts/types/exceptions.Exception`; the runtime-specific type is never
+  the service or transport return type. Do not create a package-level domain
+  instance, expose a generic `New(reason, ...)` factory, or add a catch-all
+  `errors.go`.
+- Every exception implementation file has its own matching unit-test file:
+  `renderer_exception.go` is tested by `renderer_exception_test.go`, and so on.
+- Core's `internal/core/exceptions/exception.go` defines `CoreException`, which
+  composes the contract `exceptions.Exception` and stores the domain. Each
+  `*_exception.go` defines an exported domain exception type and a
+  `New<Domain>Exception()` factory. Core must not expose global domain values
+  such as `Auth` or `Shelf`.
+- Runtime-local services, repositories and workers return ordinary `error` or
+  the shared `*contracts/types/exceptions.Exception` produced by their local
+  helper. They must not return the runtime-specific helper type itself. The
+  helper may carry HTTP status only because the shared exception envelope owns
+  that transport metadata; it must not format Gin responses or expose public
+  response semantics. One-off errors, including generic utility failures, use
+  ordinary `errors.New`/`fmt.Errorf` at the call site.
 - Set `Reason`, `Domain`, and `Operation` explicitly. They are stable,
   machine-readable application properties; `Message` is the human-readable
   explanation. Use `WithOrigin(err)` for the underlying Go error and

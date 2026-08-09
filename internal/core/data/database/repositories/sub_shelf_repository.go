@@ -132,8 +132,8 @@ func (r *SubShelfRepository) CheckPermissionAndGetOneById(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&subShelf)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Shelf.NotFound().WithOrigin(result.Error)},
-		{First: subShelf.Id == uuid.Nil, Second: apiexceptions.Shelf.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewShelfException().NotFound().WithOrigin(result.Error)},
+		{First: subShelf.Id == uuid.Nil, Second: apiexceptions.NewShelfException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -159,8 +159,8 @@ func (r *SubShelfRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&subShelves)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Shelf.NotFound().WithOrigin(result.Error)},
-		{First: len(subShelves) == 0, Second: apiexceptions.Shelf.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewShelfException().NotFound().WithOrigin(result.Error)},
+		{First: len(subShelves) == 0, Second: apiexceptions.NewShelfException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -211,8 +211,8 @@ func (r *SubShelfRepository) GetAllByRootShelfId(
 
 	result := query.Find(&subShelves)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Shelf.NotFound().WithOrigin(result.Error)},
-		{First: len(subShelves) == 0, Second: apiexceptions.Shelf.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewShelfException().NotFound().WithOrigin(result.Error)},
+		{First: len(subShelves) == 0, Second: apiexceptions.NewShelfException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -246,7 +246,7 @@ func (r *SubShelfRepository) CreateOneByRootShelfId(
 			opts...,
 		)
 		if exception = exceptions.Cover(exception, []exceptions.Pair{
-			{First: prevSubShelf.RootShelfId != rootShelfId, Second: apiexceptions.Shelf.InvalidDto("the given prev sub shelf is not one of the children of the given root shelf")},
+			{First: prevSubShelf.RootShelfId != rootShelfId, Second: apiexceptions.NewShelfException().InvalidDto("the given prev sub shelf is not one of the children of the given root shelf")},
 		}); exception != nil {
 			parsedOptions.DB.Rollback()
 			return nil, exception
@@ -263,13 +263,13 @@ func (r *SubShelfRepository) CreateOneByRootShelfId(
 			opts...,
 		) {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Shelf.NoPermission("create sub shelf by the given root shelf")
+			return nil, apiexceptions.NewShelfException().NoPermission("create sub shelf by the given root shelf")
 		}
 	}
 
 	if err := copier.Copy(&newSubShelf, &input); err != nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.Shelf.InvalidInput().WithOrigin(err)
+		return nil, apiexceptions.NewShelfException().InvalidInput().WithOrigin(err)
 	}
 	if newSubShelf.Id == uuid.Nil {
 		newSubShelf.Id = uuid.New()
@@ -279,9 +279,9 @@ func (r *SubShelfRepository) CreateOneByRootShelfId(
 	result := parsedOptions.DB.Model(&schemas.SubShelf{}).
 		Create(&newSubShelf)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Shelf.FailedToCreate().WithOrigin(result.Error)},
-		{First: newSubShelf.Id == uuid.Nil, Second: apiexceptions.Shelf.FailedToCreate()},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewShelfException().FailedToCreate().WithOrigin(result.Error)},
+		{First: newSubShelf.Id == uuid.Nil, Second: apiexceptions.NewShelfException().FailedToCreate()},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewShelfException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -290,7 +290,7 @@ func (r *SubShelfRepository) CreateOneByRootShelfId(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewShelfException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -303,7 +303,7 @@ func (r *SubShelfRepository) CreateManyByRootShelfIds(
 	opts ...options.RepositoryOptions,
 ) ([]uuid.UUID, *exceptions.Exception) {
 	if len(input) == 0 {
-		return nil, apiexceptions.Shelf.NoChanges()
+		return nil, apiexceptions.NewShelfException().NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
@@ -376,7 +376,7 @@ func (r *SubShelfRepository) CreateManyByRootShelfIds(
 		var newSubShelf schemas.SubShelf
 		if err := copier.Copy(&newSubShelf, &in); err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Shelf.InvalidInput().WithOrigin(err)
+			return nil, apiexceptions.NewShelfException().InvalidInput().WithOrigin(err)
 		}
 		if newSubShelf.Id == uuid.Nil {
 			newSubShelf.Id = uuid.New()
@@ -388,8 +388,8 @@ func (r *SubShelfRepository) CreateManyByRootShelfIds(
 	result := parsedOptions.DB.Model(&schemas.SubShelf{}).
 		CreateInBatches(&newSubShelves, parsedOptions.BatchSize)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Shelf.FailedToCreate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewShelfException().FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewShelfException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -403,7 +403,7 @@ func (r *SubShelfRepository) CreateManyByRootShelfIds(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewShelfException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -449,8 +449,8 @@ func (r *SubShelfRepository) UpdateOneById(
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewShelfException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewShelfException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -459,7 +459,7 @@ func (r *SubShelfRepository) UpdateOneById(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewShelfException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -528,8 +528,8 @@ func (r *SubShelfRepository) UpdateManyByIds(
 	`, strings.Join(valuePlaceholders, ","))
 	result := parsedOptions.DB.Exec(sql, valueArgs...)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewShelfException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewShelfException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return exception
@@ -538,7 +538,7 @@ func (r *SubShelfRepository) UpdateManyByIds(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return apiexceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+			return apiexceptions.NewShelfException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -561,9 +561,9 @@ func (r *SubShelfRepository) RestoreSoftDeletedOneById(
 		Where(`"SubShelfTable".id = ?`, id).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
-		{First: restoredSubShelf.Id == uuid.Nil, Second: apiexceptions.Shelf.FailedToUpdate()},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewShelfException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: restoredSubShelf.Id == uuid.Nil, Second: apiexceptions.NewShelfException().FailedToUpdate()},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewShelfException().NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -577,7 +577,7 @@ func (r *SubShelfRepository) RestoreSoftDeletedManyByIds(
 	opts ...options.RepositoryOptions,
 ) ([]schemas.SubShelf, *exceptions.Exception) {
 	if len(ids) == 0 {
-		return nil, apiexceptions.Shelf.NoChanges()
+		return nil, apiexceptions.NewShelfException().NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
@@ -591,9 +591,9 @@ func (r *SubShelfRepository) RestoreSoftDeletedManyByIds(
 		Where(`"SubShelfTable".id IN ?`, ids).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
-		{First: len(restoredSubShelves) == 0, Second: apiexceptions.Shelf.FailedToUpdate()},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewShelfException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: len(restoredSubShelves) == 0, Second: apiexceptions.NewShelfException().FailedToUpdate()},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewShelfException().NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -615,8 +615,8 @@ func (r *SubShelfRepository) SoftDeleteOneById(
 		Where(`"SubShelfTable".id = ?`, id).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewShelfException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewShelfException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -630,7 +630,7 @@ func (r *SubShelfRepository) SoftDeleteManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(ids) == 0 {
-		return apiexceptions.Shelf.NoChanges()
+		return apiexceptions.NewShelfException().NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
@@ -642,8 +642,8 @@ func (r *SubShelfRepository) SoftDeleteManyByIds(
 		Where(`"SubShelfTable".id IN ?`, ids).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewShelfException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewShelfException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -665,8 +665,8 @@ func (r *SubShelfRepository) HardDeleteOneById(
 		Where(`"SubShelfTable".id = ?`, id).
 		Delete(&schemas.SubShelf{})
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Shelf.FailedToDelete().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewShelfException().FailedToDelete().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewShelfException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -680,7 +680,7 @@ func (r *SubShelfRepository) HardDeleteManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(ids) == 0 {
-		return apiexceptions.Shelf.NoChanges()
+		return apiexceptions.NewShelfException().NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
@@ -692,8 +692,8 @@ func (r *SubShelfRepository) HardDeleteManyByIds(
 		Where(`"SubShelfTable".id IN ?`, ids).
 		Delete(&schemas.SubShelf{})
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Shelf.FailedToDelete().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewShelfException().FailedToDelete().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewShelfException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -738,7 +738,7 @@ func (r *SubShelfRepository) BulkCheckPermissionsAndGetManyByIds(
 			Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 			Scan(&validTargets)
 		if result.Error != nil {
-			return nil, nil, apiexceptions.Shelf.NotFound().WithOrigin(result.Error)
+			return nil, nil, apiexceptions.NewShelfException().NotFound().WithOrigin(result.Error)
 		}
 
 		for _, validTarget := range validTargets {
@@ -753,7 +753,7 @@ func (r *SubShelfRepository) BulkCheckPermissionsAndGetManyByIds(
 			Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 			Scan(&validIds)
 		if result.Error != nil {
-			return nil, nil, apiexceptions.Shelf.NotFound().WithOrigin(result.Error)
+			return nil, nil, apiexceptions.NewShelfException().NotFound().WithOrigin(result.Error)
 		}
 
 		for _, validId := range validIds {
@@ -777,7 +777,7 @@ func (r *SubShelfRepository) BulkCheckPermissionsAndGetManyByIds(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&subShelves)
 	if result.Error != nil {
-		return nil, nil, apiexceptions.Shelf.NotFound().WithOrigin(result.Error)
+		return nil, nil, apiexceptions.NewShelfException().NotFound().WithOrigin(result.Error)
 	}
 
 	foundIdSet := make(map[uuid.UUID]bool, len(subShelves))
@@ -800,7 +800,7 @@ func (r *SubShelfRepository) BulkCreateMany(
 	opts ...options.RepositoryOptions,
 ) ([]bool, *exceptions.Exception) {
 	if len(inputs) == 0 {
-		return []bool{}, apiexceptions.Shelf.NoChanges()
+		return []bool{}, apiexceptions.NewShelfException().NoChanges()
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -828,7 +828,7 @@ func (r *SubShelfRepository) BulkCreateMany(
 		Find(&usersToShelves)
 	if result.Error != nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.Shelf.FailedToCreate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewShelfException().FailedToCreate().WithOrigin(result.Error)
 	}
 
 	validRootShelfByUserId := make(map[[2]uuid.UUID]bool, len(usersToShelves))
@@ -844,7 +844,7 @@ func (r *SubShelfRepository) BulkCreateMany(
 			Find(&prevSubShelves)
 		if result.Error != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Shelf.FailedToCreate().WithOrigin(result.Error)
+			return nil, apiexceptions.NewShelfException().FailedToCreate().WithOrigin(result.Error)
 		}
 		for _, prevSubShelf := range prevSubShelves {
 			prevSubShelfById[prevSubShelf.Id] = prevSubShelf
@@ -894,13 +894,13 @@ func (r *SubShelfRepository) BulkCreateMany(
 		CreateInBatches(&newSubShelves, parsedOptions.BatchSize)
 	if result.Error != nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.Shelf.FailedToCreate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewShelfException().FailedToCreate().WithOrigin(result.Error)
 	}
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewShelfException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -916,7 +916,7 @@ func (r *SubShelfRepository) BulkUpdateMany(
 	opts ...options.RepositoryOptions,
 ) ([]bool, *exceptions.Exception) {
 	if len(bulkInputs) == 0 {
-		return []bool{}, apiexceptions.Shelf.NoChanges()
+		return []bool{}, apiexceptions.NewShelfException().NoChanges()
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -993,13 +993,13 @@ func (r *SubShelfRepository) BulkUpdateMany(
 	result := parsedOptions.DB.Raw(sql, valueArgs...).Scan(&updatedIndexes)
 	if result.Error != nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewShelfException().FailedToUpdate().WithOrigin(result.Error)
 	}
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewShelfException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -1018,7 +1018,7 @@ func (r *SubShelfRepository) BulkDeleteMany(
 	opts ...options.RepositoryOptions,
 ) ([]bool, *exceptions.Exception) {
 	if len(bulkInputs) == 0 {
-		return []bool{}, apiexceptions.Shelf.NoChanges()
+		return []bool{}, apiexceptions.NewShelfException().NoChanges()
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -1069,13 +1069,13 @@ func (r *SubShelfRepository) BulkDeleteMany(
 		Updates(map[string]interface{}{"deleted_at": time.Now(), "updated_at": time.Now()})
 	if result.Error != nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.Shelf.FailedToDelete().WithOrigin(result.Error)
+		return nil, apiexceptions.NewShelfException().FailedToDelete().WithOrigin(result.Error)
 	}
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewShelfException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 

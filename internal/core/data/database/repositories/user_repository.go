@@ -54,8 +54,8 @@ func (r *UserRepository) GetOneById(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&user)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.User.NotFound().WithOrigin(result.Error)},
-		{First: user.Id == uuid.Nil, Second: apiexceptions.User.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewUserException().NotFound().WithOrigin(result.Error)},
+		{First: user.Id == uuid.Nil, Second: apiexceptions.NewUserException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -81,8 +81,8 @@ func (r *UserRepository) GetOneByPublicId(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&user)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.User.NotFound().WithOrigin(result.Error)},
-		{First: user.Id == uuid.Nil, Second: apiexceptions.User.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewUserException().NotFound().WithOrigin(result.Error)},
+		{First: user.Id == uuid.Nil, Second: apiexceptions.NewUserException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -110,8 +110,8 @@ func (r *UserRepository) GetOneByName(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&user)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.User.NotFound().WithOrigin(result.Error)},
-		{First: user.Id == uuid.Nil, Second: apiexceptions.User.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewUserException().NotFound().WithOrigin(result.Error)},
+		{First: user.Id == uuid.Nil, Second: apiexceptions.NewUserException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -139,8 +139,8 @@ func (r *UserRepository) GetOneByEmail(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&user)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.User.NotFound().WithOrigin(result.Error)},
-		{First: user.Id == uuid.Nil, Second: apiexceptions.User.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewUserException().NotFound().WithOrigin(result.Error)},
+		{First: user.Id == uuid.Nil, Second: apiexceptions.NewUserException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -162,8 +162,8 @@ func (r *UserRepository) GetAll(
 		Preload("Themes").
 		Find(&users)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.User.NotFound().WithOrigin(result.Error)},
-		{First: len(users) == 0, Second: apiexceptions.User.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewUserException().NotFound().WithOrigin(result.Error)},
+		{First: len(users) == 0, Second: apiexceptions.NewUserException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -180,7 +180,7 @@ func (r *UserRepository) CreateOne(
 	// but the default value we set in gorm field in the above struct will be returned if we specified it in the "returning"
 	var newUser schemas.User
 	if err := copier.Copy(&newUser, &input); err != nil {
-		return nil, apiexceptions.User.FailedToCreate().WithOrigin(err)
+		return nil, apiexceptions.NewUserException().FailedToCreate().WithOrigin(err)
 	}
 
 	result := parsedOptions.DB.Model(&schemas.User{}).
@@ -191,18 +191,18 @@ func (r *UserRepository) CreateOne(
 		// this approach is faster and more straight forward
 		switch err.Error() {
 		case "ERROR: duplicate key value violates unique constraint \"uni_UserTable_name\" (SQLSTATE 23505)":
-			return nil, apiexceptions.User.DuplicateName(input.Name)
+			return nil, apiexceptions.NewUserException().DuplicateName(input.Name)
 		case "ERROR: duplicate key value violates unique constraint \"uni_UserTable_email\" (SQLSTATE 23505)":
-			return nil, apiexceptions.User.DuplicateEmail(input.Email)
+			return nil, apiexceptions.NewUserException().DuplicateEmail(input.Email)
 		default:
-			return nil, apiexceptions.User.FailedToCreate() // .WithOrigin(err) <- don't show the database error to outside
+			return nil, apiexceptions.NewUserException().FailedToCreate() // .WithOrigin(err) <- don't show the database error to outside
 		}
 	}
 	if result.RowsAffected == 0 {
 		// check the remaining condition here,
 		// since there's only 1 more condition to check,
 		// there's no need to use exceptions.Cover() to map all the it
-		return nil, apiexceptions.User.NoChanges()
+		return nil, apiexceptions.NewUserException().NoChanges()
 	}
 
 	return &newUser.Id, nil
@@ -234,8 +234,8 @@ func (r *UserRepository) UpdateOneById(
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.User.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.User.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewUserException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewUserException().NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}

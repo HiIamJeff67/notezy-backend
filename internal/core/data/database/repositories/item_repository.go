@@ -117,8 +117,8 @@ func (r *ItemRepository) CheckPermissionAndGetOneById(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&item)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Item.NotFound().WithOrigin(result.Error)},
-		{First: item.Id == uuid.Nil, Second: apiexceptions.Item.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewItemException().NotFound().WithOrigin(result.Error)},
+		{First: item.Id == uuid.Nil, Second: apiexceptions.NewItemException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -144,8 +144,8 @@ func (r *ItemRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&items)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Item.NotFound().WithOrigin(result.Error)},
-		{First: len(items) == 0, Second: apiexceptions.Item.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewItemException().NotFound().WithOrigin(result.Error)},
+		{First: len(items) == 0, Second: apiexceptions.NewItemException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -173,7 +173,7 @@ func (r *ItemRepository) GetPermittedIdentities(
 		Scopes(r.itemScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Find(&permittedItems)
 	if result.Error != nil {
-		return nil, apiexceptions.Item.NotFound().WithOrigin(result.Error)
+		return nil, apiexceptions.NewItemException().NotFound().WithOrigin(result.Error)
 	}
 
 	permittedItemIdentities := make([]types.Pair[uuid.UUID, enums.ItemType], len(permittedItems))

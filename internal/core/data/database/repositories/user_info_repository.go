@@ -42,8 +42,8 @@ func (r *UserInfoRepository) GetOneByUserId(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&userInfo)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.UserInfo.NotFound().WithOrigin(result.Error)},
-		{First: userInfo.Id == uuid.Nil, Second: apiexceptions.UserInfo.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewUserInfoException().NotFound().WithOrigin(result.Error)},
+		{First: userInfo.Id == uuid.Nil, Second: apiexceptions.NewUserInfoException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -61,15 +61,15 @@ func (r *UserInfoRepository) CreateOneByUserId(
 	var newUserInfo schemas.UserInfo
 	newUserInfo.UserId = userId
 	if err := copier.Copy(&newUserInfo, &input); err != nil {
-		return nil, apiexceptions.UserInfo.FailedToCreate().WithOrigin(err)
+		return nil, apiexceptions.NewUserInfoException().FailedToCreate().WithOrigin(err)
 	}
 
 	result := parsedOptions.DB.Model(&schemas.UserInfo{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newUserInfo)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.UserInfo.FailedToCreate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.UserInfo.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewUserInfoException().FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewUserInfoException().NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -102,8 +102,8 @@ func (r *UserInfoRepository) UpdateOneByUserId(
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.UserInfo.FailedToCreate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.UserInfo.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewUserInfoException().FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewUserInfoException().NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}

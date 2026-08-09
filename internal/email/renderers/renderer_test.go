@@ -1,12 +1,13 @@
 package renderers
 
 import (
-	"net/http"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 
 	emailcontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	emailconfig "github.com/HiIamJeff67/notezy-backend/internal/email/configs"
 )
 
@@ -76,17 +77,20 @@ func TestNewRendererRejectsUnsupportedContentType(t *testing.T) {
 	if exception == nil {
 		t.Fatal("NewRenderer() exception = nil, want an exception")
 	}
-	if exception.Reason != "InvalidContentType" {
-		t.Fatalf("exception.Reason = %q, want %q", exception.Reason, "InvalidContentType")
+	var emailException *exceptions.Exception
+	if !errors.As(exception, &emailException) {
+		t.Fatalf("exception type = %T, want *exceptions.Exception", exception)
+	}
+	if emailException.Reason != "InvalidContentType" {
+		t.Fatalf("exception.Reason = %q, want %q", emailException.Reason, "InvalidContentType")
 	}
 }
 
 func TestRendererRejectsInvalidTemplate(t *testing.T) {
 	tests := []struct {
-		name           string
-		config         emailconfig.RendererConfig
-		wantReason     string
-		wantStatusCode int
+		name       string
+		config     emailconfig.RendererConfig
+		wantReason string
 	}{
 		{
 			name: "wrong extension",
@@ -94,8 +98,7 @@ func TestRendererRejectsInvalidTemplate(t *testing.T) {
 				TemplatePath: filepath.Join(t.TempDir(), "message.txt"),
 				ContentType:  emailcontract.EmailContentType_HTML,
 			},
-			wantReason:     "InvalidTemplate",
-			wantStatusCode: http.StatusInternalServerError,
+			wantReason: "InvalidTemplate",
 		},
 		{
 			name: "missing file",
@@ -103,8 +106,7 @@ func TestRendererRejectsInvalidTemplate(t *testing.T) {
 				TemplatePath: filepath.Join(t.TempDir(), "missing.html"),
 				ContentType:  emailcontract.EmailContentType_HTML,
 			},
-			wantReason:     "TemplateReadFailed",
-			wantStatusCode: http.StatusInternalServerError,
+			wantReason: "TemplateReadFailed",
 		},
 	}
 
@@ -119,11 +121,12 @@ func TestRendererRejectsInvalidTemplate(t *testing.T) {
 			if exception == nil {
 				t.Fatal("Render() exception = nil, want an exception")
 			}
-			if exception.Reason != test.wantReason {
-				t.Fatalf("exception.Reason = %q, want %q", exception.Reason, test.wantReason)
+			var emailException *exceptions.Exception
+			if !errors.As(exception, &emailException) {
+				t.Fatalf("exception type = %T, want *exceptions.Exception", exception)
 			}
-			if exception.HTTPStatusCode() != test.wantStatusCode {
-				t.Fatalf("exception.HTTPStatusCode() = %d, want %d", exception.HTTPStatusCode(), test.wantStatusCode)
+			if emailException.Reason != test.wantReason {
+				t.Fatalf("exception.Reason = %q, want %q", emailException.Reason, test.wantReason)
 			}
 		})
 	}
@@ -147,7 +150,11 @@ func TestRendererRejectsMalformedTemplate(t *testing.T) {
 	if exception == nil {
 		t.Fatal("Render() exception = nil, want an exception")
 	}
-	if exception.Reason != "TemplateParseFailed" {
-		t.Fatalf("exception.Reason = %q, want %q", exception.Reason, "TemplateParseFailed")
+	var emailException *exceptions.Exception
+	if !errors.As(exception, &emailException) {
+		t.Fatalf("exception type = %T, want *exceptions.Exception", exception)
+	}
+	if emailException.Reason != "TemplateParseFailed" {
+		t.Fatalf("exception.Reason = %q, want %q", emailException.Reason, "TemplateParseFailed")
 	}
 }

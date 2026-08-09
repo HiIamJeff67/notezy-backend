@@ -7,15 +7,17 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 )
 
-type shelfExceptionDomain struct {
-	domainException
+type ShelfException struct {
+	CoreException
 }
 
-var Shelf = shelfExceptionDomain{
-	domainException: newDomainException("Shelf"),
+func NewShelfException() ShelfException {
+	return ShelfException{
+		CoreException: NewCoreException("Shelf"),
+	}
 }
 
-func (shelfExceptionDomain) DuplicateName(name string) *exceptions.Exception {
+func (ShelfException) DuplicateName(name string) *exceptions.Exception {
 	return exceptions.New(
 		"DuplicateName",
 		"Shelf",
@@ -25,7 +27,7 @@ func (shelfExceptionDomain) DuplicateName(name string) *exceptions.Exception {
 	)
 }
 
-func (shelfExceptionDomain) MaximumDepthExceeded(currentDepth int32, maxDepth int32) *exceptions.Exception {
+func (ShelfException) MaximumDepthExceeded(currentDepth int32, maxDepth int32) *exceptions.Exception {
 	return exceptions.New(
 		"MaximumDepthExceeded",
 		"Shelf",
@@ -35,7 +37,7 @@ func (shelfExceptionDomain) MaximumDepthExceeded(currentDepth int32, maxDepth in
 	)
 }
 
-func (shelfExceptionDomain) InsertParentIntoItsChildren(destination any, target any) *exceptions.Exception {
+func (ShelfException) InsertParentIntoItsChildren(destination any, target any) *exceptions.Exception {
 	return exceptions.New(
 		"InsertParentIntoItsChildren",
 		"Shelf",

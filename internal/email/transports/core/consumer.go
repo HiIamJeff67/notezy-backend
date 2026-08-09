@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	validatorpkg "github.com/go-playground/validator/v10"
@@ -11,6 +12,7 @@ import (
 	emailcontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1"
 	emaileventscontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1/events"
 	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
@@ -85,7 +87,7 @@ func (c *EmailRequestConsumer) consume(
 		}
 	}
 
-	var exception error
+	var err error
 	switch metadata.Operation {
 	case emailcontract.SendWelcomeEmailOperation:
 		var request emaileventscontract.SendWelcomeEmailRequestDto
@@ -98,7 +100,7 @@ func (c *EmailRequestConsumer) consume(
 		if err := c.validator.Struct(&request); err != nil {
 			return invalidEmailRequest(err.Error())
 		}
-		exception = c.sender.SendWelcomeEmail(ctx, request)
+		err = c.sender.SendWelcomeEmail(ctx, request)
 	case emailcontract.SendValidationEmailOperation:
 		var request emaileventscontract.SendValidationEmailRequestDto
 		if err := json.Unmarshal(event.Data, &request); err != nil {
@@ -110,7 +112,7 @@ func (c *EmailRequestConsumer) consume(
 		if err := c.validator.Struct(&request); err != nil {
 			return invalidEmailRequest(err.Error())
 		}
-		exception = c.sender.SendValidationEmail(ctx, request)
+		err = c.sender.SendValidationEmail(ctx, request)
 	case emailcontract.SendSecurityAlertEmailOperation:
 		var request emaileventscontract.SendSecurityAlertEmailRequestDto
 		if err := json.Unmarshal(event.Data, &request); err != nil {
@@ -122,14 +124,19 @@ func (c *EmailRequestConsumer) consume(
 		if err := c.validator.Struct(&request); err != nil {
 			return invalidEmailRequest(err.Error())
 		}
-		exception = c.sender.SendSecurityAlertEmail(ctx, request)
+		err = c.sender.SendSecurityAlertEmail(ctx, request)
 	default:
 		return invalidEmailRequest("unsupported email operation")
 	}
-	if exception != nil {
+	if err != nil {
+		classification := platformkafka.ErrorClassification_Transient
+		var emailException *exceptions.Exception
+		if errors.As(err, &emailException) && !emailException.Retryable {
+			classification = platformkafka.ErrorClassification_PoisonMessage
+		}
 		return &platformkafka.ConsumerError{
-			Classification: platformkafka.ErrorClassification_Transient,
-			Origin:         exception,
+			Classification: classification,
+			Origin:         err,
 		}
 	}
 

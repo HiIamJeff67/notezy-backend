@@ -9,15 +9,17 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 )
 
-type blockPackExceptionDomain struct {
-	domainException
+type BlockPackException struct {
+	CoreException
 }
 
-var BlockPack = blockPackExceptionDomain{
-	domainException: newDomainException("BlockPack"),
+func NewBlockPackException() BlockPackException {
+	return BlockPackException{
+		CoreException: NewCoreException("BlockPack"),
+	}
 }
 
-func (blockPackExceptionDomain) NoRootBlockInBlockPack(blockPackId uuid.UUID) *exceptions.Exception {
+func (BlockPackException) NoRootBlockInBlockPack(blockPackId uuid.UUID) *exceptions.Exception {
 	return exceptions.New(
 		"NoRootBlockInBlockPack",
 		"BlockPack",

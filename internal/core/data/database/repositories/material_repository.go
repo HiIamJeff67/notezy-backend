@@ -125,8 +125,8 @@ func (r *MaterialRepository) CheckPermissionAndGetOneById(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&material)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Material.NotFound().WithOrigin(result.Error)},
-		{First: material.Id == uuid.Nil, Second: apiexceptions.Material.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewMaterialException().NotFound().WithOrigin(result.Error)},
+		{First: material.Id == uuid.Nil, Second: apiexceptions.NewMaterialException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -152,8 +152,8 @@ func (r *MaterialRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&materials)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Material.NotFound().WithOrigin(result.Error)},
-		{First: len(materials) == 0, Second: apiexceptions.Material.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewMaterialException().NotFound().WithOrigin(result.Error)},
+		{First: len(materials) == 0, Second: apiexceptions.NewMaterialException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -201,23 +201,23 @@ func (r *MaterialRepository) CreateOneBySubShelfId(
 			opts...,
 		) {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Shelf.NoPermission("create a material under this shelf")
+			return nil, apiexceptions.NewShelfException().NoPermission("create a material under this shelf")
 		}
 	}
 
 	var newMaterial schemas.Material
 	if err := copier.Copy(&newMaterial, &input); err != nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.Material.FailedToCreate().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().FailedToCreate().WithOrigin(err)
 	}
 	newMaterial.ParentSubShelfId = subShelfId
 
 	result := parsedOptions.DB.Model(&schemas.Material{}).
 		Create(&newMaterial)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Material.FailedToCreate().WithOrigin(result.Error)},
-		{First: newMaterial.Id == uuid.Nil, Second: apiexceptions.Material.FailedToCreate()},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Material.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewMaterialException().FailedToCreate().WithOrigin(result.Error)},
+		{First: newMaterial.Id == uuid.Nil, Second: apiexceptions.NewMaterialException().FailedToCreate()},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewMaterialException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -226,7 +226,7 @@ func (r *MaterialRepository) CreateOneBySubShelfId(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Material.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewMaterialException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -263,7 +263,7 @@ func (r *MaterialRepository) UpdateOneById(
 	}
 	if existingMaterial == nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.Material.NotFound()
+		return nil, apiexceptions.NewMaterialException().NotFound()
 	}
 
 	// if the root shelf id is required to be updated in the database
@@ -277,7 +277,7 @@ func (r *MaterialRepository) UpdateOneById(
 			opts...,
 		) {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Shelf.NoPermission("move a material to this shelf")
+			return nil, apiexceptions.NewShelfException().NoPermission("move a material to this shelf")
 		}
 	}
 
@@ -292,8 +292,8 @@ func (r *MaterialRepository) UpdateOneById(
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Material.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewMaterialException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewMaterialException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -302,7 +302,7 @@ func (r *MaterialRepository) UpdateOneById(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Material.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewMaterialException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -329,9 +329,9 @@ func (r *MaterialRepository) RestoreSoftDeletedOneById(
 		Where(`"MaterialTable".id = ?`, id).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
-		{First: restoredMaterial.Id == uuid.Nil, Second: apiexceptions.Material.FailedToUpdate()},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Material.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewMaterialException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: restoredMaterial.Id == uuid.Nil, Second: apiexceptions.NewMaterialException().FailedToUpdate()},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewMaterialException().NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -345,7 +345,7 @@ func (r *MaterialRepository) RestoreSoftDeletedManyByIds(
 	opts ...options.RepositoryOptions,
 ) ([]schemas.Material, *exceptions.Exception) {
 	if len(ids) == 0 {
-		return nil, apiexceptions.Material.NoChanges()
+		return nil, apiexceptions.NewMaterialException().NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
@@ -362,9 +362,9 @@ func (r *MaterialRepository) RestoreSoftDeletedManyByIds(
 		Where(`"MaterialTable".id IN ?`, ids).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
-		{First: len(restoredMaterials) != len(ids), Second: apiexceptions.Material.FailedToUpdate()},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Material.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewMaterialException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: len(restoredMaterials) != len(ids), Second: apiexceptions.NewMaterialException().FailedToUpdate()},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewMaterialException().NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -386,8 +386,8 @@ func (r *MaterialRepository) SoftDeleteOneById(
 		Where(`"MaterialTable".id = ?`, id).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Material.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewMaterialException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewMaterialException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -401,7 +401,7 @@ func (r *MaterialRepository) SoftDeleteManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(ids) == 0 {
-		return apiexceptions.Material.NoChanges()
+		return apiexceptions.NewMaterialException().NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
@@ -413,8 +413,8 @@ func (r *MaterialRepository) SoftDeleteManyByIds(
 		Where(`"MaterialTable".id IN ?`, ids).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Material.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewMaterialException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewMaterialException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -436,8 +436,8 @@ func (r *MaterialRepository) HardDeleteOneById(
 		Where(`"MaterialTable".id = ?`, id).
 		Delete(&schemas.Material{})
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Material.FailedToDelete().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Material.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewMaterialException().FailedToDelete().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewMaterialException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -451,7 +451,7 @@ func (r *MaterialRepository) HardDeleteManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(ids) == 0 {
-		return apiexceptions.Material.NoChanges()
+		return apiexceptions.NewMaterialException().NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
@@ -463,8 +463,8 @@ func (r *MaterialRepository) HardDeleteManyByIds(
 		Where(`"MaterialTable".id IN ?`, ids).
 		Delete(&schemas.Material{})
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Material.FailedToDelete().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Material.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewMaterialException().FailedToDelete().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewMaterialException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -509,7 +509,7 @@ func (r *MaterialRepository) BulkCheckPermissionsAndGetManyByIds(
 			Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 			Scan(&validTargets)
 		if result.Error != nil {
-			return nil, nil, apiexceptions.Material.NotFound().WithOrigin(result.Error)
+			return nil, nil, apiexceptions.NewMaterialException().NotFound().WithOrigin(result.Error)
 		}
 
 		for _, validTarget := range validTargets {
@@ -524,7 +524,7 @@ func (r *MaterialRepository) BulkCheckPermissionsAndGetManyByIds(
 			Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 			Scan(&validIds)
 		if result.Error != nil {
-			return nil, nil, apiexceptions.Material.NotFound().WithOrigin(result.Error)
+			return nil, nil, apiexceptions.NewMaterialException().NotFound().WithOrigin(result.Error)
 		}
 
 		for _, validId := range validIds {
@@ -548,7 +548,7 @@ func (r *MaterialRepository) BulkCheckPermissionsAndGetManyByIds(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&materials)
 	if result.Error != nil {
-		return nil, nil, apiexceptions.Material.NotFound().WithOrigin(result.Error)
+		return nil, nil, apiexceptions.NewMaterialException().NotFound().WithOrigin(result.Error)
 	}
 
 	foundIdSet := make(map[uuid.UUID]bool, len(materials))
@@ -571,7 +571,7 @@ func (r *MaterialRepository) BulkDeleteMany(
 	opts ...options.RepositoryOptions,
 ) ([]bool, *exceptions.Exception) {
 	if len(bulkInputs) == 0 {
-		return []bool{}, apiexceptions.Material.NoChanges()
+		return []bool{}, apiexceptions.NewMaterialException().NoChanges()
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -622,13 +622,13 @@ func (r *MaterialRepository) BulkDeleteMany(
 		Updates(map[string]interface{}{"deleted_at": time.Now(), "updated_at": time.Now()})
 	if result.Error != nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.Material.FailedToDelete().WithOrigin(result.Error)
+		return nil, apiexceptions.NewMaterialException().FailedToDelete().WithOrigin(result.Error)
 	}
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Material.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewMaterialException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 

@@ -42,7 +42,7 @@ func (r *UserAccountRepository) GetOneByUserId(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&userAccount)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.UserAccount.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewUserAccountException().NotFound().WithOrigin(err)
 	}
 
 	return &userAccount, nil
@@ -59,14 +59,14 @@ func (r *UserAccountRepository) CreateOneByUserId(
 	newUserAccount.UserId = userId
 
 	if err := copier.Copy(&newUserAccount, &input); err != nil {
-		return nil, apiexceptions.UserAccount.FailedToCreate().WithOrigin(err)
+		return nil, apiexceptions.NewUserAccountException().FailedToCreate().WithOrigin(err)
 	}
 
 	result := parsedOptions.DB.Model(&schemas.UserAccount{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newUserAccount)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.UserAccount.FailedToCreate().WithOrigin(err)
+		return nil, apiexceptions.NewUserAccountException().FailedToCreate().WithOrigin(err)
 	}
 
 	return &newUserAccount.Id, nil
@@ -84,7 +84,7 @@ func (r *UserAccountRepository) UpdateOneByUserId(
 		opts...,
 	)
 	if exception = exceptions.Cover(exception, []exceptions.Pair{
-		{First: existingUserAccount == nil, Second: apiexceptions.UserAccount.NotFound()},
+		{First: existingUserAccount == nil, Second: apiexceptions.NewUserAccountException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -99,10 +99,10 @@ func (r *UserAccountRepository) UpdateOneByUserId(
 		Select("*").
 		Updates(&updates)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.UserAccount.FailedToUpdate().WithOrigin(err)
+		return nil, apiexceptions.NewUserAccountException().FailedToUpdate().WithOrigin(err)
 	}
 	if result.RowsAffected == 0 {
-		return nil, apiexceptions.UserAccount.NoChanges()
+		return nil, apiexceptions.NewUserAccountException().NoChanges()
 	}
 
 	return &updates, nil

@@ -1,9 +1,11 @@
 package apiexceptions
 
-type routineTagExceptionDomain struct {
-	domainException
+type RoutineTagException struct {
+	CoreException
 }
 
-var RoutineTag = routineTagExceptionDomain{
-	domainException: newDomainException("RoutineTag"),
+func NewRoutineTagException() RoutineTagException {
+	return RoutineTagException{
+		CoreException: NewCoreException("RoutineTag"),
+	}
 }

@@ -8,15 +8,17 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 )
 
-type routineExceptionDomain struct {
-	domainException
+type RoutineException struct {
+	CoreException
 }
 
-var Routine = routineExceptionDomain{
-	domainException: newDomainException("Routine"),
+func NewRoutineException() RoutineException {
+	return RoutineException{
+		CoreException: NewCoreException("Routine"),
+	}
 }
 
-func (routineExceptionDomain) QueriedTimeRangeTooLarge(from time.Time, to time.Time) *exceptions.Exception {
+func (RoutineException) QueriedTimeRangeTooLarge(from time.Time, to time.Time) *exceptions.Exception {
 	return exceptions.New(
 		"QueriedTimeRangeTooLarge",
 		"Routine",
@@ -26,7 +28,7 @@ func (routineExceptionDomain) QueriedTimeRangeTooLarge(from time.Time, to time.T
 	)
 }
 
-func (routineExceptionDomain) FailedToLinkRoutineTags() *exceptions.Exception {
+func (RoutineException) FailedToLinkRoutineTags() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToLinkRoutineTags",
 		"Routine",
@@ -36,7 +38,7 @@ func (routineExceptionDomain) FailedToLinkRoutineTags() *exceptions.Exception {
 	)
 }
 
-func (routineExceptionDomain) FailedToLinkItems() *exceptions.Exception {
+func (RoutineException) FailedToLinkItems() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToLinkItems",
 		"Routine",

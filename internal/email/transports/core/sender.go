@@ -4,15 +4,14 @@ import (
 	"context"
 
 	emaileventscontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1/events"
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	emailsenders "github.com/HiIamJeff67/notezy-backend/internal/email/senders"
 )
 
 type SenderInterface interface {
-	SendWelcomeEmail(context.Context, emaileventscontract.SendWelcomeEmailRequestDto) *exceptions.Exception
-	SendValidationEmail(context.Context, emaileventscontract.SendValidationEmailRequestDto) *exceptions.Exception
-	SendSecurityAlertEmail(context.Context, emaileventscontract.SendSecurityAlertEmailRequestDto) *exceptions.Exception
+	SendWelcomeEmail(context.Context, emaileventscontract.SendWelcomeEmailRequestDto) error
+	SendValidationEmail(context.Context, emaileventscontract.SendValidationEmailRequestDto) error
+	SendSecurityAlertEmail(context.Context, emaileventscontract.SendSecurityAlertEmailRequestDto) error
 }
 
 type Sender struct {
@@ -36,21 +35,21 @@ func NewSender(
 func (s *Sender) SendWelcomeEmail(
 	ctx context.Context,
 	request emaileventscontract.SendWelcomeEmailRequestDto,
-) *exceptions.Exception {
+) error {
 	return s.welcome.Send(ctx, request)
 }
 
 func (s *Sender) SendValidationEmail(
 	ctx context.Context,
 	request emaileventscontract.SendValidationEmailRequestDto,
-) *exceptions.Exception {
+) error {
 	return s.validation.Send(ctx, request)
 }
 
 func (s *Sender) SendSecurityAlertEmail(
 	ctx context.Context,
 	request emaileventscontract.SendSecurityAlertEmailRequestDto,
-) *exceptions.Exception {
+) error {
 	return s.securityAlert.Send(ctx, request)
 }
 

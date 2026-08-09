@@ -124,8 +124,8 @@ func (r *BlockRepository) CheckPermissionAndGetOneById(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&block)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Block.NotFound().WithOrigin(result.Error)},
-		{First: block.Id == uuid.Nil, Second: apiexceptions.Block.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewBlockException().NotFound().WithOrigin(result.Error)},
+		{First: block.Id == uuid.Nil, Second: apiexceptions.NewBlockException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -153,8 +153,8 @@ func (r *BlockRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&blocks)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Block.NotFound().WithOrigin(result.Error)},
-		{First: len(blocks) == 0, Second: apiexceptions.Block.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewBlockException().NotFound().WithOrigin(result.Error)},
+		{First: len(blocks) == 0, Second: apiexceptions.NewBlockException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -216,7 +216,7 @@ func (r *BlockRepository) BulkCheckPermissionsAndGetManyByIds(
 		Where("uts.user_id IN ? AND uts.permission IN ?", userIds, allowedPermissions).
 		Scan(&validTargets)
 	if result.Error != nil {
-		return nil, nil, apiexceptions.Block.NotFound().WithOrigin(result.Error)
+		return nil, nil, apiexceptions.NewBlockException().NotFound().WithOrigin(result.Error)
 	}
 
 	validTargetByUserId := make(map[[2]uuid.UUID]bool, len(validTargets))
@@ -246,7 +246,7 @@ func (r *BlockRepository) BulkCheckPermissionsAndGetManyByIds(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&blocks)
 	if result.Error != nil {
-		return nil, nil, apiexceptions.Block.NotFound().WithOrigin(result.Error)
+		return nil, nil, apiexceptions.NewBlockException().NotFound().WithOrigin(result.Error)
 	}
 
 	foundIdSet := make(map[uuid.UUID]bool, len(blocks))
@@ -267,7 +267,7 @@ func (r *BlockRepository) BulkCreateMany(
 	opts ...options.RepositoryOptions,
 ) ([]bool, *exceptions.Exception) {
 	if len(bulkInputs) == 0 {
-		return []bool{}, apiexceptions.Block.NoChanges()
+		return []bool{}, apiexceptions.NewBlockException().NoChanges()
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -342,14 +342,14 @@ func (r *BlockRepository) BulkCreateMany(
 	if result.Error != nil {
 		parsedOptions.DB.Rollback()
 
-		return nil, apiexceptions.Block.FailedToCreate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewBlockException().FailedToCreate().WithOrigin(result.Error)
 	}
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
 
-			return nil, apiexceptions.Block.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewBlockException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -361,7 +361,7 @@ func (r *BlockRepository) BulkUpdateMany(
 	opts ...options.RepositoryOptions,
 ) ([]bool, *exceptions.Exception) {
 	if len(bulkInputs) == 0 {
-		return []bool{}, apiexceptions.Block.NoChanges()
+		return []bool{}, apiexceptions.NewBlockException().NoChanges()
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -474,14 +474,14 @@ func (r *BlockRepository) BulkUpdateMany(
 	if result.Error != nil {
 		parsedOptions.DB.Rollback()
 
-		return nil, apiexceptions.Block.FailedToUpdate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewBlockException().FailedToUpdate().WithOrigin(result.Error)
 	}
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
 
-			return nil, apiexceptions.Block.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewBlockException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 

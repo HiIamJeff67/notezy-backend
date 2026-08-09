@@ -1,9 +1,11 @@
 package apiexceptions
 
-type materialExceptionDomain struct {
-	domainException
+type MaterialException struct {
+	CoreException
 }
 
-var Material = materialExceptionDomain{
-	domainException: newDomainException("Material"),
+func NewMaterialException() MaterialException {
+	return MaterialException{
+		CoreException: NewCoreException("Material"),
+	}
 }

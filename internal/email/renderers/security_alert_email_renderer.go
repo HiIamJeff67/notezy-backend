@@ -9,5 +9,5 @@ type MarkdownEmailRenderer struct {
 }
 
 func NewMarkdownEmailRenderer(config emailconfig.RendererConfig) RendererInterface {
-	return &MarkdownEmailRenderer{Renderer: newRenderer(config, "md", "RenderMarkdown")}
+	return &MarkdownEmailRenderer{Renderer: newRenderer(config, "md")}
 }

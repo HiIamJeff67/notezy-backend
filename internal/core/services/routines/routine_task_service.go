@@ -163,7 +163,7 @@ func (s *RoutineTaskService) visualizeMyRoutineTaskTimeCount(
 		Order("buckets.bucket_start ASC").
 		Scan(&buckets)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.RoutineTask.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().NotFound().WithOrigin(err)
 	}
 
 	data := make([]apicontract.RoutineTaskCountDatum, len(buckets))
@@ -182,7 +182,7 @@ func (s *RoutineTaskService) visualizeMyRoutineTaskTimeCount(
 		}
 		meta, err := json.Marshal(metadata)
 		if err != nil {
-			return nil, apiexceptions.Routine.FailedToMarshalData(metadata).WithOrigin(err)
+			return nil, apiexceptions.NewRoutineException().FailedToMarshalData(metadata).WithOrigin(err)
 		}
 
 		data[index] = apicontract.RoutineTaskCountDatum{
@@ -208,10 +208,10 @@ func (s *RoutineTaskService) GetMyRoutineTaskById(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 	if reqDto.Param.IsDeleted != nil && *reqDto.Param.IsDeleted {
-		return nil, apiexceptions.RoutineTask.NotFound()
+		return nil, apiexceptions.NewRoutineTaskException().NotFound()
 	}
 
 	db := s.db.WithContext(ctx)
@@ -260,7 +260,7 @@ func (s *RoutineTaskService) GetAllMyRoutineTasksByRoutineIds(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 	if reqDto.Param.AreDeleted != nil && *reqDto.Param.AreDeleted {
 		resDto := apicontract.GetAllMyRoutineTasksByRoutineIdsResponseDto{}
@@ -317,7 +317,7 @@ func (s *RoutineTaskService) GetAllMyRoutineTasks(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 	if reqDto.Param.AreDeleted != nil && *reqDto.Param.AreDeleted {
 		resDto := apicontract.GetAllMyRoutineTasksResponseDto{}
@@ -374,7 +374,7 @@ func (s *RoutineTaskService) CreateRoutineTaskByRoutineId(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 	if exception := s.routineTaskExecutionService.ValidateRoutineTaskPayload(
 		*(*enums.RoutineTaskPurpose)(&reqDto.Body.Purpose).ToStorable(),
@@ -423,7 +423,7 @@ func (s *RoutineTaskService) UpdateMyRoutineTaskById(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -497,7 +497,7 @@ func (s *RoutineTaskService) PauseMyRoutineTaskById(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
@@ -521,7 +521,7 @@ func (s *RoutineTaskService) PauseMyRoutineTaskById(
 	}
 	if routineTask.Status != enums.RoutineTaskStatus_Idle {
 		tx.Rollback()
-		return nil, apiexceptions.RoutineTask.InvalidInput("only idle routine tasks can be paused")
+		return nil, apiexceptions.NewRoutineTaskException().InvalidInput("only idle routine tasks can be paused")
 	}
 
 	now := time.Now()
@@ -533,15 +533,15 @@ func (s *RoutineTaskService) PauseMyRoutineTaskById(
 		})
 	if result.Error != nil {
 		tx.Rollback()
-		return nil, apiexceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewRoutineTaskException().FailedToUpdate().WithOrigin(result.Error)
 	}
 	if result.RowsAffected == 0 {
 		tx.Rollback()
-		return nil, apiexceptions.RoutineTask.NoChanges()
+		return nil, apiexceptions.NewRoutineTaskException().NoChanges()
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		return nil, apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &apicontract.PauseMyRoutineTaskByIdResponseDto{UpdatedAt: now}, nil
@@ -555,7 +555,7 @@ func (s *RoutineTaskService) ResumeMyRoutineTaskById(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
@@ -579,7 +579,7 @@ func (s *RoutineTaskService) ResumeMyRoutineTaskById(
 	}
 	if routineTask.Status != enums.RoutineTaskStatus_Pause {
 		tx.Rollback()
-		return nil, apiexceptions.RoutineTask.InvalidInput("only paused routine tasks can be resumed")
+		return nil, apiexceptions.NewRoutineTaskException().InvalidInput("only paused routine tasks can be resumed")
 	}
 
 	now := time.Now()
@@ -591,15 +591,15 @@ func (s *RoutineTaskService) ResumeMyRoutineTaskById(
 		})
 	if result.Error != nil {
 		tx.Rollback()
-		return nil, apiexceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewRoutineTaskException().FailedToUpdate().WithOrigin(result.Error)
 	}
 	if result.RowsAffected == 0 {
 		tx.Rollback()
-		return nil, apiexceptions.RoutineTask.NoChanges()
+		return nil, apiexceptions.NewRoutineTaskException().NoChanges()
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		return nil, apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &apicontract.ResumeMyRoutineTaskByIdResponseDto{UpdatedAt: now}, nil
@@ -613,7 +613,7 @@ func (s *RoutineTaskService) HardDeleteMyRoutineTaskById(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -645,7 +645,7 @@ func (s *RoutineTaskService) HardDeleteMyRoutineTasksByIds(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -679,7 +679,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskStatusCount(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -696,7 +696,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskStatusCount(
 		Group(`"RoutineTaskTable".status`).
 		Scan(&rows)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.RoutineTask.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().NotFound().WithOrigin(err)
 	}
 
 	counts := make(map[enums.RoutineTaskStatus]int64, len(rows))
@@ -709,7 +709,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskStatusCount(
 		metadata := map[string]string{"status": status.String()}
 		meta, err := json.Marshal(metadata)
 		if err != nil {
-			return nil, apiexceptions.Routine.FailedToMarshalData(metadata)
+			return nil, apiexceptions.NewRoutineException().FailedToMarshalData(metadata)
 		}
 
 		data[index] = apicontract.RoutineTaskCountDatum{
@@ -733,7 +733,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskPurposeCount(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -750,7 +750,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskPurposeCount(
 		Group(`"RoutineTaskTable".purpose`).
 		Scan(&rows)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.RoutineTask.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().NotFound().WithOrigin(err)
 	}
 
 	counts := make(map[enums.RoutineTaskPurpose]int64, len(rows))
@@ -763,7 +763,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskPurposeCount(
 		metadata := map[string]string{"purpose": purpose.String()}
 		meta, err := json.Marshal(metadata)
 		if err != nil {
-			return nil, apiexceptions.Routine.FailedToMarshalData(metadata)
+			return nil, apiexceptions.NewRoutineException().FailedToMarshalData(metadata)
 		}
 
 		data[index] = apicontract.RoutineTaskCountDatum{
@@ -787,13 +787,13 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskScheduledAtCount(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 	if !reqDto.Param.QueryRangeStartedAt.Before(reqDto.Param.QueryRangeEndedAt) {
-		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
 	}
 	if !times.IsTimeWithin(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
-		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt and queryRangeEndedAt should be within 360 days")
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto("queryRangeStartedAt and queryRangeEndedAt should be within 360 days")
 	}
 
 	data, exception := s.visualizeMyRoutineTaskTimeCount(
@@ -823,13 +823,13 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskActualStartedAtCount(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 	if !reqDto.Param.QueryRangeStartedAt.Before(reqDto.Param.QueryRangeEndedAt) {
-		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
 	}
 	if !times.IsTimeWithin(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
-		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt and queryRangeEndedAt should be within 360 days")
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto("queryRangeStartedAt and queryRangeEndedAt should be within 360 days")
 	}
 
 	data, exception := s.visualizeMyRoutineTaskTimeCount(
@@ -859,13 +859,13 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskActualEndedAtCount(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 	if !reqDto.Param.QueryRangeStartedAt.Before(reqDto.Param.QueryRangeEndedAt) {
-		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
 	}
 	if !times.IsTimeWithin(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
-		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt and queryRangeEndedAt should be within 360 days")
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto("queryRangeStartedAt and queryRangeEndedAt should be within 360 days")
 	}
 
 	data, exception := s.visualizeMyRoutineTaskTimeCount(
@@ -929,7 +929,7 @@ func (s *RoutineTaskService) SearchPrivateRoutineTasks(
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
 		searchCursor, err := searchcursor.Decode[gqlmodels.SearchRoutineTaskCursorFields](*gqlInput.After)
 		if err != nil {
-			return nil, apiexceptions.Search.FailedToDecode().WithOrigin(err)
+			return nil, apiexceptions.NewSearchException().FailedToDecode().WithOrigin(err)
 		}
 
 		query = query.Where("id > ?", searchCursor.Fields.ID)
@@ -1023,7 +1023,7 @@ func (s *RoutineTaskService) SearchPrivateRoutineTasks(
 	if err := query.Scopes(s.routineTaskScope.IncludePreloads(
 		nil,
 	)).Find(&routineTasks).Error; err != nil {
-		return nil, apiexceptions.RoutineTask.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().NotFound().WithOrigin(err)
 	}
 
 	hasNextPage := len(routineTasks) > limit
@@ -1037,10 +1037,10 @@ func (s *RoutineTaskService) SearchPrivateRoutineTasks(
 		}
 		encodedSearchCursor, err := searchCursor.Encode()
 		if err != nil {
-			return nil, apiexceptions.Search.FailedToEncode().WithOrigin(err)
+			return nil, apiexceptions.NewSearchException().FailedToEncode().WithOrigin(err)
 		}
 		if encodedSearchCursor == nil {
-			return nil, apiexceptions.Search.FailedToUnmarshalSearchCursor()
+			return nil, apiexceptions.NewSearchException().FailedToUnmarshalSearchCursor()
 		}
 
 		searchEdges[index] = &gqlmodels.SearchRoutineTaskEdge{
@@ -1100,7 +1100,7 @@ func (s *RoutineTaskService) ClaimRoutineTasks(
 
 	tx := s.db.WithContext(ctx).Begin()
 	if err := tx.Error; err != nil {
-		return nil, apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	result := tx.
@@ -1124,7 +1124,7 @@ func (s *RoutineTaskService) ClaimRoutineTasks(
 	if result.RowsAffected == 0 {
 		if err := tx.Commit().Error; err != nil {
 			tx.Rollback()
-			return nil, apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 		}
 
 		return nil, nil
@@ -1187,7 +1187,7 @@ func (s *RoutineTaskService) ClaimRoutineTasks(
 		}
 		if err := tx.Commit().Error; err != nil {
 			tx.Rollback()
-			return nil, apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 		}
 
 		return response, nil
@@ -1305,7 +1305,7 @@ func (s *RoutineTaskService) ClaimRoutineTasks(
 		}
 		if err := json.Unmarshal(claimedRoutineTasks[index].Payload, &payload); err != nil {
 			tx.Rollback()
-			return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+			return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 		}
 		patterns[index] = payload.Pattern
 	}
@@ -1382,7 +1382,7 @@ func (s *RoutineTaskService) ClaimRoutineTasks(
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return response, nil
@@ -1414,7 +1414,7 @@ func (s *RoutineTaskService) MarkCompletedRoutineTasks(
 
 	tx := s.db.WithContext(ctx).Begin()
 	if err := tx.Error; err != nil {
-		return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+		return apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 	}
 	result := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&schemas.InboxEvent{EventId: eventId})
 	if result.Error != nil {
@@ -1423,7 +1423,7 @@ func (s *RoutineTaskService) MarkCompletedRoutineTasks(
 	}
 	if result.RowsAffected == 0 {
 		if err := tx.Commit().Error; err != nil {
-			return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+			return apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 		}
 		return nil
 	}
@@ -1450,13 +1450,13 @@ func (s *RoutineTaskService) MarkCompletedRoutineTasks(
 			Count(&finalizedRecordCount)
 		if result.Error == nil && finalizedResult.Error == nil && finalizedRecordCount == int64(len(recordIds)) {
 			if err := tx.Commit().Error; err != nil {
-				return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+				return apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 			}
 			return nil
 		}
 		tx.Rollback()
 		if result.Error != nil {
-			return apiexceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)
+			return apiexceptions.NewRoutineTaskException().FailedToUpdate().WithOrigin(result.Error)
 		}
 		return exceptions.New("ResultStateMismatch", "RoutineTask", "MarkCompletedRoutineTasks", "Routine task completion count does not match the claimed batch", http.StatusConflict, true)
 	}
@@ -1476,18 +1476,18 @@ func (s *RoutineTaskService) MarkCompletedRoutineTasks(
 			Count(&finalizedRecordCount)
 		if result.Error == nil && finalizedResult.Error == nil && finalizedRecordCount == int64(len(recordIds)) {
 			if err := tx.Commit().Error; err != nil {
-				return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+				return apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 			}
 			return nil
 		}
 		tx.Rollback()
 		if result.Error != nil {
-			return apiexceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)
+			return apiexceptions.NewRoutineTaskException().FailedToUpdate().WithOrigin(result.Error)
 		}
 		return exceptions.New("ResultStateMismatch", "RoutineTaskRecord", "MarkCompletedRoutineTasks", "Routine task record completion count does not match the claimed batch", http.StatusConflict, true)
 	}
 	if err := tx.Commit().Error; err != nil {
-		return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+		return apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 	}
 	return nil
 }
@@ -1506,7 +1506,7 @@ func (s *RoutineTaskService) MarkFailedRoutineTasks(
 
 	tx := s.db.WithContext(ctx).Begin()
 	if err := tx.Error; err != nil {
-		return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+		return apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 	}
 	result := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&schemas.InboxEvent{EventId: eventId})
 	if result.Error != nil {
@@ -1515,7 +1515,7 @@ func (s *RoutineTaskService) MarkFailedRoutineTasks(
 	}
 	if result.RowsAffected == 0 {
 		if err := tx.Commit().Error; err != nil {
-			return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+			return apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 		}
 		return nil
 	}
@@ -1547,13 +1547,13 @@ func (s *RoutineTaskService) MarkFailedRoutineTasks(
 			Count(&finalizedRecordCount)
 		if result.Error == nil && finalizedResult.Error == nil && finalizedRecordCount == int64(len(request.Tasks)) {
 			if err := tx.Commit().Error; err != nil {
-				return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+				return apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 			}
 			return nil
 		}
 		tx.Rollback()
 		if result.Error != nil {
-			return apiexceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)
+			return apiexceptions.NewRoutineTaskException().FailedToUpdate().WithOrigin(result.Error)
 		}
 		return exceptions.New("ResultStateMismatch", "RoutineTask", "MarkFailedRoutineTasks", "Routine task failure count does not match the claimed batch", http.StatusConflict, true)
 	}
@@ -1573,7 +1573,7 @@ func (s *RoutineTaskService) MarkFailedRoutineTasks(
 			Count(&finalizedRecordCount)
 		if finalizedResult.Error == nil && finalizedRecordCount == int64(len(request.Tasks)) {
 			if err := tx.Commit().Error; err != nil {
-				return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+				return apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 			}
 			return nil
 		}
@@ -1581,7 +1581,7 @@ func (s *RoutineTaskService) MarkFailedRoutineTasks(
 		return exceptions.New("ResultStateMismatch", "RoutineTaskRecord", "MarkFailedRoutineTasks", "Routine task record failure count does not match the claimed batch", http.StatusConflict, true)
 	}
 	if err := tx.Commit().Error; err != nil {
-		return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+		return apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 	}
 	return nil
 }

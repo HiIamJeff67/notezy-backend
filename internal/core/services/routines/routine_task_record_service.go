@@ -126,7 +126,7 @@ func (s *RoutineTaskRecordService) visualizeMyRoutineTaskRecordTimeCount(
 		Order("buckets.bucket_start ASC").
 		Scan(&buckets)
 	if result.Error != nil {
-		return nil, apiexceptions.RoutineTask.NotFound().WithOrigin(result.Error)
+		return nil, apiexceptions.NewRoutineTaskException().NotFound().WithOrigin(result.Error)
 	}
 
 	data := make([]apicontract.RoutineTaskRecordCountDatum, len(buckets))
@@ -146,7 +146,7 @@ func (s *RoutineTaskRecordService) visualizeMyRoutineTaskRecordTimeCount(
 		}
 		meta, err := json.Marshal(metadata)
 		if err != nil {
-			return nil, apiexceptions.Routine.FailedToMarshalData(metadata)
+			return nil, apiexceptions.NewRoutineException().FailedToMarshalData(metadata)
 		}
 
 		data[index] = apicontract.RoutineTaskRecordCountDatum{
@@ -164,7 +164,7 @@ func (s *RoutineTaskRecordService) GetAllMyRoutineTaskRecordsByRoutineTaskId(
 	ctx context.Context, requestDto *apicontract.GetAllMyRoutineTaskRecordsByRoutineTaskIdRequestDto,
 ) (*apicontract.GetAllMyRoutineTaskRecordsByRoutineTaskIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -219,7 +219,7 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordStatusCount(
 	ctx context.Context, requestDto *apicontract.VisualizeMyRoutineTaskRecordStatusCountRequestDto,
 ) (*apicontract.VisualizeMyRoutineTaskRecordStatusCountResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -229,7 +229,7 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordStatusCount(
 	}
 	permission, err := enums.ConvertStringToAccessControlPermission(requestDto.Param.Permission)
 	if err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 	var rows []struct {
 		Status                 enums.RoutineTaskRecordStatus `gorm:"column:status;"`
@@ -248,7 +248,7 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordStatusCount(
 
 	result := query.Group(`"RoutineTaskRecordTable".status`).Scan(&rows)
 	if result.Error != nil {
-		return nil, apiexceptions.RoutineTask.NotFound().WithOrigin(result.Error)
+		return nil, apiexceptions.NewRoutineTaskException().NotFound().WithOrigin(result.Error)
 	}
 
 	counts := make(map[enums.RoutineTaskRecordStatus]int64, len(rows))
@@ -261,7 +261,7 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordStatusCount(
 		metadata := map[string]any{"status": status.String(), "routineTaskIds": requestDto.Param.RoutineTaskIds}
 		meta, err := json.Marshal(metadata)
 		if err != nil {
-			return nil, apiexceptions.Routine.FailedToMarshalData(metadata)
+			return nil, apiexceptions.NewRoutineException().FailedToMarshalData(metadata)
 		}
 
 		data[index] = apicontract.RoutineTaskRecordCountDatum{
@@ -281,7 +281,7 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordPurposeCount(
 	ctx context.Context, requestDto *apicontract.VisualizeMyRoutineTaskRecordPurposeCountRequestDto,
 ) (*apicontract.VisualizeMyRoutineTaskRecordPurposeCountResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -291,7 +291,7 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordPurposeCount(
 	}
 	permission, err := enums.ConvertStringToAccessControlPermission(requestDto.Param.Permission)
 	if err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 	var rows []struct {
 		Purpose                enums.RoutineTaskPurpose `gorm:"column:purpose;"`
@@ -310,7 +310,7 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordPurposeCount(
 
 	result := query.Group(`"RoutineTaskRecordTable".purpose`).Scan(&rows)
 	if result.Error != nil {
-		return nil, apiexceptions.RoutineTask.NotFound().WithOrigin(result.Error)
+		return nil, apiexceptions.NewRoutineTaskException().NotFound().WithOrigin(result.Error)
 	}
 
 	counts := make(map[enums.RoutineTaskPurpose]int64, len(rows))
@@ -323,7 +323,7 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordPurposeCount(
 		metadata := map[string]any{"purpose": purpose.String(), "routineTaskIds": requestDto.Param.RoutineTaskIds}
 		meta, err := json.Marshal(metadata)
 		if err != nil {
-			return nil, apiexceptions.Routine.FailedToMarshalData(metadata)
+			return nil, apiexceptions.NewRoutineException().FailedToMarshalData(metadata)
 		}
 
 		data[index] = apicontract.RoutineTaskRecordCountDatum{
@@ -343,13 +343,13 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordScheduledAtCount(
 	ctx context.Context, requestDto *apicontract.VisualizeMyRoutineTaskRecordScheduledAtCountRequestDto,
 ) (*apicontract.VisualizeMyRoutineTaskRecordScheduledAtCountResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 	if !requestDto.Param.QueryRangeStartedAt.Before(requestDto.Param.QueryRangeEndedAt) {
-		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
 	}
 	if !times.IsTimeWithin(requestDto.Param.QueryRangeStartedAt, requestDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
-		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt and queryRangeEndedAt should be within 360 days")
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto("queryRangeStartedAt and queryRangeEndedAt should be within 360 days")
 	}
 
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -358,7 +358,7 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordScheduledAtCount(
 	}
 	permission, err := enums.ConvertStringToAccessControlPermission(requestDto.Param.Permission)
 	if err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 	data, exception := s.visualizeMyRoutineTaskRecordTimeCount(
 		ctx,
@@ -384,13 +384,13 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordActualStartedAtCo
 	ctx context.Context, requestDto *apicontract.VisualizeMyRoutineTaskRecordActualStartedAtCountRequestDto,
 ) (*apicontract.VisualizeMyRoutineTaskRecordActualStartedAtCountResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 	if !requestDto.Param.QueryRangeStartedAt.Before(requestDto.Param.QueryRangeEndedAt) {
-		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
 	}
 	if !times.IsTimeWithin(requestDto.Param.QueryRangeStartedAt, requestDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
-		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt and queryRangeEndedAt should be within 360 days")
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto("queryRangeStartedAt and queryRangeEndedAt should be within 360 days")
 	}
 
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -399,7 +399,7 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordActualStartedAtCo
 	}
 	permission, err := enums.ConvertStringToAccessControlPermission(requestDto.Param.Permission)
 	if err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 	data, exception := s.visualizeMyRoutineTaskRecordTimeCount(
 		ctx,
@@ -425,13 +425,13 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordActualEndedAtCoun
 	ctx context.Context, requestDto *apicontract.VisualizeMyRoutineTaskRecordActualEndedAtCountRequestDto,
 ) (*apicontract.VisualizeMyRoutineTaskRecordActualEndedAtCountResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 	if !requestDto.Param.QueryRangeStartedAt.Before(requestDto.Param.QueryRangeEndedAt) {
-		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
 	}
 	if !times.IsTimeWithin(requestDto.Param.QueryRangeStartedAt, requestDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
-		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt and queryRangeEndedAt should be within 360 days")
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto("queryRangeStartedAt and queryRangeEndedAt should be within 360 days")
 	}
 
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -440,7 +440,7 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordActualEndedAtCoun
 	}
 	permission, err := enums.ConvertStringToAccessControlPermission(requestDto.Param.Permission)
 	if err != nil {
-		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidDto().WithOrigin(err)
 	}
 	data, exception := s.visualizeMyRoutineTaskRecordTimeCount(
 		ctx,
@@ -504,7 +504,7 @@ func (s *RoutineTaskRecordService) SearchPrivateRoutineTaskRecords(
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
 		searchCursor, err := searchcursor.Decode[gqlmodels.SearchRoutineTaskRecordCursorFields](*gqlInput.After)
 		if err != nil {
-			return nil, apiexceptions.Search.FailedToDecode().WithOrigin(err)
+			return nil, apiexceptions.NewSearchException().FailedToDecode().WithOrigin(err)
 		}
 
 		query = query.Where(`"RoutineTaskRecordTable".id > ?`, searchCursor.Fields.ID)
@@ -557,7 +557,7 @@ func (s *RoutineTaskRecordService) SearchPrivateRoutineTaskRecords(
 
 	var routineTaskRecords []PrivateRoutineTaskRecord
 	if err := query.Find(&routineTaskRecords).Error; err != nil {
-		return nil, apiexceptions.RoutineTask.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().NotFound().WithOrigin(err)
 	}
 
 	hasNextPage := len(routineTaskRecords) > limit
@@ -571,10 +571,10 @@ func (s *RoutineTaskRecordService) SearchPrivateRoutineTaskRecords(
 		}
 		encodedSearchCursor, err := searchCursor.Encode()
 		if err != nil {
-			return nil, apiexceptions.Search.FailedToEncode().WithOrigin(err)
+			return nil, apiexceptions.NewSearchException().FailedToEncode().WithOrigin(err)
 		}
 		if encodedSearchCursor == nil {
-			return nil, apiexceptions.Search.FailedToUnmarshalSearchCursor()
+			return nil, apiexceptions.NewSearchException().FailedToUnmarshalSearchCursor()
 		}
 
 		searchEdges[index] = &gqlmodels.SearchRoutineTaskRecordEdge{

@@ -117,8 +117,8 @@ func (r *RoutineTaskRepository) CheckPermissionAndGetOneById(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&routineTask)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.RoutineTask.NotFound().WithOrigin(result.Error)},
-		{First: routineTask.Id == uuid.Nil, Second: apiexceptions.RoutineTask.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineTaskException().NotFound().WithOrigin(result.Error)},
+		{First: routineTask.Id == uuid.Nil, Second: apiexceptions.NewRoutineTaskException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -143,8 +143,8 @@ func (r *RoutineTaskRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&routineTasks)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.RoutineTask.NotFound().WithOrigin(result.Error)},
-		{First: len(routineTasks) == 0, Second: apiexceptions.RoutineTask.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineTaskException().NotFound().WithOrigin(result.Error)},
+		{First: len(routineTasks) == 0, Second: apiexceptions.NewRoutineTaskException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -184,7 +184,7 @@ func (r *RoutineTaskRepository) GetAllByUserId(
 		Scopes(r.routineTaskScope.IncludePreloads(preloads)).
 		Find(&routineTasks)
 	if result.Error != nil {
-		return nil, apiexceptions.RoutineTask.NotFound().WithOrigin(result.Error)
+		return nil, apiexceptions.NewRoutineTaskException().NotFound().WithOrigin(result.Error)
 	}
 
 	return routineTasks, nil
@@ -213,7 +213,7 @@ func (r *RoutineTaskRepository) GetAllByRoutineIds(
 		Scopes(r.routineTaskScope.IncludePreloads(preloads)).
 		Find(&routineTasks)
 	if result.Error != nil {
-		return nil, apiexceptions.RoutineTask.NotFound().WithOrigin(result.Error)
+		return nil, apiexceptions.NewRoutineTaskException().NotFound().WithOrigin(result.Error)
 	}
 
 	return routineTasks, nil
@@ -227,7 +227,7 @@ func (r *RoutineTaskRepository) CreateOneByRoutineId(
 ) (*uuid.UUID, *exceptions.Exception) {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 	if input.ActorUserId == uuid.Nil || input.ActorUserId != userId {
-		return nil, apiexceptions.RoutineTask.InvalidInput().WithOrigin(fmt.Errorf("actorUserId must match userId"))
+		return nil, apiexceptions.NewRoutineTaskException().InvalidInput().WithOrigin(fmt.Errorf("actorUserId must match userId"))
 	}
 
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
@@ -245,18 +245,18 @@ func (r *RoutineTaskRepository) CreateOneByRoutineId(
 		opts...,
 	) {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.RoutineTask.NoPermission("create a routine task under this routine")
+		return nil, apiexceptions.NewRoutineTaskException().NoPermission("create a routine task under this routine")
 	}
 
 	if input.NextScheduledAt.IsZero() {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.RoutineTask.InvalidInput().WithOrigin(fmt.Errorf("nextScheduledAt is required"))
+		return nil, apiexceptions.NewRoutineTaskException().InvalidInput().WithOrigin(fmt.Errorf("nextScheduledAt is required"))
 	}
 
 	newRoutineTask := schemas.RoutineTask{}
 	if err := copier.Copy(&newRoutineTask, &input); err != nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.RoutineTask.InvalidInput().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTaskException().InvalidInput().WithOrigin(err)
 	}
 	newRoutineTask.RoutineId = routineId
 	newRoutineTask.ActorUserId = input.ActorUserId
@@ -267,8 +267,8 @@ func (r *RoutineTaskRepository) CreateOneByRoutineId(
 		Model(&schemas.RoutineTask{}).
 		Create(&newRoutineTask)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.RoutineTask.FailedToCreate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTask.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineTaskException().FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewRoutineTaskException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -277,7 +277,7 @@ func (r *RoutineTaskRepository) CreateOneByRoutineId(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -290,13 +290,13 @@ func (r *RoutineTaskRepository) CreateManyByRoutineIds(
 	opts ...options.RepositoryOptions,
 ) ([]uuid.UUID, *exceptions.Exception) {
 	if len(input) == 0 {
-		return nil, apiexceptions.RoutineTask.NoChanges()
+		return nil, apiexceptions.NewRoutineTaskException().NoChanges()
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 	for _, in := range input {
 		if in.ActorUserId == uuid.Nil || in.ActorUserId != userId {
-			return nil, apiexceptions.RoutineTask.InvalidInput().WithOrigin(fmt.Errorf("actorUserId must match userId"))
+			return nil, apiexceptions.NewRoutineTaskException().InvalidInput().WithOrigin(fmt.Errorf("actorUserId must match userId"))
 		}
 	}
 
@@ -331,7 +331,7 @@ func (r *RoutineTaskRepository) CreateManyByRoutineIds(
 		}
 		if in.NextScheduledAt.IsZero() {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.RoutineTask.InvalidInput().WithOrigin(fmt.Errorf("nextScheduledAt is required"))
+			return nil, apiexceptions.NewRoutineTaskException().InvalidInput().WithOrigin(fmt.Errorf("nextScheduledAt is required"))
 		}
 		newRoutineTask := schemas.RoutineTask{
 			Id:          uuid.New(),
@@ -340,7 +340,7 @@ func (r *RoutineTaskRepository) CreateManyByRoutineIds(
 		}
 		if err := copier.Copy(&newRoutineTask, &in); err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.RoutineTask.InvalidInput().WithOrigin(err)
+			return nil, apiexceptions.NewRoutineTaskException().InvalidInput().WithOrigin(err)
 		}
 		newRoutineTask.RoutineId = in.RoutineId
 		newRoutineTask.NextScheduledAt = in.NextScheduledAt.Truncate(time.Minute)
@@ -350,15 +350,15 @@ func (r *RoutineTaskRepository) CreateManyByRoutineIds(
 
 	if len(newRoutineTasks) == 0 {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.RoutineTask.NoChanges()
+		return nil, apiexceptions.NewRoutineTaskException().NoChanges()
 	}
 
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTask{}).
 		CreateInBatches(&newRoutineTasks, parsedOptions.BatchSize)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.RoutineTask.FailedToCreate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTask.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineTaskException().FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewRoutineTaskException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -371,7 +371,7 @@ func (r *RoutineTaskRepository) CreateManyByRoutineIds(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -402,7 +402,7 @@ func (r *RoutineTaskRepository) UpdateOneById(
 		routineRepository := NewRoutineRepository(scopes.NewRoutineScope())
 		if !routineRepository.HasPermission(*input.Values.RoutineId, userId, parsedOptions.AllowedPermissions, opts...) {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.RoutineTask.NoPermission("move a routine task to this routine")
+			return nil, apiexceptions.NewRoutineTaskException().NoPermission("move a routine task to this routine")
 		}
 	}
 	if input.Values.NextScheduledAt != nil {
@@ -438,8 +438,8 @@ func (r *RoutineTaskRepository) UpdateOneById(
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTask.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineTaskException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewRoutineTaskException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -448,7 +448,7 @@ func (r *RoutineTaskRepository) UpdateOneById(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -461,7 +461,7 @@ func (r *RoutineTaskRepository) UpdateManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(input) == 0 {
-		return apiexceptions.RoutineTask.NoChanges()
+		return apiexceptions.NewRoutineTaskException().NoChanges()
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -480,7 +480,7 @@ func (r *RoutineTaskRepository) UpdateManyByIds(
 	validRoutineTasks, exception := r.CheckPermissionsAndGetManyByIds(ids, userId, nil, parsedOptions.AllowedPermissions, opts...)
 	if exception != nil {
 		parsedOptions.DB.Rollback()
-		return apiexceptions.RoutineTask.NoPermission("update these routine tasks")
+		return apiexceptions.NewRoutineTaskException().NoPermission("update these routine tasks")
 	}
 
 	isRoutineTaskValid := make(map[uuid.UUID]bool, len(validRoutineTasks))
@@ -504,7 +504,7 @@ func (r *RoutineTaskRepository) UpdateManyByIds(
 		routineRepository := NewRoutineRepository(scopes.NewRoutineScope())
 		if !routineRepository.HavePermissions(targetRoutineIds, userId, parsedOptions.AllowedPermissions, opts...) {
 			parsedOptions.DB.Rollback()
-			return apiexceptions.RoutineTask.NoPermission("move these routine tasks to the given routines")
+			return apiexceptions.NewRoutineTaskException().NoPermission("move these routine tasks to the given routines")
 		}
 	}
 
@@ -547,7 +547,7 @@ func (r *RoutineTaskRepository) UpdateManyByIds(
 
 	if len(valuePlaceholders) == 0 {
 		parsedOptions.DB.Rollback()
-		return apiexceptions.RoutineTask.NoChanges()
+		return apiexceptions.NewRoutineTaskException().NoChanges()
 	}
 
 	sql := fmt.Sprintf(`
@@ -575,8 +575,8 @@ func (r *RoutineTaskRepository) UpdateManyByIds(
 	`, strings.Join(valuePlaceholders, ","))
 	result := parsedOptions.DB.Exec(sql, valueArgs...)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTask.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineTaskException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewRoutineTaskException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return exception
@@ -585,7 +585,7 @@ func (r *RoutineTaskRepository) UpdateManyByIds(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+			return apiexceptions.NewRoutineTaskException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -605,8 +605,8 @@ func (r *RoutineTaskRepository) HardDeleteOneById(
 		Where(`"RoutineTaskTable".id = ?`, id).
 		Delete(&schemas.RoutineTask{})
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.RoutineTask.FailedToDelete().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTask.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineTaskException().FailedToDelete().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewRoutineTaskException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -620,7 +620,7 @@ func (r *RoutineTaskRepository) HardDeleteManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(ids) == 0 {
-		return apiexceptions.RoutineTask.NoChanges()
+		return apiexceptions.NewRoutineTaskException().NoChanges()
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -631,8 +631,8 @@ func (r *RoutineTaskRepository) HardDeleteManyByIds(
 		Where(`"RoutineTaskTable".id IN ?`, ids).
 		Delete(&schemas.RoutineTask{})
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.RoutineTask.FailedToDelete().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTask.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineTaskException().FailedToDelete().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewRoutineTaskException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}

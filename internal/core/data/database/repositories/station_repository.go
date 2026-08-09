@@ -143,8 +143,8 @@ func (r *StationRepository) CheckPermissionAndGetOneById(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&station)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Station.NotFound().WithOrigin(result.Error)},
-		{First: station.Id == uuid.Nil, Second: apiexceptions.Station.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewStationException().NotFound().WithOrigin(result.Error)},
+		{First: station.Id == uuid.Nil, Second: apiexceptions.NewStationException().NotFound()},
 	}); exception != nil {
 		return nil, "", exception
 	}
@@ -170,8 +170,8 @@ func (r *StationRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&stations)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Station.NotFound().WithOrigin(result.Error)},
-		{First: len(stations) == 0, Second: apiexceptions.Station.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewStationException().NotFound().WithOrigin(result.Error)},
+		{First: len(stations) == 0, Second: apiexceptions.NewStationException().NotFound()},
 	}); exception != nil {
 		return nil, nil, exception
 	}
@@ -191,8 +191,8 @@ func (r *StationRepository) CheckPermissionsAndGetManyByIds(
 			Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 			Find(&usersToStations)
 		if exception := exceptions.Cover(nil, []exceptions.Pair{
-			{First: result.Error != nil, Second: apiexceptions.Station.NotFound().WithOrigin(result.Error)},
-			{First: len(usersToStations) == 0, Second: apiexceptions.Station.NotFound()},
+			{First: result.Error != nil, Second: apiexceptions.NewStationException().NotFound().WithOrigin(result.Error)},
+			{First: len(usersToStations) == 0, Second: apiexceptions.NewStationException().NotFound()},
 		}); exception != nil {
 			return nil, nil, exception
 		}
@@ -205,7 +205,7 @@ func (r *StationRepository) CheckPermissionsAndGetManyByIds(
 		for index, station := range stations {
 			permission, exist := permissionByStationId[station.Id]
 			if !exist {
-				return nil, nil, apiexceptions.Station.NotFound()
+				return nil, nil, apiexceptions.NewStationException().NotFound()
 			}
 			permissions[index] = permission
 		}
@@ -256,7 +256,7 @@ func (r *StationRepository) GetAllByUserId(
 		Order(`"StationTable".id ASC`).
 		Find(&stationsWithPermissions)
 	if result.Error != nil {
-		return nil, nil, apiexceptions.Station.NotFound().WithOrigin(result.Error)
+		return nil, nil, apiexceptions.NewStationException().NotFound().WithOrigin(result.Error)
 	}
 
 	stations := make([]schemas.Station, len(stationsWithPermissions))
@@ -288,7 +288,7 @@ func (r *StationRepository) CreateOne(
 	newStation.OwnerId = ownerId
 	if err := copier.Copy(&newStation, &input); err != nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.Station.InvalidInput().WithOrigin(err)
+		return nil, apiexceptions.NewStationException().InvalidInput().WithOrigin(err)
 	}
 	if newStation.Id == uuid.Nil {
 		newStation.Id = uuid.New()
@@ -298,9 +298,9 @@ func (r *StationRepository) CreateOne(
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newStation)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Station.FailedToCreate().WithOrigin(result.Error)},
-		{First: newStation.Id == uuid.Nil, Second: apiexceptions.Station.FailedToCreate()},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewStationException().FailedToCreate().WithOrigin(result.Error)},
+		{First: newStation.Id == uuid.Nil, Second: apiexceptions.NewStationException().FailedToCreate()},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewStationException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -314,8 +314,8 @@ func (r *StationRepository) CreateOne(
 	result = parsedOptions.DB.Model(&schemas.UsersToStations{}).
 		Create(&newUsersToStations)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Station.FailedToCreate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewStationException().FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewStationException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -324,7 +324,7 @@ func (r *StationRepository) CreateOne(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Station.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewStationException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -337,7 +337,7 @@ func (r *StationRepository) CreateMany(
 	opts ...options.RepositoryOptions,
 ) ([]uuid.UUID, *exceptions.Exception) {
 	if len(input) == 0 {
-		return nil, apiexceptions.Station.NoChanges()
+		return nil, apiexceptions.NewStationException().NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
@@ -356,7 +356,7 @@ func (r *StationRepository) CreateMany(
 		newStation.OwnerId = ownerId
 		if err := copier.Copy(&newStation, &in); err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Station.InvalidInput().WithOrigin(err)
+			return nil, apiexceptions.NewStationException().InvalidInput().WithOrigin(err)
 		}
 		if newStation.Id == uuid.Nil {
 			newStation.Id = uuid.New()
@@ -367,8 +367,8 @@ func (r *StationRepository) CreateMany(
 	result := parsedOptions.DB.Model(&schemas.Station{}).
 		CreateInBatches(&newStations, parsedOptions.BatchSize)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Station.FailedToCreate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewStationException().FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewStationException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -387,8 +387,8 @@ func (r *StationRepository) CreateMany(
 	result = parsedOptions.DB.Model(&schemas.UsersToStations{}).
 		CreateInBatches(&newUsersToStations, parsedOptions.BatchSize)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Station.FailedToCreate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewStationException().FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewStationException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -397,7 +397,7 @@ func (r *StationRepository) CreateMany(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Station.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewStationException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -443,8 +443,8 @@ func (r *StationRepository) UpdateOneById(
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewStationException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewStationException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -453,7 +453,7 @@ func (r *StationRepository) UpdateOneById(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Station.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewStationException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -466,7 +466,7 @@ func (r *StationRepository) UpdateManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(input) == 0 {
-		return apiexceptions.Station.NoChanges()
+		return apiexceptions.NewStationException().NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
@@ -495,7 +495,7 @@ func (r *StationRepository) UpdateManyByIds(
 		)
 		if exception != nil {
 			parsedOptions.DB.Rollback()
-			return apiexceptions.Station.NoPermission("update these stations")
+			return apiexceptions.NewStationException().NoPermission("update these stations")
 		}
 
 		for _, validStation := range validStations {
@@ -527,7 +527,7 @@ func (r *StationRepository) UpdateManyByIds(
 
 	if len(valuePlaceholders) == 0 {
 		parsedOptions.DB.Rollback()
-		return apiexceptions.Station.NoChanges()
+		return apiexceptions.NewStationException().NoChanges()
 	}
 
 	sql := fmt.Sprintf(`
@@ -549,8 +549,8 @@ func (r *StationRepository) UpdateManyByIds(
 	`, strings.Join(valuePlaceholders, ","))
 	result := parsedOptions.DB.Exec(sql, valueArgs...)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewStationException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewStationException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return exception
@@ -559,7 +559,7 @@ func (r *StationRepository) UpdateManyByIds(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return apiexceptions.Station.FailedToCommitTransaction().WithOrigin(err)
+			return apiexceptions.NewStationException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -582,9 +582,9 @@ func (r *StationRepository) RestoreSoftDeletedOneById(
 		Where(`"StationTable".id = ?`, id).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
-		{First: restoredStation.Id == uuid.Nil, Second: apiexceptions.Station.FailedToUpdate()},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewStationException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: restoredStation.Id == uuid.Nil, Second: apiexceptions.NewStationException().FailedToUpdate()},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewStationException().NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -598,7 +598,7 @@ func (r *StationRepository) RestoreSoftDeletedManyByIds(
 	opts ...options.RepositoryOptions,
 ) ([]schemas.Station, *exceptions.Exception) {
 	if len(ids) == 0 {
-		return nil, apiexceptions.Station.NoChanges()
+		return nil, apiexceptions.NewStationException().NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
@@ -612,9 +612,9 @@ func (r *StationRepository) RestoreSoftDeletedManyByIds(
 		Where(`"StationTable".id IN ?`, ids).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
-		{First: len(restoredStations) == 0, Second: apiexceptions.Station.FailedToUpdate()},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewStationException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: len(restoredStations) == 0, Second: apiexceptions.NewStationException().FailedToUpdate()},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewStationException().NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -636,8 +636,8 @@ func (r *StationRepository) SoftDeleteOneById(
 		Where(`"StationTable".id = ?`, id).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewStationException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewStationException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -651,7 +651,7 @@ func (r *StationRepository) SoftDeleteManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(ids) == 0 {
-		return apiexceptions.Station.NoChanges()
+		return apiexceptions.NewStationException().NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
@@ -663,8 +663,8 @@ func (r *StationRepository) SoftDeleteManyByIds(
 		Where(`"StationTable".id IN ?`, ids).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewStationException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewStationException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -684,8 +684,8 @@ func (r *StationRepository) SoftDeleteManyByUserId(
 		Where("owner_id = ?", userId).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewStationException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewStationException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -707,8 +707,8 @@ func (r *StationRepository) HardDeleteOneById(
 		Where(`"StationTable".id = ?`, id).
 		Delete(&schemas.Station{})
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Station.FailedToDelete().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewStationException().FailedToDelete().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewStationException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -722,7 +722,7 @@ func (r *StationRepository) HardDeleteManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(ids) == 0 {
-		return apiexceptions.Station.NoChanges()
+		return apiexceptions.NewStationException().NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
@@ -734,8 +734,8 @@ func (r *StationRepository) HardDeleteManyByIds(
 		Where(`"StationTable".id IN ?`, ids).
 		Delete(&schemas.Station{})
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Station.FailedToDelete().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewStationException().FailedToDelete().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewStationException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -755,8 +755,8 @@ func (r *StationRepository) HardDeleteManyByUserId(
 		Where("owner_id = ?", userId).
 		Delete(&schemas.Station{})
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Station.FailedToDelete().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewStationException().FailedToDelete().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewStationException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -800,7 +800,7 @@ func (r *StationRepository) BulkCheckPermissionsAndGetManyByIds(
 			Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 			Scan(&validTargets)
 		if result.Error != nil {
-			return nil, nil, apiexceptions.Station.NotFound().WithOrigin(result.Error)
+			return nil, nil, apiexceptions.NewStationException().NotFound().WithOrigin(result.Error)
 		}
 
 		for _, validTarget := range validTargets {
@@ -815,7 +815,7 @@ func (r *StationRepository) BulkCheckPermissionsAndGetManyByIds(
 			Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 			Scan(&validIds)
 		if result.Error != nil {
-			return nil, nil, apiexceptions.Station.NotFound().WithOrigin(result.Error)
+			return nil, nil, apiexceptions.NewStationException().NotFound().WithOrigin(result.Error)
 		}
 
 		for _, validId := range validIds {
@@ -839,7 +839,7 @@ func (r *StationRepository) BulkCheckPermissionsAndGetManyByIds(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&stations)
 	if result.Error != nil {
-		return nil, nil, apiexceptions.Station.NotFound().WithOrigin(result.Error)
+		return nil, nil, apiexceptions.NewStationException().NotFound().WithOrigin(result.Error)
 	}
 
 	foundIdSet := make(map[uuid.UUID]bool, len(stations))
@@ -862,7 +862,7 @@ func (r *StationRepository) BulkCreateMany(
 	opts ...options.RepositoryOptions,
 ) ([]bool, *exceptions.Exception) {
 	if len(inputs) == 0 {
-		return []bool{}, apiexceptions.Station.NoChanges()
+		return []bool{}, apiexceptions.NewStationException().NoChanges()
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -899,20 +899,20 @@ func (r *StationRepository) BulkCreateMany(
 		CreateInBatches(&newStations, parsedOptions.BatchSize)
 	if result.Error != nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.Station.FailedToCreate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewStationException().FailedToCreate().WithOrigin(result.Error)
 	}
 
 	result = parsedOptions.DB.Model(&schemas.UsersToStations{}).
 		CreateInBatches(&newUsersToStations, parsedOptions.BatchSize)
 	if result.Error != nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.Station.FailedToCreate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewStationException().FailedToCreate().WithOrigin(result.Error)
 	}
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Station.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewStationException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -924,7 +924,7 @@ func (r *StationRepository) BulkUpdateMany(
 	opts ...options.RepositoryOptions,
 ) ([]bool, *exceptions.Exception) {
 	if len(bulkInputs) == 0 {
-		return []bool{}, apiexceptions.Station.NoChanges()
+		return []bool{}, apiexceptions.NewStationException().NoChanges()
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -1018,13 +1018,13 @@ func (r *StationRepository) BulkUpdateMany(
 	result := parsedOptions.DB.Raw(sql, valueArgs...).Scan(&updatedIndexes)
 	if result.Error != nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.Station.FailedToUpdate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewStationException().FailedToUpdate().WithOrigin(result.Error)
 	}
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Station.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewStationException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 

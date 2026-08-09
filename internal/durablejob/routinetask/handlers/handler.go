@@ -4,17 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-
 	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
 	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+
+	durablejobexceptions "github.com/HiIamJeff67/notezy-backend/internal/durablejob/exceptions"
 )
 
 type PurposeHandler struct {
@@ -24,14 +23,14 @@ type PurposeHandler struct {
 type PurposeHandlerFunc func(
 	context.Context,
 	routinetasktypes.RoutineTaskAssignment,
-) (*routinetasktypes.PreparedRoutineTask, *exceptions.Exception)
+) (*routinetasktypes.PreparedRoutineTask, error)
 
 func NewPurposeHandler(validator *validator.Validate) PurposeHandler {
 	return PurposeHandler{
 		HandlerFunc: func(
 			ctx context.Context,
 			assignment routinetasktypes.RoutineTaskAssignment,
-		) (*routinetasktypes.PreparedRoutineTask, *exceptions.Exception) {
+		) (*routinetasktypes.PreparedRoutineTask, error) {
 			return prepareAssignment(ctx, validator, assignment)
 		},
 	}
@@ -41,11 +40,13 @@ func prepareAssignment(
 	_ context.Context,
 	validator *validator.Validate,
 	assignment routinetasktypes.RoutineTaskAssignment,
-) (*routinetasktypes.PreparedRoutineTask, *exceptions.Exception) {
+) (*routinetasktypes.PreparedRoutineTask, error) {
 	if assignment.RoutineTaskId == uuid.Nil || assignment.RoutineTaskRecordId == uuid.Nil ||
 		assignment.RoutineId == uuid.Nil || assignment.ActorUserId == uuid.Nil ||
 		assignment.Purpose == "" || len(assignment.Payload) == 0 {
-		return nil, invalidPayloadException(fmt.Errorf("routine task assignment is incomplete"))
+		return nil, durablejobexceptions.NewRoutineTaskException("RoutineTask").InvalidPayload(
+			fmt.Errorf("routine task assignment is incomplete"),
+		)
 	}
 
 	var payload any
@@ -79,30 +80,32 @@ func prepareAssignment(
 	case enums.RoutineTaskPurpose_UpdateRoutine:
 		payload = &routinetasktypes.UpdateRoutineRoutineTaskPayload{}
 	default:
-		return nil, invalidPayloadException(fmt.Errorf("unsupported routine task purpose: %s", assignment.Purpose))
+		return nil, durablejobexceptions.NewRoutineTaskException("RoutineTask").InvalidPayload(
+			fmt.Errorf("unsupported routine task purpose: %s", assignment.Purpose),
+		)
 	}
 
 	if err := json.Unmarshal(assignment.Payload, payload); err != nil {
-		return nil, invalidPayloadException(err)
+		return nil, durablejobexceptions.NewRoutineTaskException("RoutineTask").InvalidPayload(err)
 	}
 	if validator != nil {
 		if err := validator.Struct(payload); err != nil {
-			return nil, invalidPayloadException(err)
+			return nil, durablejobexceptions.NewRoutineTaskException("RoutineTask").InvalidPayload(err)
 		}
 	}
 
 	rawPayload, err := json.Marshal(payload)
 	if err != nil {
-		return nil, invalidPayloadException(err)
+		return nil, durablejobexceptions.NewRoutineTaskException("RoutineTask").InvalidPayload(err)
 	}
 	var payloadValue any
 	if err := json.Unmarshal(rawPayload, &payloadValue); err != nil {
-		return nil, invalidPayloadException(err)
+		return nil, durablejobexceptions.NewRoutineTaskException("RoutineTask").InvalidPayload(err)
 	}
 	payloadValue = matchPayloadValue(payloadValue, assignment.PatternValues, true)
 	preparedPayload, err := json.Marshal(payloadValue)
 	if err != nil {
-		return nil, invalidPayloadException(err)
+		return nil, durablejobexceptions.NewRoutineTaskException("RoutineTask").InvalidPayload(err)
 	}
 
 	return &routinetasktypes.PreparedRoutineTask{
@@ -115,16 +118,6 @@ func prepareAssignment(
 		Payload:             preparedPayload,
 		PreparedAt:          time.Now().UTC(),
 	}, nil
-}
-
-func invalidPayloadException(err error) *exceptions.Exception {
-	return exceptions.New(
-		"InvalidRoutineTaskPayload",
-		"RoutineTask",
-		"Prepare",
-		"Routine task payload is invalid",
-		http.StatusBadRequest,
-	).WithOrigin(err)
 }
 
 func matchPayloadValue(value any, values map[string]string, allowStrings bool) any {

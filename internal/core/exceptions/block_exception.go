@@ -6,11 +6,15 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 )
 
-type blockExceptionDomain struct{}
+type BlockException struct {
+	CoreException
+}
 
-var Block = blockExceptionDomain{}
+func NewBlockException() BlockException {
+	return BlockException{CoreException: NewCoreException("Block")}
+}
 
-func (blockExceptionDomain) NotFound() *exceptions.Exception {
+func (BlockException) NotFound() *exceptions.Exception {
 	return exceptions.New(
 		"NotFound",
 		"Block",
@@ -20,7 +24,7 @@ func (blockExceptionDomain) NotFound() *exceptions.Exception {
 	)
 }
 
-func (blockExceptionDomain) FailedToCreate() *exceptions.Exception {
+func (BlockException) FailedToCreate() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToCreate",
 		"Block",
@@ -31,7 +35,7 @@ func (blockExceptionDomain) FailedToCreate() *exceptions.Exception {
 	)
 }
 
-func (blockExceptionDomain) FailedToUpdate() *exceptions.Exception {
+func (BlockException) FailedToUpdate() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToUpdate",
 		"Block",
@@ -42,7 +46,7 @@ func (blockExceptionDomain) FailedToUpdate() *exceptions.Exception {
 	)
 }
 
-func (blockExceptionDomain) NoChanges() *exceptions.Exception {
+func (BlockException) NoChanges() *exceptions.Exception {
 	return exceptions.New(
 		"NoChanges",
 		"Block",
@@ -52,7 +56,7 @@ func (blockExceptionDomain) NoChanges() *exceptions.Exception {
 	)
 }
 
-func (blockExceptionDomain) FailedToCommitTransaction() *exceptions.Exception {
+func (BlockException) FailedToCommitTransaction() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToCommitTransaction",
 		"Block",
@@ -63,7 +67,7 @@ func (blockExceptionDomain) FailedToCommitTransaction() *exceptions.Exception {
 	)
 }
 
-func (blockExceptionDomain) InvalidDto() *exceptions.Exception {
+func (BlockException) InvalidDto() *exceptions.Exception {
 	return exceptions.New(
 		"InvalidDto",
 		"Block",
@@ -73,7 +77,7 @@ func (blockExceptionDomain) InvalidDto() *exceptions.Exception {
 	)
 }
 
-func (blockExceptionDomain) NoPermission(action string) *exceptions.Exception {
+func (BlockException) NoPermission(action string) *exceptions.Exception {
 	return exceptions.New(
 		"PermissionDenied",
 		"Block",

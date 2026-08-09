@@ -4,15 +4,14 @@ import (
 	"container/heap"
 	"context"
 	"fmt"
-	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
 
+	emailexceptions "github.com/HiIamJeff67/notezy-backend/internal/email/exceptions"
 	emailsenders "github.com/HiIamJeff67/notezy-backend/internal/email/senders"
 	emailtypes "github.com/HiIamJeff67/notezy-backend/internal/email/types"
 )
@@ -52,12 +51,12 @@ func (ewm *EmailWorkerManager) generateTaskID() string {
 /* ============================== Private Methods ============================== */
 
 func (ewm *EmailWorkerManager) processTask(task *emailtypes.EmailTask, workerID int) {
-	exception := ewm.emailSender.Send(context.Background(), task.Object)
-	if exception != nil {
+	err := ewm.emailSender.Send(context.Background(), task.Object)
+	if err != nil {
 		if logs.NotezyLogger != nil {
 			logs.NotezyLogger.Error(
 				context.Background(),
-				exception.Origin(),
+				err,
 				fmt.Sprintf(
 					"Worker %d failed to send email (attempt %d/%d)",
 					workerID,
@@ -189,7 +188,7 @@ func (ewm *EmailWorkerManager) Enqueue(
 	emailTaskType emailtypes.EmailTaskType,
 	maxRetries int,
 	priority int,
-) *exceptions.Exception {
+) error {
 	task := &emailtypes.EmailTask{
 		ID:         ewm.generateTaskID(),
 		Type:       emailTaskType,
@@ -199,14 +198,9 @@ func (ewm *EmailWorkerManager) Enqueue(
 		Priority:   priority,
 	}
 	if err := ewm.enqueueTask(task); err != nil {
-		return exceptions.New(
-			"EnqueueFailed",
-			"Email",
-			"Enqueue",
-			"Failed to enqueue the email task",
-			http.StatusInternalServerError,
-			true,
-		).WithOrigin(err)
+		return emailexceptions.
+			NewDeliveryException("Email").
+			EnqueueFailed(err)
 	}
 	return nil
 }

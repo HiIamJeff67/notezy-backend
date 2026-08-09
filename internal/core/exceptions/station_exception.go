@@ -1,9 +1,11 @@
 package apiexceptions
 
-type stationExceptionDomain struct {
-	domainException
+type StationException struct {
+	CoreException
 }
 
-var Station = stationExceptionDomain{
-	domainException: newDomainException("Station"),
+func NewStationException() StationException {
+	return StationException{
+		CoreException: NewCoreException("Station"),
+	}
 }

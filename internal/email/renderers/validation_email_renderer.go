@@ -9,5 +9,5 @@ type PlainTextEmailRenderer struct {
 }
 
 func NewPlainTextEmailRenderer(config emailconfig.RendererConfig) RendererInterface {
-	return &PlainTextEmailRenderer{Renderer: newRenderer(config, "txt", "RenderPlainText")}
+	return &PlainTextEmailRenderer{Renderer: newRenderer(config, "txt")}
 }

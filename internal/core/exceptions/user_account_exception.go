@@ -6,11 +6,15 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 )
 
-type userAccountExceptionDomain struct{}
+type UserAccountException struct {
+	CoreException
+}
 
-var UserAccount = userAccountExceptionDomain{}
+func NewUserAccountException() UserAccountException {
+	return UserAccountException{CoreException: NewCoreException("UserAccount")}
+}
 
-func (userAccountExceptionDomain) NotFound() *exceptions.Exception {
+func (UserAccountException) NotFound() *exceptions.Exception {
 	return exceptions.New(
 		"NotFound",
 		"UserAccount",
@@ -20,7 +24,7 @@ func (userAccountExceptionDomain) NotFound() *exceptions.Exception {
 	)
 }
 
-func (userAccountExceptionDomain) FailedToCreate() *exceptions.Exception {
+func (UserAccountException) FailedToCreate() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToCreate",
 		"UserAccount",
@@ -31,7 +35,7 @@ func (userAccountExceptionDomain) FailedToCreate() *exceptions.Exception {
 	)
 }
 
-func (userAccountExceptionDomain) FailedToUpdate() *exceptions.Exception {
+func (UserAccountException) FailedToUpdate() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToUpdate",
 		"UserAccount",
@@ -42,7 +46,7 @@ func (userAccountExceptionDomain) FailedToUpdate() *exceptions.Exception {
 	)
 }
 
-func (userAccountExceptionDomain) NoChanges() *exceptions.Exception {
+func (UserAccountException) NoChanges() *exceptions.Exception {
 	return exceptions.New(
 		"NoChanges",
 		"UserAccount",

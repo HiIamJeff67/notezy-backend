@@ -6,11 +6,15 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 )
 
-type themeExceptionDomain struct{}
+type ThemeException struct {
+	CoreException
+}
 
-var Theme = themeExceptionDomain{}
+func NewThemeException() ThemeException {
+	return ThemeException{CoreException: NewCoreException("Theme")}
+}
 
-func (themeExceptionDomain) NotFound() *exceptions.Exception {
+func (ThemeException) NotFound() *exceptions.Exception {
 	return exceptions.New(
 		"NotFound",
 		"Theme",
@@ -20,7 +24,7 @@ func (themeExceptionDomain) NotFound() *exceptions.Exception {
 	)
 }
 
-func (themeExceptionDomain) FailedToCreate() *exceptions.Exception {
+func (ThemeException) FailedToCreate() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToCreate",
 		"Theme",
@@ -31,7 +35,7 @@ func (themeExceptionDomain) FailedToCreate() *exceptions.Exception {
 	)
 }
 
-func (themeExceptionDomain) FailedToUpdate() *exceptions.Exception {
+func (ThemeException) FailedToUpdate() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToUpdate",
 		"Theme",
@@ -42,7 +46,7 @@ func (themeExceptionDomain) FailedToUpdate() *exceptions.Exception {
 	)
 }
 
-func (themeExceptionDomain) FailedToDelete() *exceptions.Exception {
+func (ThemeException) FailedToDelete() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToDelete",
 		"Theme",
@@ -53,7 +57,7 @@ func (themeExceptionDomain) FailedToDelete() *exceptions.Exception {
 	)
 }
 
-func (themeExceptionDomain) NoChanges() *exceptions.Exception {
+func (ThemeException) NoChanges() *exceptions.Exception {
 	return exceptions.New(
 		"NoChanges",
 		"Theme",

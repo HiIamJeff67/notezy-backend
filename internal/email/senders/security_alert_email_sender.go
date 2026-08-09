@@ -4,33 +4,32 @@ import (
 	"context"
 
 	emaileventscontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1/events"
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
-	"github.com/HiIamJeff67/notezy-backend/internal/email/renderers"
+	emailrenderers "github.com/HiIamJeff67/notezy-backend/internal/email/renderers"
 	emailtypes "github.com/HiIamJeff67/notezy-backend/internal/email/types"
 )
 
 const securityAlertEmailSubject = "Security Alert - Some Suspicious Actions Detected on Your Account"
 
 type SecurityAlertEmailSenderInterface interface {
-	Send(context.Context, emaileventscontract.SendSecurityAlertEmailRequestDto) *exceptions.Exception
-	SendAsync(context.Context, emaileventscontract.SendSecurityAlertEmailRequestDto) *exceptions.Exception
+	Send(context.Context, emaileventscontract.SendSecurityAlertEmailRequestDto) error
+	SendAsync(context.Context, emaileventscontract.SendSecurityAlertEmailRequestDto) error
 }
 
 type SecurityAlertEmailSender struct {
-	renderer    renderers.RendererInterface
+	renderer    emailrenderers.RendererInterface
 	enqueueFunc emailtypes.EnqueueFunc
 }
 
-func NewSecurityAlertEmailSender(renderer renderers.RendererInterface, enqueueFunc emailtypes.EnqueueFunc) SecurityAlertEmailSenderInterface {
+func NewSecurityAlertEmailSender(renderer emailrenderers.RendererInterface, enqueueFunc emailtypes.EnqueueFunc) SecurityAlertEmailSenderInterface {
 	return &SecurityAlertEmailSender{renderer: renderer, enqueueFunc: enqueueFunc}
 }
 
 func (s *SecurityAlertEmailSender) Send(
 	_ context.Context,
 	request emaileventscontract.SendSecurityAlertEmailRequestDto,
-) *exceptions.Exception {
-	body, exception := s.renderer.Render(map[string]any{
+) error {
+	body, err := s.renderer.Render(map[string]any{
 		"UserName":         request.UserName,
 		"Status":           request.Status,
 		"AlertType":        request.AlertType,
@@ -38,8 +37,8 @@ func (s *SecurityAlertEmailSender) Send(
 		"TimeOfOccurrence": request.TimeOfOccurrence,
 		"OtherDetails":     request.OtherDetails,
 	})
-	if exception != nil {
-		return exception
+	if err != nil {
+		return err
 	}
 
 	return s.enqueueFunc(
@@ -58,7 +57,7 @@ func (s *SecurityAlertEmailSender) Send(
 func (s *SecurityAlertEmailSender) SendAsync(
 	ctx context.Context,
 	request emaileventscontract.SendSecurityAlertEmailRequestDto,
-) *exceptions.Exception {
+) error {
 	return s.Send(ctx, request)
 }
 

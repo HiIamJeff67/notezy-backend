@@ -1,9 +1,11 @@
 package apiexceptions
 
-type userInfoExceptionDomain struct {
-	domainException
+type UserInfoException struct {
+	CoreException
 }
 
-var UserInfo = userInfoExceptionDomain{
-	domainException: newDomainException("UserInfo"),
+func NewUserInfoException() UserInfoException {
+	return UserInfoException{
+		CoreException: NewCoreException("UserInfo"),
+	}
 }

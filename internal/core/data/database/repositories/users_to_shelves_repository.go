@@ -46,7 +46,7 @@ func (r *UsersToShelvesRepository) GetOne(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&relation)
 	if result.Error != nil {
-		return nil, apiexceptions.Shelf.NotFound().WithOrigin(result.Error)
+		return nil, apiexceptions.NewShelfException().NotFound().WithOrigin(result.Error)
 	}
 
 	return &relation, nil
@@ -66,7 +66,7 @@ func (r *UsersToShelvesRepository) GetMany(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&relations)
 	if result.Error != nil {
-		return nil, apiexceptions.Shelf.NotFound().WithOrigin(result.Error)
+		return nil, apiexceptions.NewShelfException().NotFound().WithOrigin(result.Error)
 	}
 
 	return relations, nil
@@ -86,7 +86,7 @@ func (r *UsersToShelvesRepository) GetManyByRootShelfIdsAndUserId(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&relations)
 	if result.Error != nil {
-		return nil, apiexceptions.Shelf.NotFound().WithOrigin(result.Error)
+		return nil, apiexceptions.NewShelfException().NotFound().WithOrigin(result.Error)
 	}
 
 	return relations, nil
@@ -107,10 +107,10 @@ func (r *UsersToShelvesRepository) CreateOne(
 	}
 	result := parsedOptions.DB.Create(&relation)
 	if result.Error != nil {
-		return nil, apiexceptions.Shelf.FailedToCreate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewShelfException().FailedToCreate().WithOrigin(result.Error)
 	}
 	if result.RowsAffected == 0 {
-		return nil, apiexceptions.Shelf.NoChanges()
+		return nil, apiexceptions.NewShelfException().NoChanges()
 	}
 
 	return r.GetOne(
@@ -127,7 +127,7 @@ func (r *UsersToShelvesRepository) UpsertMany(
 	opts ...options.RepositoryOptions,
 ) ([]schemas.UsersToShelves, *exceptions.Exception) {
 	if len(userIds) != len(permissions) {
-		return nil, apiexceptions.Shelf.InvalidInput("userIds and permissions must have equal lengths")
+		return nil, apiexceptions.NewShelfException().InvalidInput("userIds and permissions must have equal lengths")
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -158,7 +158,7 @@ func (r *UsersToShelvesRepository) UpsertMany(
 		).
 		CreateInBatches(&relations, parsedOptions.BatchSize)
 	if result.Error != nil {
-		return nil, apiexceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewShelfException().FailedToUpdate().WithOrigin(result.Error)
 	}
 
 	return relations, nil
@@ -182,10 +182,10 @@ func (r *UsersToShelvesRepository) UpdateOne(
 		Select("permission").
 		Updates(&relation)
 	if result.Error != nil {
-		return nil, apiexceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewShelfException().FailedToUpdate().WithOrigin(result.Error)
 	}
 	if result.RowsAffected == 0 {
-		return nil, apiexceptions.Shelf.NotFound()
+		return nil, apiexceptions.NewShelfException().NotFound()
 	}
 
 	return r.GetOne(
@@ -205,10 +205,10 @@ func (r *UsersToShelvesRepository) DeleteOne(
 		Where("root_shelf_id = ? AND user_id = ?", rootShelfId, userId).
 		Delete(&schemas.UsersToShelves{})
 	if result.Error != nil {
-		return apiexceptions.Shelf.FailedToDelete().WithOrigin(result.Error)
+		return apiexceptions.NewShelfException().FailedToDelete().WithOrigin(result.Error)
 	}
 	if result.RowsAffected == 0 {
-		return apiexceptions.Shelf.NotFound()
+		return apiexceptions.NewShelfException().NotFound()
 	}
 
 	return nil
@@ -225,10 +225,10 @@ func (r *UsersToShelvesRepository) DeleteMany(
 		Where("root_shelf_id = ? AND user_id IN ?", rootShelfId, userIds).
 		Delete(&schemas.UsersToShelves{})
 	if result.Error != nil {
-		return apiexceptions.Shelf.FailedToDelete().WithOrigin(result.Error)
+		return apiexceptions.NewShelfException().FailedToDelete().WithOrigin(result.Error)
 	}
 	if result.RowsAffected != int64(len(userIds)) {
-		return apiexceptions.Shelf.NotFound()
+		return apiexceptions.NewShelfException().NotFound()
 	}
 
 	return nil
@@ -245,10 +245,10 @@ func (r *UsersToShelvesRepository) DeleteManyByRootShelfIdsAndUserId(
 		Where("root_shelf_id IN ? AND user_id = ?", rootShelfIds, userId).
 		Delete(&schemas.UsersToShelves{})
 	if result.Error != nil {
-		return apiexceptions.Shelf.FailedToDelete().WithOrigin(result.Error)
+		return apiexceptions.NewShelfException().FailedToDelete().WithOrigin(result.Error)
 	}
 	if result.RowsAffected != int64(len(rootShelfIds)) {
-		return apiexceptions.Shelf.NotFound()
+		return apiexceptions.NewShelfException().NotFound()
 	}
 
 	return nil

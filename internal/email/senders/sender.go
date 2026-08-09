@@ -2,19 +2,17 @@ package senders
 
 import (
 	"context"
-	"net/http"
 
 	"gopkg.in/gomail.v2"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-
 	emailconfig "github.com/HiIamJeff67/notezy-backend/internal/email/configs"
+	emailexceptions "github.com/HiIamJeff67/notezy-backend/internal/email/exceptions"
 	emailtypes "github.com/HiIamJeff67/notezy-backend/internal/email/types"
 )
 
 type EmailSenderInterface interface {
-	Send(ctx context.Context, emailObject emailtypes.EmailObject) *exceptions.Exception
-	SendAsync(ctx context.Context, emailObject emailtypes.EmailObject) *exceptions.Exception
+	Send(ctx context.Context, emailObject emailtypes.EmailObject) error
+	SendAsync(ctx context.Context, emailObject emailtypes.EmailObject) error
 }
 
 type EmailSender struct {
@@ -25,15 +23,11 @@ func NewEmailSender(config emailconfig.SMTPConfig) EmailSenderInterface {
 	return &EmailSender{config: config}
 }
 
-func (s *EmailSender) Send(_ context.Context, emailObject emailtypes.EmailObject) *exceptions.Exception {
+func (s *EmailSender) Send(_ context.Context, emailObject emailtypes.EmailObject) error {
 	if !emailObject.EmailContentType.IsValidEnum() {
-		return exceptions.New(
-			"InvalidContentType",
-			"Email",
-			"Send",
-			"The email content type is invalid",
-			http.StatusBadRequest,
-		)
+		return emailexceptions.
+			NewRendererException("Email").
+			InvalidContentType()
 	}
 
 	message := gomail.NewMessage()
@@ -49,19 +43,14 @@ func (s *EmailSender) Send(_ context.Context, emailObject emailtypes.EmailObject
 		s.config.Password,
 	)
 	if err := dialer.DialAndSend(message); err != nil {
-		return exceptions.New(
-			"DeliveryFailed",
-			"Email",
-			"Send",
-			"Failed to send the email",
-			http.StatusInternalServerError,
-			true,
-		).WithOrigin(err)
+		return emailexceptions.
+			NewDeliveryException("Email").
+			DeliveryFailed(err)
 	}
 
 	return nil
 }
 
-func (s *EmailSender) SendAsync(ctx context.Context, emailObject emailtypes.EmailObject) *exceptions.Exception {
+func (s *EmailSender) SendAsync(ctx context.Context, emailObject emailtypes.EmailObject) error {
 	return s.Send(ctx, emailObject)
 }

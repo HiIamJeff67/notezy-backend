@@ -8,15 +8,17 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 )
 
-type authExceptionDomain struct {
-	domainException
+type AuthException struct {
+	CoreException
 }
 
-var Auth = authExceptionDomain{
-	domainException: newDomainException("Auth"),
+func NewAuthException() AuthException {
+	return AuthException{
+		CoreException: NewCoreException("Auth"),
+	}
 }
 
-func (authExceptionDomain) WrongPassword() *exceptions.Exception {
+func (AuthException) WrongPassword() *exceptions.Exception {
 	return exceptions.New(
 		"WrongPassword",
 		"Auth",
@@ -26,7 +28,7 @@ func (authExceptionDomain) WrongPassword() *exceptions.Exception {
 	)
 }
 
-func (authExceptionDomain) WrongAuthCode() *exceptions.Exception {
+func (AuthException) WrongAuthCode() *exceptions.Exception {
 	return exceptions.New(
 		"WrongAuthCode",
 		"Auth",
@@ -36,7 +38,7 @@ func (authExceptionDomain) WrongAuthCode() *exceptions.Exception {
 	)
 }
 
-func (authExceptionDomain) LoginBlockedDueToTryingTooManyTimes(blockedUntil time.Time) *exceptions.Exception {
+func (AuthException) LoginBlockedDueToTryingTooManyTimes(blockedUntil time.Time) *exceptions.Exception {
 	return exceptions.New(
 		"LoginBlockedDueToTryingTooManyTimes",
 		"Auth",
@@ -46,7 +48,7 @@ func (authExceptionDomain) LoginBlockedDueToTryingTooManyTimes(blockedUntil time
 	)
 }
 
-func (authExceptionDomain) AuthCodeBlockedDueToTryingTooManyTimes(blockedUntil time.Time) *exceptions.Exception {
+func (AuthException) AuthCodeBlockedDueToTryingTooManyTimes(blockedUntil time.Time) *exceptions.Exception {
 	return exceptions.New(
 		"AuthCodeBlockedDueToTryingTooManyTimes",
 		"Auth",

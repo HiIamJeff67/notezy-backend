@@ -6,11 +6,15 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 )
 
-type usersToBillingPlansExceptionDomain struct{}
+type UsersToBillingPlansException struct {
+	CoreException
+}
 
-var UsersToBillingPlans = usersToBillingPlansExceptionDomain{}
+func NewUsersToBillingPlansException() UsersToBillingPlansException {
+	return UsersToBillingPlansException{CoreException: NewCoreException("UsersToBillingPlans")}
+}
 
-func (usersToBillingPlansExceptionDomain) NotFound() *exceptions.Exception {
+func (UsersToBillingPlansException) NotFound() *exceptions.Exception {
 	return exceptions.New(
 		"NotFound",
 		"UsersToBillingPlans",
@@ -20,7 +24,7 @@ func (usersToBillingPlansExceptionDomain) NotFound() *exceptions.Exception {
 	)
 }
 
-func (usersToBillingPlansExceptionDomain) FailedToCreate() *exceptions.Exception {
+func (UsersToBillingPlansException) FailedToCreate() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToCreate",
 		"UsersToBillingPlans",
@@ -31,7 +35,7 @@ func (usersToBillingPlansExceptionDomain) FailedToCreate() *exceptions.Exception
 	)
 }
 
-func (usersToBillingPlansExceptionDomain) FailedToUpdate() *exceptions.Exception {
+func (UsersToBillingPlansException) FailedToUpdate() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToUpdate",
 		"UsersToBillingPlans",
@@ -42,7 +46,7 @@ func (usersToBillingPlansExceptionDomain) FailedToUpdate() *exceptions.Exception
 	)
 }
 
-func (usersToBillingPlansExceptionDomain) FailedToDelete() *exceptions.Exception {
+func (UsersToBillingPlansException) FailedToDelete() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToDelete",
 		"UsersToBillingPlans",
@@ -53,7 +57,7 @@ func (usersToBillingPlansExceptionDomain) FailedToDelete() *exceptions.Exception
 	)
 }
 
-func (usersToBillingPlansExceptionDomain) NoChanges() *exceptions.Exception {
+func (UsersToBillingPlansException) NoChanges() *exceptions.Exception {
 	return exceptions.New(
 		"NoChanges",
 		"UsersToBillingPlans",

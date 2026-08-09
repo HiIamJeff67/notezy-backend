@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
@@ -16,6 +15,7 @@ import (
 	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/notification/data/database/repositories"
+	notificationexceptions "github.com/HiIamJeff67/notezy-backend/internal/notification/exceptions"
 )
 
 type NotificationService struct {
@@ -38,60 +38,67 @@ func (s *NotificationService) ConsumeRequested(
 	event eventcontract.EventEnvelope[coreeventscontract.NotificationRequestedData],
 ) error {
 	if event.EventType != coreeventscontract.EventType_NotificationRequested {
-		return errors.New("unsupported notification event type")
+		return notificationexceptions.NewEventException("Notification").UnsupportedEventType()
 	}
 	if event.AggregateId != event.Data.RecipientUserPublicId {
-		return errors.New("notification aggregate does not match recipient")
+		return notificationexceptions.NewEventException("Notification").AggregateRecipientMismatch()
 	}
 	if err := s.validator.Struct(notificationtypescontract.NotificationMetadata{
 		Type:            string(event.Data.Type),
 		Priority:        string(event.Data.Priority),
 		TemplateVersion: event.Data.TemplateVersion,
 	}); err != nil {
-		return err
+		return notificationexceptions.NewEventException("Notification").InvalidMetadata(err)
 	}
 	if event.Data.TemplateVersion != 1 {
-		return fmt.Errorf("unsupported notification template version: %d", event.Data.TemplateVersion)
+		return notificationexceptions.NewEventException("Notification").UnsupportedTemplateVersion(
+			fmt.Errorf("version: %d", event.Data.TemplateVersion),
+		)
 	}
 	switch event.Data.Type {
 	case coreeventscontract.NotificationType_News:
 		if event.Data.TemplateKey != notificationtypescontract.TemplateKey_News {
-			return errors.New("news notification template key is invalid")
+			return notificationexceptions.NewEventException("Notification").InvalidNewsTemplateKey()
 		}
 		var payload notificationtypescontract.NewsPayload
 		if err := json.Unmarshal(event.Data.Payload, &payload); err != nil {
-			return fmt.Errorf("decode news notification payload: %w", err)
+			return notificationexceptions.NewPayloadException("Notification").PayloadDecodeFailed(err)
 		}
 		if err := s.validator.Struct(payload); err != nil {
-			return err
+			return notificationexceptions.NewPayloadException("Notification").InvalidNewsPayload(err)
 		}
 	case coreeventscontract.NotificationType_Warning:
 		if event.Data.TemplateKey != notificationtypescontract.TemplateKey_Warning {
-			return errors.New("warning notification template key is invalid")
+			return notificationexceptions.NewEventException("Notification").InvalidWarningTemplateKey()
 		}
 		var payload notificationtypescontract.WarningPayload
 		if err := json.Unmarshal(event.Data.Payload, &payload); err != nil {
-			return fmt.Errorf("decode warning notification payload: %w", err)
+			return notificationexceptions.NewPayloadException("Notification").PayloadDecodeFailed(err)
 		}
 		if err := s.validator.Struct(payload); err != nil {
-			return err
+			return notificationexceptions.NewPayloadException("Notification").InvalidWarningPayload(err)
 		}
 	case coreeventscontract.NotificationType_Important:
 		if event.Data.TemplateKey != notificationtypescontract.TemplateKey_Important {
-			return errors.New("important notification template key is invalid")
+			return notificationexceptions.NewEventException("Notification").InvalidImportantTemplateKey()
 		}
 		var payload notificationtypescontract.ImportantPayload
 		if err := json.Unmarshal(event.Data.Payload, &payload); err != nil {
-			return fmt.Errorf("decode important notification payload: %w", err)
+			return notificationexceptions.NewPayloadException("Notification").PayloadDecodeFailed(err)
 		}
 		if err := s.validator.Struct(payload); err != nil {
-			return err
+			return notificationexceptions.NewPayloadException("Notification").InvalidImportantPayload(err)
 		}
 	default:
-		return fmt.Errorf("unsupported notification type: %q", event.Data.Type)
+		return notificationexceptions.NewEventException("Notification").UnsupportedType(
+			fmt.Errorf("type: %q", event.Data.Type),
+		)
 	}
 
-	return s.repository.CreateFromRequest(ctx, event)
+	if err := s.repository.CreateFromRequest(ctx, event); err != nil {
+		return notificationexceptions.NewOperationException("Notification").CreateFailed(err)
+	}
+	return nil
 }
 
 func (s *NotificationService) List(
@@ -99,10 +106,10 @@ func (s *NotificationService) List(
 	request *notificationscontract.ListNotificationsRequestDto,
 ) (*notificationscontract.ListNotificationsResponseDto, error) {
 	if request == nil || request.RecipientUserPublicId == uuid.Nil {
-		return nil, errors.New("recipient user public ID is required")
+		return nil, notificationexceptions.NewRequestException("Notification").RecipientRequired()
 	}
 	if err := s.validator.Struct(request); err != nil {
-		return nil, err
+		return nil, notificationexceptions.NewRequestException("Notification").InvalidListRequest(err)
 	}
 	limit := request.Limit
 	if limit <= 0 || limit > 100 {
@@ -110,7 +117,7 @@ func (s *NotificationService) List(
 	}
 	notifications, err := s.repository.List(ctx, request.RecipientUserPublicId, request.Before, limit)
 	if err != nil {
-		return nil, err
+		return nil, notificationexceptions.NewOperationException("Notification").ListFailed(err)
 	}
 	response := &notificationscontract.ListNotificationsResponseDto{
 		Items: make([]notificationscontract.NotificationResponseDto, len(notifications)),
@@ -119,7 +126,7 @@ func (s *NotificationService) List(
 		payload := map[string]any{}
 		if len(notification.Payload) > 0 {
 			if err := json.Unmarshal(notification.Payload, &payload); err != nil {
-				return nil, err
+				return nil, notificationexceptions.NewPayloadException("Notification").ResponsePayloadDecodeFailed(err)
 			}
 		}
 		response.Items[index] = notificationscontract.NotificationResponseDto{
@@ -148,14 +155,14 @@ func (s *NotificationService) CountUnread(
 	request *notificationscontract.CountUnreadNotificationsRequestDto,
 ) (*notificationscontract.CountUnreadNotificationsResponseDto, error) {
 	if request == nil || request.RecipientUserPublicId == uuid.Nil {
-		return nil, errors.New("recipient user public ID is required")
+		return nil, notificationexceptions.NewRequestException("Notification").RecipientRequired()
 	}
 	if err := s.validator.Struct(request); err != nil {
-		return nil, err
+		return nil, notificationexceptions.NewRequestException("Notification").InvalidCountRequest(err)
 	}
 	count, err := s.repository.CountUnread(ctx, request.RecipientUserPublicId)
 	if err != nil {
-		return nil, err
+		return nil, notificationexceptions.NewOperationException("Notification").CountUnreadFailed(err)
 	}
 
 	return &notificationscontract.CountUnreadNotificationsResponseDto{Count: count}, nil
@@ -166,14 +173,14 @@ func (s *NotificationService) MarkRead(
 	request *notificationscontract.MarkNotificationsReadRequestDto,
 ) (*notificationscontract.MarkNotificationsReadResponseDto, error) {
 	if request == nil || request.RecipientUserPublicId == uuid.Nil {
-		return nil, errors.New("recipient user public ID is required")
+		return nil, notificationexceptions.NewRequestException("Notification").RecipientRequired()
 	}
 	if err := s.validator.Struct(request); err != nil {
-		return nil, err
+		return nil, notificationexceptions.NewRequestException("Notification").InvalidMarkReadRequest(err)
 	}
 	count, err := s.repository.MarkRead(ctx, request.RecipientUserPublicId, request.NotificationIds)
 	if err != nil {
-		return nil, err
+		return nil, notificationexceptions.NewOperationException("Notification").MarkReadFailed(err)
 	}
 
 	return &notificationscontract.MarkNotificationsReadResponseDto{UpdatedCount: count}, nil
@@ -184,14 +191,14 @@ func (s *NotificationService) SoftDelete(
 	request *notificationscontract.DeleteNotificationsRequestDto,
 ) (*notificationscontract.DeleteNotificationsResponseDto, error) {
 	if request == nil || request.RecipientUserPublicId == uuid.Nil {
-		return nil, errors.New("recipient user public ID is required")
+		return nil, notificationexceptions.NewRequestException("Notification").RecipientRequired()
 	}
 	if err := s.validator.Struct(request); err != nil {
-		return nil, err
+		return nil, notificationexceptions.NewRequestException("Notification").InvalidDeleteRequest(err)
 	}
 	count, err := s.repository.SoftDelete(ctx, request.RecipientUserPublicId, request.NotificationIds)
 	if err != nil {
-		return nil, err
+		return nil, notificationexceptions.NewOperationException("Notification").DeleteFailed(err)
 	}
 
 	return &notificationscontract.DeleteNotificationsResponseDto{DeletedCount: count}, nil
@@ -202,7 +209,11 @@ func (s *NotificationService) HardDelete(
 	now time.Time,
 	retention time.Duration,
 ) (int64, error) {
-	return s.repository.DeleteExpired(ctx, now, retention)
+	count, err := s.repository.DeleteExpired(ctx, now, retention)
+	if err != nil {
+		return 0, notificationexceptions.NewOperationException("Notification").HardDeleteFailed(err)
+	}
+	return count, nil
 }
 
 func (s *NotificationService) DeleteForUser(
@@ -210,9 +221,12 @@ func (s *NotificationService) DeleteForUser(
 	userPublicId uuid.UUID,
 ) error {
 	if userPublicId == uuid.Nil {
-		return errors.New("user public ID is required")
+		return notificationexceptions.NewRequestException("Notification").UserRequired()
 	}
 
 	_, err := s.repository.DeleteForUser(ctx, userPublicId)
-	return err
+	if err != nil {
+		return notificationexceptions.NewOperationException("Notification").DeleteForUserFailed(err)
+	}
+	return nil
 }

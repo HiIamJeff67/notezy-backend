@@ -3,7 +3,6 @@ package routinetask
 import (
 	"context"
 	"errors"
-	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -13,6 +12,7 @@ import (
 	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1"
 	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
 	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	handlers "github.com/HiIamJeff67/notezy-backend/internal/durablejob/routinetask/handlers"
 	validation "github.com/HiIamJeff67/notezy-backend/internal/durablejob/validations"
@@ -140,31 +140,37 @@ func (hm *HandlerManager) Manage(
 				hm.workerPool.Done()
 			}()
 
-			preparedTask, exception := registry.HandlerFunc(ctx, assignment)
-			if exception != nil || preparedTask == nil {
+			preparedTask, err := registry.HandlerFunc(ctx, assignment)
+			if err != nil || preparedTask == nil {
 				errorCode := enums.RoutineTaskRecordErrorCode_HandlerFailed
 				errorReason := "routine task preparation failed"
-				if exception != nil {
-					switch {
-					case errors.Is(exception.Origin(), context.Canceled):
-						errorCode = enums.RoutineTaskRecordErrorCode_Canceled
-					case errors.Is(exception.Origin(), context.DeadlineExceeded):
-						errorCode = enums.RoutineTaskRecordErrorCode_Timeout
-					default:
-						switch exception.HTTPStatusCode() {
-						case http.StatusBadRequest:
+				if err != nil {
+					var durableJobError *exceptions.Exception
+					if errors.As(err, &durableJobError) {
+						switch durableJobError.Reason {
+						case "Canceled":
+							errorCode = enums.RoutineTaskRecordErrorCode_Canceled
+						case "Timeout":
+							errorCode = enums.RoutineTaskRecordErrorCode_Timeout
+						case "InvalidRoutineTaskPayload":
 							errorCode = enums.RoutineTaskRecordErrorCode_PayloadInvalid
-						case http.StatusNotFound:
+						case "TargetNotFound":
 							errorCode = enums.RoutineTaskRecordErrorCode_TargetNotFound
-						case http.StatusUnauthorized, http.StatusForbidden:
+						case "PermissionDenied":
 							errorCode = enums.RoutineTaskRecordErrorCode_PermissionDenied
 						}
-					}
-					if exception.Reason != "" {
-						errorReason = exception.Reason
-						if len(errorReason) > 256 {
-							errorReason = errorReason[:256]
+						if durableJobError.Reason != "" {
+							errorReason = durableJobError.Reason
 						}
+					} else if errors.Is(err, context.Canceled) {
+						errorCode = enums.RoutineTaskRecordErrorCode_Canceled
+					} else if errors.Is(err, context.DeadlineExceeded) {
+						errorCode = enums.RoutineTaskRecordErrorCode_Timeout
+					} else {
+						errorReason = err.Error()
+					}
+					if len(errorReason) > 256 {
+						errorReason = errorReason[:256]
 					}
 				}
 				hm.appendFailure(failedRoutineTask{

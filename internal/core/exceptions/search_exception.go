@@ -6,11 +6,15 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 )
 
-type searchExceptionDomain struct{}
+type SearchException struct {
+	CoreException
+}
 
-var Search = searchExceptionDomain{}
+func NewSearchException() SearchException {
+	return SearchException{CoreException: NewCoreException("Search")}
+}
 
-func (searchExceptionDomain) FailedToDecode() *exceptions.Exception {
+func (SearchException) FailedToDecode() *exceptions.Exception {
 	return exceptions.New(
 		"CursorDecodeFailed",
 		"Search",
@@ -21,7 +25,7 @@ func (searchExceptionDomain) FailedToDecode() *exceptions.Exception {
 	)
 }
 
-func (searchExceptionDomain) FailedToEncode() *exceptions.Exception {
+func (SearchException) FailedToEncode() *exceptions.Exception {
 	return exceptions.New(
 		"CursorEncodeFailed",
 		"Search",
@@ -32,7 +36,7 @@ func (searchExceptionDomain) FailedToEncode() *exceptions.Exception {
 	)
 }
 
-func (searchExceptionDomain) FailedToUnmarshalSearchCursor() *exceptions.Exception {
+func (SearchException) FailedToUnmarshalSearchCursor() *exceptions.Exception {
 	return exceptions.New(
 		"CursorEncodingFailed",
 		"Search",

@@ -57,8 +57,8 @@ func (r *RoutineTagRepository) GetOneById(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&routineTag)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.RoutineTag.NotFound().WithOrigin(result.Error)},
-		{First: routineTag.Id == uuid.Nil, Second: apiexceptions.RoutineTag.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineTagException().NotFound().WithOrigin(result.Error)},
+		{First: routineTag.Id == uuid.Nil, Second: apiexceptions.NewRoutineTagException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -82,8 +82,8 @@ func (r *RoutineTagRepository) GetManyByIds(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&routineTags)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.RoutineTag.NotFound().WithOrigin(result.Error)},
-		{First: len(routineTags) == 0, Second: apiexceptions.RoutineTag.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineTagException().NotFound().WithOrigin(result.Error)},
+		{First: len(routineTags) == 0, Second: apiexceptions.NewRoutineTagException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -108,7 +108,7 @@ func (r *RoutineTagRepository) GetAllByUserId(
 		Order(`"RoutineTagTable".id ASC`).
 		Find(&routineTags)
 	if result.Error != nil {
-		return nil, apiexceptions.RoutineTag.NotFound().WithOrigin(result.Error)
+		return nil, apiexceptions.NewRoutineTagException().NotFound().WithOrigin(result.Error)
 	}
 
 	return routineTags, nil
@@ -135,15 +135,15 @@ func (r *RoutineTagRepository) CreateOne(
 	}
 	if err := copier.Copy(&newRoutineTag, &input); err != nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.RoutineTag.InvalidInput().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineTagException().InvalidInput().WithOrigin(err)
 	}
 
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTag{}).
 		Create(&newRoutineTag)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.RoutineTag.FailedToCreate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTag.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineTagException().FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewRoutineTagException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -152,7 +152,7 @@ func (r *RoutineTagRepository) CreateOne(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.RoutineTag.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewRoutineTagException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -165,7 +165,7 @@ func (r *RoutineTagRepository) CreateMany(
 	opts ...options.RepositoryOptions,
 ) ([]uuid.UUID, *exceptions.Exception) {
 	if len(input) == 0 {
-		return nil, apiexceptions.RoutineTag.NoChanges()
+		return nil, apiexceptions.NewRoutineTagException().NoChanges()
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -186,7 +186,7 @@ func (r *RoutineTagRepository) CreateMany(
 		}
 		if err := copier.Copy(&newRoutineTag, &in); err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.RoutineTag.InvalidInput().WithOrigin(err)
+			return nil, apiexceptions.NewRoutineTagException().InvalidInput().WithOrigin(err)
 		}
 		if newRoutineTag.Id == uuid.Nil {
 			newRoutineTag.Id = uuid.New()
@@ -199,15 +199,15 @@ func (r *RoutineTagRepository) CreateMany(
 
 	if len(newRoutineTags) == 0 {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.RoutineTag.NoChanges()
+		return nil, apiexceptions.NewRoutineTagException().NoChanges()
 	}
 
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTag{}).
 		CreateInBatches(&newRoutineTags, parsedOptions.BatchSize)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.RoutineTag.FailedToCreate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTag.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineTagException().FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewRoutineTagException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -221,7 +221,7 @@ func (r *RoutineTagRepository) CreateMany(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.RoutineTag.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewRoutineTagException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -261,8 +261,8 @@ func (r *RoutineTagRepository) UpdateOneById(
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.RoutineTag.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTag.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineTagException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewRoutineTagException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -270,7 +270,7 @@ func (r *RoutineTagRepository) UpdateOneById(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.RoutineTag.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewRoutineTagException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -283,7 +283,7 @@ func (r *RoutineTagRepository) UpdateManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(input) == 0 {
-		return apiexceptions.RoutineTag.NoChanges()
+		return apiexceptions.NewRoutineTagException().NoChanges()
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -302,7 +302,7 @@ func (r *RoutineTagRepository) UpdateManyByIds(
 	validRoutineTags, exception := r.GetManyByIds(ids, userId, nil, opts...)
 	if exception != nil {
 		parsedOptions.DB.Rollback()
-		return apiexceptions.RoutineTag.NotFound()
+		return apiexceptions.NewRoutineTagException().NotFound()
 	}
 
 	isRoutineTagValid := make(map[uuid.UUID]bool, len(validRoutineTags))
@@ -331,7 +331,7 @@ func (r *RoutineTagRepository) UpdateManyByIds(
 
 	if len(valuePlaceholders) == 0 {
 		parsedOptions.DB.Rollback()
-		return apiexceptions.RoutineTag.NoChanges()
+		return apiexceptions.NewRoutineTagException().NoChanges()
 	}
 
 	sql := fmt.Sprintf(`
@@ -349,8 +349,8 @@ func (r *RoutineTagRepository) UpdateManyByIds(
 	`, strings.Join(valuePlaceholders, ","))
 	result := parsedOptions.DB.Exec(sql, valueArgs...)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.RoutineTag.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTag.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineTagException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewRoutineTagException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return exception
@@ -359,7 +359,7 @@ func (r *RoutineTagRepository) UpdateManyByIds(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return apiexceptions.RoutineTag.FailedToCommitTransaction().WithOrigin(err)
+			return apiexceptions.NewRoutineTagException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -378,8 +378,8 @@ func (r *RoutineTagRepository) HardDeleteOneById(
 		Where(`"RoutineTagTable".id = ? AND "RoutineTagTable".owner_id = ?`, id, userId).
 		Delete(&schemas.RoutineTag{})
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.RoutineTag.FailedToDelete().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTag.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineTagException().FailedToDelete().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewRoutineTagException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -393,7 +393,7 @@ func (r *RoutineTagRepository) HardDeleteManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(ids) == 0 {
-		return apiexceptions.RoutineTag.NoChanges()
+		return apiexceptions.NewRoutineTagException().NoChanges()
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -403,8 +403,8 @@ func (r *RoutineTagRepository) HardDeleteManyByIds(
 		Where(`"RoutineTagTable".id IN ? AND "RoutineTagTable".owner_id = ?`, ids, userId).
 		Delete(&schemas.RoutineTag{})
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.RoutineTag.FailedToDelete().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTag.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineTagException().FailedToDelete().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewRoutineTagException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}

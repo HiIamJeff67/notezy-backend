@@ -279,7 +279,7 @@ func (s *AuthService) Register(
 	ctx context.Context, reqDto *apicontract.RegisterRequestDto,
 ) (*apicontract.RegisterResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Auth.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewAuthException().InvalidDto().WithOrigin(err)
 	}
 
 	// put the hash part outside the transaction to decrease its blocking time from heavily hashing operation
@@ -402,7 +402,7 @@ func (s *AuthService) Register(
 	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.User.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewUserException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	exception = s.userDataCacheClient.Set(
@@ -454,7 +454,7 @@ func (s *AuthService) RegisterViaGoogle(
 	ctx context.Context, reqDto *apicontract.RegisterViaGoogleRequestDto,
 ) (*apicontract.RegisterViaGoogleResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Auth.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewAuthException().InvalidDto().WithOrigin(err)
 	}
 
 	userInfo, exception := s.oauthService.GetGoogleUserInfo(ctx, reqDto.Body.AuthorizationCode)
@@ -485,7 +485,7 @@ func (s *AuthService) RegisterViaGoogle(
 	reg, err := regexp.Compile("[^a-z0-9]+")
 	if err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.Auth.FailedToCompileRegularExpression().WithOrigin(err)
+		return nil, apiexceptions.NewAuthException().FailedToCompileRegularExpression().WithOrigin(err)
 	}
 	fakeName := strings.ToLower(uuid.New().String())
 	fakeName = reg.ReplaceAllString(fakeName, "")
@@ -636,7 +636,7 @@ func (s *AuthService) RegisterViaGoogle(
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.User.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewUserException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	// send the welcome email to the registered user
@@ -664,7 +664,7 @@ func (s *AuthService) Login(
 	ctx context.Context, reqDto *apicontract.LoginRequestDto,
 ) (*apicontract.LoginResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
+		return nil, apiexceptions.NewUserException().InvalidInput().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
@@ -694,17 +694,17 @@ func (s *AuthService) Login(
 		}
 	} else {
 		tx.Rollback()
-		return nil, apiexceptions.Auth.InvalidDto()
+		return nil, apiexceptions.NewAuthException().InvalidDto()
 	}
 
 	if user == nil {
 		tx.Rollback()
-		return nil, apiexceptions.Auth.InvalidDto()
+		return nil, apiexceptions.NewAuthException().InvalidDto()
 	}
 
 	if user.BlockLoginUntil.After(time.Now()) {
 		tx.Rollback()
-		return nil, apiexceptions.Auth.LoginBlockedDueToTryingTooManyTimes(user.BlockLoginUntil)
+		return nil, apiexceptions.NewAuthException().LoginBlockedDueToTryingTooManyTimes(user.BlockLoginUntil)
 	}
 
 	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(reqDto.Body.Password)) != nil {
@@ -734,11 +734,11 @@ func (s *AuthService) Login(
 
 		if blockLoginUntil != nil {
 			tx.Rollback()
-			return nil, apiexceptions.Auth.LoginBlockedDueToTryingTooManyTimes(*blockLoginUntil)
+			return nil, apiexceptions.NewAuthException().LoginBlockedDueToTryingTooManyTimes(*blockLoginUntil)
 		}
 
 		tx.Rollback()
-		return nil, apiexceptions.Auth.WrongPassword() // login procedure early ends here
+		return nil, apiexceptions.NewAuthException().WrongPassword() // login procedure early ends here
 	}
 
 	if user.UserAgent != reqDto.Header.UserAgent {
@@ -824,7 +824,7 @@ func (s *AuthService) Login(
 			)
 		if err != nil {
 			tx.Rollback()
-			return nil, apiexceptions.User.NotFound().WithOrigin(err)
+			return nil, apiexceptions.NewUserException().NotFound().WithOrigin(err)
 		}
 
 		newUserDataCache := userdata.UserDataCache{
@@ -881,7 +881,7 @@ func (s *AuthService) Login(
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.User.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewUserException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &apicontract.LoginResponseDto{
@@ -901,7 +901,7 @@ func (s *AuthService) LoginViaGoogle(
 	ctx context.Context, reqDto *apicontract.LoginViaGoogleRequestDto,
 ) (*apicontract.LoginViaGoogleResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Auth.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewAuthException().InvalidDto().WithOrigin(err)
 	}
 
 	userInfo, exception := s.oauthService.GetGoogleUserInfo(ctx, reqDto.Body.AuthorizationCode)
@@ -925,12 +925,12 @@ func (s *AuthService) LoginViaGoogle(
 
 	if user == nil {
 		tx.Rollback()
-		return nil, apiexceptions.Auth.InvalidDto()
+		return nil, apiexceptions.NewAuthException().InvalidDto()
 	}
 
 	if user.BlockLoginUntil.After(time.Now()) {
 		tx.Rollback()
-		return nil, apiexceptions.Auth.LoginBlockedDueToTryingTooManyTimes(user.BlockLoginUntil)
+		return nil, apiexceptions.NewAuthException().LoginBlockedDueToTryingTooManyTimes(user.BlockLoginUntil)
 	}
 
 	if user.UserAccount.GoogleCredential == nil || userInfo.Id != *user.UserAccount.GoogleCredential {
@@ -960,11 +960,11 @@ func (s *AuthService) LoginViaGoogle(
 
 		if blockLoginUntil != nil {
 			tx.Rollback()
-			return nil, apiexceptions.Auth.LoginBlockedDueToTryingTooManyTimes(*blockLoginUntil)
+			return nil, apiexceptions.NewAuthException().LoginBlockedDueToTryingTooManyTimes(*blockLoginUntil)
 		}
 
 		tx.Rollback()
-		return nil, apiexceptions.Auth.WrongPassword() // login via google procedure early ends here
+		return nil, apiexceptions.NewAuthException().WrongPassword() // login via google procedure early ends here
 	}
 
 	if user.UserAgent != reqDto.Header.UserAgent {
@@ -1050,7 +1050,7 @@ func (s *AuthService) LoginViaGoogle(
 			)
 		if err != nil {
 			tx.Rollback()
-			return nil, apiexceptions.User.NotFound().WithOrigin(err)
+			return nil, apiexceptions.NewUserException().NotFound().WithOrigin(err)
 		}
 
 		newUserDataCache := userdata.UserDataCache{
@@ -1107,7 +1107,7 @@ func (s *AuthService) LoginViaGoogle(
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.User.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewUserException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &apicontract.LoginViaGoogleResponseDto{
@@ -1127,7 +1127,7 @@ func (s *AuthService) Logout(
 	ctx context.Context, reqDto *apicontract.LogoutRequestDto,
 ) (*apicontract.LogoutResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Auth.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewAuthException().InvalidDto().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
@@ -1188,7 +1188,7 @@ func (s *AuthService) Logout(
 	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.User.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewUserException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	exception = s.userDataCacheClient.Delete(actorUserName)
@@ -1205,7 +1205,7 @@ func (s *AuthService) SendAuthCode(
 	ctx context.Context, reqDto *apicontract.SendAuthCodeRequestDto,
 ) (*apicontract.SendAuthCodeResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
+		return nil, apiexceptions.NewUserException().InvalidInput().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1224,7 +1224,7 @@ func (s *AuthService) SendAuthCode(
 	).Row().
 		Scan(&output.Name, &output.UserAgent, &output.BlockAuthCodeUntil, &output.Now)
 	if err != nil {
-		return nil, apiexceptions.Auth.AuthCodeBlockedDueToTryingTooManyTimes(output.BlockAuthCodeUntil).WithOrigin(err)
+		return nil, apiexceptions.NewAuthException().AuthCodeBlockedDueToTryingTooManyTimes(output.BlockAuthCodeUntil).WithOrigin(err)
 	}
 
 	if exception := s.emailClient.SendValidationEmail(ctx, emaildto.SendValidationEmailRequestDto{
@@ -1248,7 +1248,7 @@ func (s *AuthService) ValidateEmail(
 	ctx context.Context, reqDto *apicontract.ValidateEmailRequestDto,
 ) (*apicontract.ValidateEmailResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
+		return nil, apiexceptions.NewUserException().InvalidInput().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
@@ -1262,7 +1262,7 @@ func (s *AuthService) ValidateEmail(
 		Row().
 		Scan(&updatedAt)
 	if err != nil {
-		return nil, apiexceptions.User.FailedToUpdate().WithOrigin(err)
+		return nil, apiexceptions.NewUserException().FailedToUpdate().WithOrigin(err)
 	}
 
 	return &apicontract.ValidateEmailResponseDto{
@@ -1274,7 +1274,7 @@ func (s *AuthService) ResetEmail(
 	ctx context.Context, reqDto *apicontract.ResetEmailRequestDto,
 ) (*apicontract.ResetEmailResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
+		return nil, apiexceptions.NewUserException().InvalidInput().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
@@ -1289,7 +1289,7 @@ func (s *AuthService) ResetEmail(
 		Scan(&updatedAt)
 	if err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.User.FailedToUpdate().WithOrigin(err)
+		return nil, apiexceptions.NewUserException().FailedToUpdate().WithOrigin(err)
 	}
 
 	authCode := s.authCodeGenerator.Generate()
@@ -1312,7 +1312,7 @@ func (s *AuthService) ResetEmail(
 	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.User.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewUserException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &apicontract.ResetEmailResponseDto{
@@ -1324,7 +1324,7 @@ func (s *AuthService) ForgetPassword(
 	ctx context.Context, reqDto *apicontract.ForgetPasswordRequestDto,
 ) (*apicontract.ForgetPasswordResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
+		return nil, apiexceptions.NewUserException().InvalidInput().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
@@ -1354,12 +1354,12 @@ func (s *AuthService) ForgetPassword(
 		}
 	} else {
 		tx.Rollback()
-		return nil, apiexceptions.Auth.InvalidDto()
+		return nil, apiexceptions.NewAuthException().InvalidDto()
 	}
 
 	if reqDto.Body.AuthCode != user.UserAccount.AuthCode {
 		tx.Rollback()
-		return nil, apiexceptions.Auth.WrongAuthCode()
+		return nil, apiexceptions.NewAuthException().WrongAuthCode()
 	}
 
 	newAccessToken, exception := s.generateAccessToken(user.PublicId, user.Name, user.Email, user.UserAgent)
@@ -1450,7 +1450,7 @@ func (s *AuthService) ForgetPassword(
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.User.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewUserException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &apicontract.ForgetPasswordResponseDto{
@@ -1462,7 +1462,7 @@ func (s *AuthService) ResetMe(
 	ctx context.Context, reqDto *apicontract.ResetMeRequestDto,
 ) (*apicontract.ResetMeResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
+		return nil, apiexceptions.NewUserException().InvalidInput().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
@@ -1481,13 +1481,13 @@ func (s *AuthService) ResetMe(
 		First(&resetUserAccount)
 	if err := result.Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.UserAccount.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewUserAccountException().NotFound().WithOrigin(err)
 	}
 
 	// delete the user info
 	if err := tx.Where("user_id = ?", actorUserId).Delete(&schemas.UserInfo{}).Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.UserInfo.FailedToDelete().WithOrigin(err)
+		return nil, apiexceptions.NewUserInfoException().FailedToDelete().WithOrigin(err)
 	}
 	// and then re-create a new user info
 	if _, exception := s.userInfoRepository.CreateOneByUserId(
@@ -1503,7 +1503,7 @@ func (s *AuthService) ResetMe(
 	// delete the user setting
 	if err := tx.Where("user_id = ?", actorUserId).Delete(&schemas.UserSetting{}).Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.UserSetting.FailedToDelete().WithOrigin(err)
+		return nil, apiexceptions.NewUserSettingException().FailedToDelete().WithOrigin(err)
 	}
 	// and then re-create a new user setting
 	if _, exception := s.userSettingRepository.CreateOneByUserId(
@@ -1543,7 +1543,7 @@ func (s *AuthService) ResetMe(
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.User.FailedToCommitTransaction().WithDetails(err)
+		return nil, apiexceptions.NewUserException().FailedToCommitTransaction().WithDetails(err)
 	}
 
 	return &apicontract.ResetMeResponseDto{
@@ -1555,7 +1555,7 @@ func (s *AuthService) DeleteMe(
 	ctx context.Context, reqDto *apicontract.DeleteMeRequestDto,
 ) (*apicontract.DeleteMeResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
+		return nil, apiexceptions.NewUserException().InvalidInput().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
@@ -1585,11 +1585,11 @@ func (s *AuthService) DeleteMe(
 	deleteResult := tx.Exec(authsql.DeleteMeSQL, actorUserId, reqDto.Body.AuthCode)
 	if deleteResult.Error != nil {
 		tx.Rollback()
-		return nil, apiexceptions.User.FailedToDelete().WithOrigin(deleteResult.Error)
+		return nil, apiexceptions.NewUserException().FailedToDelete().WithOrigin(deleteResult.Error)
 	}
 	if deleteResult.RowsAffected == 0 {
 		tx.Rollback()
-		return nil, apiexceptions.User.FailedToDelete()
+		return nil, apiexceptions.NewUserException().FailedToDelete()
 	}
 	if err := s.outboxRepository.EnqueueUserSessionsRevoked(
 		tx,
@@ -1624,7 +1624,7 @@ func (s *AuthService) DeleteMe(
 	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.User.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewUserException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	exception = s.userDataCacheClient.Delete(actorUserName)

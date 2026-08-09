@@ -6,11 +6,15 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 )
 
-type itemExceptionDomain struct{}
+type ItemException struct {
+	CoreException
+}
 
-var Item = itemExceptionDomain{}
+func NewItemException() ItemException {
+	return ItemException{CoreException: NewCoreException("Item")}
+}
 
-func (itemExceptionDomain) NotFound() *exceptions.Exception {
+func (ItemException) NotFound() *exceptions.Exception {
 	return exceptions.New(
 		"NotFound",
 		"Item",
@@ -20,7 +24,7 @@ func (itemExceptionDomain) NotFound() *exceptions.Exception {
 	)
 }
 
-func (itemExceptionDomain) NoPermission(_ ...string) *exceptions.Exception {
+func (ItemException) NoPermission(_ ...string) *exceptions.Exception {
 	return exceptions.New(
 		"PermissionDenied",
 		"Item",

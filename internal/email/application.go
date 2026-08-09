@@ -12,7 +12,7 @@ import (
 	observability "github.com/HiIamJeff67/notezy-backend/shared/platform/observability"
 
 	emailconfig "github.com/HiIamJeff67/notezy-backend/internal/email/configs"
-	"github.com/HiIamJeff67/notezy-backend/internal/email/renderers"
+	renderers "github.com/HiIamJeff67/notezy-backend/internal/email/renderers"
 	emailsenders "github.com/HiIamJeff67/notezy-backend/internal/email/senders"
 	coretransport "github.com/HiIamJeff67/notezy-backend/internal/email/transports/core"
 	status "github.com/HiIamJeff67/notezy-backend/internal/email/transports/status"
@@ -43,23 +43,23 @@ func Start() func() {
 	)
 	deliverySender := emailsenders.NewEmailSender(config.SMTP)
 	emailWorkerManager := NewEmailWorkerManager(16, deliverySender)
-	welcomeRenderer, exception := renderers.NewRenderer(config.Renderers.Welcome)
-	if exception != nil {
+	welcomeRenderer, err := renderers.NewRenderer(config.Renderers.Welcome)
+	if err != nil {
 		emailWorkerManager.Shutdown()
 		shutdownObservability()
-		panic(exception)
+		panic(err)
 	}
-	validationRenderer, exception := renderers.NewRenderer(config.Renderers.Validation)
-	if exception != nil {
+	validationRenderer, err := renderers.NewRenderer(config.Renderers.Validation)
+	if err != nil {
 		emailWorkerManager.Shutdown()
 		shutdownObservability()
-		panic(exception)
+		panic(err)
 	}
-	securityAlertRenderer, exception := renderers.NewRenderer(config.Renderers.SecurityAlert)
-	if exception != nil {
+	securityAlertRenderer, err := renderers.NewRenderer(config.Renderers.SecurityAlert)
+	if err != nil {
 		emailWorkerManager.Shutdown()
 		shutdownObservability()
-		panic(exception)
+		panic(err)
 	}
 	sender := coretransport.NewSender(
 		emailsenders.NewWelcomeEmailSender(welcomeRenderer, emailWorkerManager.Enqueue),

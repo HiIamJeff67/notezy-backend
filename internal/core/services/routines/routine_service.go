@@ -185,7 +185,7 @@ func (s *RoutineService) visualizeMyRoutineTimeCount(
 		Order("buckets.bucket_start ASC").
 		Scan(&buckets)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.Routine.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().NotFound().WithOrigin(err)
 	}
 
 	data := make([]apicontract.RoutineCountDatum, len(buckets))
@@ -204,7 +204,7 @@ func (s *RoutineService) visualizeMyRoutineTimeCount(
 		}
 		meta, err := json.Marshal(metadata)
 		if err != nil {
-			return nil, apiexceptions.Routine.FailedToMarshalData(metadata)
+			return nil, apiexceptions.NewRoutineException().FailedToMarshalData(metadata)
 		}
 
 		data[index] = apicontract.RoutineCountDatum{
@@ -230,7 +230,7 @@ func (s *RoutineService) GetMyRoutineById(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -318,7 +318,7 @@ func (s *RoutineService) GetMyRoutinesByStationId(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -359,7 +359,7 @@ func (s *RoutineService) GetMyRoutinesByStationId(
 		Order(`"RoutineTable".id ASC`).
 		Find(&routines)
 	if result.Error != nil {
-		return nil, apiexceptions.Routine.NotFound().WithOrigin(result.Error)
+		return nil, apiexceptions.NewRoutineException().NotFound().WithOrigin(result.Error)
 	}
 	permittedItemIdentitySet, exception := s.filterReadableRoutineItems(
 		ctx,
@@ -420,13 +420,13 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 	if !reqDto.Param.From.Before(reqDto.Param.To) { // make sure from is before to
-		return nil, apiexceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("from must be before to"))
+		return nil, apiexceptions.NewRoutineException().InvalidInput().WithOrigin(fmt.Errorf("from must be before to"))
 	}
 	if !times.IsTimeWithin(reqDto.Param.From, reqDto.Param.To, 360*24*time.Hour) { // make sure the time range is within 360 days which is approximate 1 year
-		return nil, apiexceptions.Routine.QueriedTimeRangeTooLarge(reqDto.Param.From, reqDto.Param.To)
+		return nil, apiexceptions.NewRoutineException().QueriedTimeRangeTooLarge(reqDto.Param.From, reqDto.Param.To)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -519,7 +519,7 @@ func (s *RoutineService) CreateRoutineByStationId(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -563,7 +563,7 @@ func (s *RoutineService) CreateRoutinesByStationIds(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -611,7 +611,7 @@ func (s *RoutineService) UpdateMyRoutineById(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -657,7 +657,7 @@ func (s *RoutineService) UpdateMyRoutinesByIds(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -709,7 +709,7 @@ func (s *RoutineService) LinkRoutineTagById(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
@@ -731,7 +731,7 @@ func (s *RoutineService) LinkRoutineTagById(
 	)
 	if exception != nil {
 		tx.Rollback()
-		return nil, apiexceptions.Routine.NoPermission("get the routine")
+		return nil, apiexceptions.NewRoutineException().NoPermission("get the routine")
 	}
 
 	if _, exception := s.routineTagRepository.GetOneById(
@@ -767,8 +767,8 @@ func (s *RoutineService) LinkRoutineTagById(
 			Create(&newRoutinesToTags)
 	}
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Routine.FailedToLinkRoutineTags().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Routine.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineException().FailedToLinkRoutineTags().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewRoutineException().NoChanges()},
 	}); exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -776,7 +776,7 @@ func (s *RoutineService) LinkRoutineTagById(
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.Routine.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &apicontract.LinkRoutineTagByIdResponseDto{
@@ -792,7 +792,7 @@ func (s *RoutineService) LinkRoutineTagsByIds(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
@@ -869,7 +869,7 @@ func (s *RoutineService) LinkRoutineTagsByIds(
 	}
 	if len(newRoutinesToTags) == 0 {
 		tx.Rollback()
-		return nil, apiexceptions.Routine.NoChanges()
+		return nil, apiexceptions.NewRoutineException().NoChanges()
 	}
 
 	values := make([][]any, len(newRoutinesToTags))
@@ -887,8 +887,8 @@ func (s *RoutineService) LinkRoutineTagsByIds(
 			Create(&newRoutinesToTags)
 	}
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Routine.FailedToLinkRoutineTags().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Routine.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineException().FailedToLinkRoutineTags().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewRoutineException().NoChanges()},
 	}); exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -896,7 +896,7 @@ func (s *RoutineService) LinkRoutineTagsByIds(
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.Routine.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &apicontract.LinkRoutineTagsByIdsResponseDto{
@@ -912,7 +912,7 @@ func (s *RoutineService) LinkRoutineItemById(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
@@ -932,7 +932,7 @@ func (s *RoutineService) LinkRoutineItemById(
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	) {
 		tx.Rollback()
-		return nil, apiexceptions.Routine.NoPermission("get the routine")
+		return nil, apiexceptions.NewRoutineException().NoPermission("get the routine")
 	}
 
 	if !s.itemRepository.HasPermission(
@@ -946,7 +946,7 @@ func (s *RoutineService) LinkRoutineItemById(
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	) {
 		tx.Rollback()
-		return nil, apiexceptions.Item.NoPermission("get the item")
+		return nil, apiexceptions.NewItemException().NoPermission("get the item")
 	}
 
 	var newRoutinesToItems schemas.RoutinesToItems
@@ -969,8 +969,8 @@ func (s *RoutineService) LinkRoutineItemById(
 			Create(&newRoutinesToItems)
 	}
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Routine.FailedToLinkItems().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Routine.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineException().FailedToLinkItems().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewRoutineException().NoChanges()},
 	}); exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -978,7 +978,7 @@ func (s *RoutineService) LinkRoutineItemById(
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.Routine.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &apicontract.LinkRoutineItemByIdResponseDto{
@@ -994,7 +994,7 @@ func (s *RoutineService) LinkRoutineItemsByIds(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
@@ -1082,7 +1082,7 @@ func (s *RoutineService) LinkRoutineItemsByIds(
 	}
 	if len(newRoutinesToItems) == 0 {
 		tx.Rollback()
-		return nil, apiexceptions.Routine.NoChanges()
+		return nil, apiexceptions.NewRoutineException().NoChanges()
 	}
 
 	values := make([][]any, len(newRoutinesToItems))
@@ -1100,8 +1100,8 @@ func (s *RoutineService) LinkRoutineItemsByIds(
 			Create(&newRoutinesToItems)
 	}
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Routine.FailedToLinkItems().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.Routine.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewRoutineException().FailedToLinkItems().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewRoutineException().NoChanges()},
 	}); exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -1109,7 +1109,7 @@ func (s *RoutineService) LinkRoutineItemsByIds(
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, apiexceptions.Routine.FailedToCommitTransaction().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &apicontract.LinkRoutineItemsByIdsResponseDto{
@@ -1125,7 +1125,7 @@ func (s *RoutineService) RestoreMyRoutineById(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1169,7 +1169,7 @@ func (s *RoutineService) RestoreMyRoutinesByIds(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1218,7 +1218,7 @@ func (s *RoutineService) DeleteMyRoutineById(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1250,7 +1250,7 @@ func (s *RoutineService) DeleteMyRoutinesByIds(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1282,7 +1282,7 @@ func (s *RoutineService) HardDeleteMyRoutineById(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1314,7 +1314,7 @@ func (s *RoutineService) HardDeleteMyRoutinesByIds(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1348,7 +1348,7 @@ func (s *RoutineService) VisualizeMyRoutineStatusCount(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1376,31 +1376,31 @@ func (s *RoutineService) VisualizeMyRoutineStatusCount(
 		Where(`"RoutineTable".deleted_at IS NULL`).
 		Scan(&counts)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.Routine.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().NotFound().WithOrigin(err)
 	}
 
 	scheduledRoutineMetadata := map[string]string{"status": "scheduled"}
 	scheduledRoutineMeta, err := json.Marshal(scheduledRoutineMetadata)
 	if err != nil {
-		return nil, apiexceptions.Routine.FailedToMarshalData(scheduledRoutineMetadata)
+		return nil, apiexceptions.NewRoutineException().FailedToMarshalData(scheduledRoutineMetadata)
 	}
 
 	inProgressRoutineMetadata := map[string]string{"status": "inProgress"}
 	inProgressRoutineMeta, err := json.Marshal(inProgressRoutineMetadata)
 	if err != nil {
-		return nil, apiexceptions.Routine.FailedToMarshalData(inProgressRoutineMetadata)
+		return nil, apiexceptions.NewRoutineException().FailedToMarshalData(inProgressRoutineMetadata)
 	}
 
 	completedRoutineMetadata := map[string]string{"status": "completed"}
 	completedRoutineMeta, err := json.Marshal(completedRoutineMetadata)
 	if err != nil {
-		return nil, apiexceptions.Routine.FailedToMarshalData(completedRoutineMetadata)
+		return nil, apiexceptions.NewRoutineException().FailedToMarshalData(completedRoutineMetadata)
 	}
 
 	overDueRoutineMetadata := map[string]string{"status": "overDue"}
 	overDueRoutineMeta, err := json.Marshal(overDueRoutineMetadata)
 	if err != nil {
-		return nil, apiexceptions.Routine.FailedToMarshalData(overDueRoutineMetadata)
+		return nil, apiexceptions.NewRoutineException().FailedToMarshalData(overDueRoutineMetadata)
 	}
 
 	return &apicontract.VisualizeMyRoutineStatusCountResponseDto{
@@ -1441,7 +1441,7 @@ func (s *RoutineService) VisualizeMyRoutinePeriodCount(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1466,25 +1466,25 @@ func (s *RoutineService) VisualizeMyRoutinePeriodCount(
 		Where(`"RoutineTable".deleted_at IS NULL`).
 		Scan(&counts)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.Routine.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().NotFound().WithOrigin(err)
 	}
 
 	dailyRoutineMetadata := map[string]string{"period": "daily"}
 	dailyRoutineMeta, err := json.Marshal(dailyRoutineMetadata)
 	if err != nil {
-		return nil, apiexceptions.Routine.FailedToMarshalData(dailyRoutineMetadata)
+		return nil, apiexceptions.NewRoutineException().FailedToMarshalData(dailyRoutineMetadata)
 	}
 
 	weeklyRoutineMetadata := map[string]string{"period": "daily"}
 	weeklyRoutineMeta, err := json.Marshal(weeklyRoutineMetadata)
 	if err != nil {
-		return nil, apiexceptions.Routine.FailedToMarshalData(weeklyRoutineMetadata)
+		return nil, apiexceptions.NewRoutineException().FailedToMarshalData(weeklyRoutineMetadata)
 	}
 
 	monthlyRoutineMetadata := map[string]string{"period": "daily"}
 	monthlyRoutineMeta, err := json.Marshal(monthlyRoutineMetadata)
 	if err != nil {
-		return nil, apiexceptions.Routine.FailedToMarshalData(monthlyRoutineMetadata)
+		return nil, apiexceptions.NewRoutineException().FailedToMarshalData(monthlyRoutineMetadata)
 	}
 
 	return &apicontract.VisualizeMyRoutinePeriodCountResponseDto{
@@ -1519,13 +1519,13 @@ func (s *RoutineService) VisualizeMyRoutineScheduledStartAtCount(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 	if !reqDto.Param.QueryRangeStartedAt.Before(reqDto.Param.QueryRangeEndedAt) {
-		return nil, apiexceptions.Routine.InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
+		return nil, apiexceptions.NewRoutineException().InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
 	}
 	if !times.IsTimeWithin(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
-		return nil, apiexceptions.Routine.QueriedTimeRangeTooLarge(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt)
+		return nil, apiexceptions.NewRoutineException().QueriedTimeRangeTooLarge(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt)
 	}
 
 	data, exception := s.visualizeMyRoutineTimeCount(
@@ -1555,13 +1555,13 @@ func (s *RoutineService) VisualizeMyRoutineScheduledEndAtCount(
 		return nil, exception
 	}
 	if err := s.validator.Struct(reqDto); err != nil {
-		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().InvalidDto().WithOrigin(err)
 	}
 	if !reqDto.Param.QueryRangeStartedAt.Before(reqDto.Param.QueryRangeEndedAt) {
-		return nil, apiexceptions.Routine.InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
+		return nil, apiexceptions.NewRoutineException().InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
 	}
 	if !times.IsTimeWithin(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
-		return nil, apiexceptions.Routine.QueriedTimeRangeTooLarge(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt)
+		return nil, apiexceptions.NewRoutineException().QueriedTimeRangeTooLarge(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt)
 	}
 
 	data, exception := s.visualizeMyRoutineTimeCount(
@@ -1635,7 +1635,7 @@ func (s *RoutineService) SearchPrivateRoutines(
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
 		searchCursor, err := searchcursor.Decode[gqlmodels.SearchRoutineCursorFields](*gqlInput.After)
 		if err != nil {
-			return nil, apiexceptions.Search.FailedToDecode().WithOrigin(err)
+			return nil, apiexceptions.NewSearchException().FailedToDecode().WithOrigin(err)
 		}
 
 		query = query.Where(
@@ -1706,7 +1706,7 @@ func (s *RoutineService) SearchPrivateRoutines(
 		},
 		&userId,
 	)).Find(&routines).Error; err != nil {
-		return nil, apiexceptions.Routine.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewRoutineException().NotFound().WithOrigin(err)
 	}
 	permittedItemIdentitySet, exception := s.filterReadableRoutineItems(
 		ctx,
@@ -1742,10 +1742,10 @@ func (s *RoutineService) SearchPrivateRoutines(
 		}
 		encodedSearchCursor, err := searchCursor.Encode()
 		if err != nil {
-			return nil, apiexceptions.Search.FailedToEncode().WithOrigin(err)
+			return nil, apiexceptions.NewSearchException().FailedToEncode().WithOrigin(err)
 		}
 		if encodedSearchCursor == nil {
-			return nil, apiexceptions.Search.FailedToUnmarshalSearchCursor()
+			return nil, apiexceptions.NewSearchException().FailedToUnmarshalSearchCursor()
 		}
 
 		searchEdges[index] = &gqlmodels.SearchRoutineEdge{

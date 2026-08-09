@@ -9,5 +9,5 @@ type HTMLEmailRenderer struct {
 }
 
 func NewHTMLEmailRenderer(config emailconfig.RendererConfig) RendererInterface {
-	return &HTMLEmailRenderer{Renderer: newRenderer(config, "html", "RenderHTML")}
+	return &HTMLEmailRenderer{Renderer: newRenderer(config, "html")}
 }

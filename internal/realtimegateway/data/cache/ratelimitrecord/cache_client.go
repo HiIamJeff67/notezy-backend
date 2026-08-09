@@ -6,17 +6,16 @@ import (
 	"fmt"
 	"hash/fnv"
 	"math/rand"
-	"net/http"
 	"time"
 
 	"github.com/go-redis/redis"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
 	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
 
 	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/ratelimitrecord/inputs"
 	redislibraries "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/ratelimitrecord/libraries"
+	realtimeexceptions "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/exceptions"
 )
 
 type RateLimitRecordCache struct {
@@ -46,27 +45,17 @@ func NewRateLimitRecordCacheClient(cacheStore *RateLimitRecordCacheStore) *RateL
 
 /* ============================== Auxiliary Methods ============================== */
 
-func (s *RateLimitRecordCacheClient) getRedisClient(backendServerName platformredis.BackendServerName) (*redis.Client, int, *exceptions.Exception) {
+func (s *RateLimitRecordCacheClient) getRedisClient(backendServerName platformredis.BackendServerName) (*redis.Client, int, error) {
 	if s == nil || s.cacheStore == nil {
-		return nil, 0, exceptions.New(
-			"CacheClientUnavailable",
-			"Cache",
-			"GetRedisClient",
-			"Rate limit cache client is unavailable",
-			http.StatusInternalServerError,
-			true,
-		)
+		return nil, 0, realtimeexceptions.
+			NewCacheException("RateLimitRecord").
+			Unavailable(nil)
 	}
 	redisClient, shardIndex, err := s.cacheStore.ClientSet().ClientForKey(string(backendServerName))
 	if err != nil {
-		return nil, 0, exceptions.New(
-			"CacheClientUnavailable",
-			"Cache",
-			"GetRedisClient",
-			"Rate limit cache client is unavailable",
-			http.StatusInternalServerError,
-			true,
-		).WithOrigin(err)
+		return nil, 0, realtimeexceptions.
+			NewCacheException("RateLimitRecord").
+			Unavailable(err)
 	}
 	return redisClient, shardIndex, nil
 }
@@ -93,34 +82,24 @@ func (s *RateLimitRecordCacheClient) calculateExpiration(identifier string, wind
 func (s *RateLimitRecordCacheClient) Get(
 	identifier string,
 	backendServerName platformredis.BackendServerName,
-) (*RateLimitRecordCache, *exceptions.Exception) {
-	redisClient, shardIndex, exception := s.getRedisClient(backendServerName)
-	if exception != nil {
-		return nil, exception
+) (*RateLimitRecordCache, error) {
+	redisClient, shardIndex, err := s.getRedisClient(backendServerName)
+	if err != nil {
+		return nil, err
 	}
 
 	cacheString, err := redisClient.Get(formatRateLimitRecordKey(backendServerName, identifier)).Result()
 	if err != nil {
-		return nil, exceptions.New(
-			"NotFound",
-			"Cache",
-			"GetRateLimitRecord",
-			"Rate limit record was not found",
-			http.StatusNotFound,
-			true,
-		).WithOrigin(err)
+		return nil, realtimeexceptions.
+			NewCacheException("RateLimitRecord").
+			NotFound(err)
 	}
 
 	var rateLimitRecordCache RateLimitRecordCache
 	if err := json.Unmarshal([]byte(cacheString), &rateLimitRecordCache); err != nil {
-		return nil, exceptions.New(
-			"DeserializationFailed",
-			"Cache",
-			"GetRateLimitRecord",
-			"Failed to decode the rate limit record",
-			http.StatusInternalServerError,
-			true,
-		).WithOrigin(err)
+		return nil, realtimeexceptions.
+			NewCacheException("RateLimitRecord").
+			DeserializationFailed(err)
 	}
 
 	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully got cached rate limit record from Redis shard %d", shardIndex))
@@ -131,34 +110,20 @@ func (s *RateLimitRecordCacheClient) Set(
 	identifier string,
 	backendServerName platformredis.BackendServerName,
 	rateLimitRecordCache RateLimitRecordCache,
-) *exceptions.Exception {
-	redisClient, shardIndex, exception := s.getRedisClient(backendServerName)
-	if exception != nil {
-		return exception
+) error {
+	redisClient, shardIndex, err := s.getRedisClient(backendServerName)
+	if err != nil {
+		return err
 	}
 
 	value, err := json.Marshal(rateLimitRecordCache)
 	if err != nil {
-		return exceptions.New(
-			"SerializationFailed",
-			"Cache",
-			"SetRateLimitRecord",
-			"Failed to encode the rate limit record",
-			http.StatusInternalServerError,
-			true,
-		).WithOrigin(err)
+		return realtimeexceptions.NewCacheException("RateLimitRecord").SerializationFailed(err)
 	}
 
 	expiresIn := s.calculateExpiration(identifier, rateLimitRecordCache.WindowStartTime, rateLimitRecordCache.WindowDuration)
 	if err := redisClient.Set(formatRateLimitRecordKey(backendServerName, identifier), string(value), expiresIn).Err(); err != nil {
-		return exceptions.New(
-			"FailedToCreate",
-			"Cache",
-			"SetRateLimitRecord",
-			"Failed to store the rate limit record",
-			http.StatusInternalServerError,
-			true,
-		).WithOrigin(err)
+		return realtimeexceptions.NewCacheException("RateLimitRecord").CreateFailed(err)
 	}
 
 	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully set cached rate limit record in Redis shard %d", shardIndex))
@@ -169,21 +134,14 @@ func (s *RateLimitRecordCacheClient) Update(
 	identifier string,
 	backendServerName platformredis.BackendServerName,
 	input cacheinputs.SynchronizeRateLimitRecordCacheInput,
-) *exceptions.Exception {
-	rateLimitRecordCache, exception := s.Get(identifier, backendServerName)
-	if exception != nil {
-		return exception
+) error {
+	rateLimitRecordCache, err := s.Get(identifier, backendServerName)
+	if err != nil {
+		return err
 	}
 
 	if (!input.IsAccumulated && rateLimitRecordCache.NumOfTokens < input.NumOfChangingTokens) || rateLimitRecordCache.NumOfTokens < 0 {
-		return exceptions.New(
-			"InvalidRateLimitTokenCount",
-			"RateLimit",
-			"UpdateRateLimitRecord",
-			"Rate limit token count is invalid",
-			http.StatusInternalServerError,
-			true,
-		)
+		return realtimeexceptions.NewCacheException("RateLimitRecord").InvalidRateLimitTokenCount()
 	}
 
 	if input.IsAccumulated {
@@ -193,33 +151,19 @@ func (s *RateLimitRecordCacheClient) Update(
 	}
 	rateLimitRecordCache.UpdatedAt = time.Now()
 
-	redisClient, shardIndex, exception := s.getRedisClient(backendServerName)
-	if exception != nil {
-		return exception
+	redisClient, shardIndex, err := s.getRedisClient(backendServerName)
+	if err != nil {
+		return err
 	}
 
 	value, err := json.Marshal(rateLimitRecordCache)
 	if err != nil {
-		return exceptions.New(
-			"SerializationFailed",
-			"Cache",
-			"UpdateRateLimitRecord",
-			"Failed to encode the rate limit record",
-			http.StatusInternalServerError,
-			true,
-		).WithOrigin(err)
+		return realtimeexceptions.NewCacheException("RateLimitRecord").SerializationFailed(err)
 	}
 
 	expiresIn := s.calculateExpiration(identifier, rateLimitRecordCache.WindowStartTime, rateLimitRecordCache.WindowDuration)
 	if err := redisClient.Set(formatRateLimitRecordKey(backendServerName, identifier), string(value), expiresIn).Err(); err != nil {
-		return exceptions.New(
-			"FailedToUpdate",
-			"Cache",
-			"UpdateRateLimitRecord",
-			"Failed to update the rate limit record",
-			http.StatusInternalServerError,
-			true,
-		).WithOrigin(err)
+		return realtimeexceptions.NewCacheException("RateLimitRecord").UpdateFailed(err)
 	}
 
 	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully updated cached rate limit record in Redis shard %d", shardIndex))
@@ -229,21 +173,14 @@ func (s *RateLimitRecordCacheClient) Update(
 func (s *RateLimitRecordCacheClient) Delete(
 	identifier string,
 	backendServerName platformredis.BackendServerName,
-) *exceptions.Exception {
-	redisClient, shardIndex, exception := s.getRedisClient(backendServerName)
-	if exception != nil {
-		return exception
+) error {
+	redisClient, shardIndex, err := s.getRedisClient(backendServerName)
+	if err != nil {
+		return err
 	}
 
 	if err := redisClient.Del(formatRateLimitRecordKey(backendServerName, identifier)).Err(); err != nil {
-		return exceptions.New(
-			"FailedToDelete",
-			"Cache",
-			"DeleteRateLimitRecord",
-			"Failed to delete the rate limit record",
-			http.StatusInternalServerError,
-			true,
-		).WithOrigin(err)
+		return realtimeexceptions.NewCacheException("RateLimitRecord").DeleteFailed(err)
 	}
 
 	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully deleted cached rate limit record from Redis shard %d", shardIndex))
@@ -255,14 +192,14 @@ func (s *RateLimitRecordCacheClient) Delete(
 func (s *RateLimitRecordCacheClient) BatchSynchronize(
 	inputs []cacheinputs.BatchSynchronizeRateLimitRecordCacheInput,
 	backendServerName platformredis.BackendServerName,
-) *exceptions.Exception {
+) error {
 	if len(inputs) == 0 {
 		return nil
 	}
 
-	redisClient, shardIndex, exception := s.getRedisClient(backendServerName)
-	if exception != nil {
-		return exception
+	redisClient, shardIndex, err := s.getRedisClient(backendServerName)
+	if err != nil {
+		return err
 	}
 
 	keys := make([]interface{}, 0, len(inputs))
@@ -280,14 +217,7 @@ func (s *RateLimitRecordCacheClient) BatchSynchronize(
 	command = append(command, keys...)
 	command = append(command, arguments...)
 	if _, err := redisClient.Do(command...).Result(); err != nil {
-		return exceptions.New(
-			"FailedToUpdate",
-			"Cache",
-			"BatchSynchronizeRateLimitRecords",
-			"Failed to synchronize rate limit records",
-			http.StatusInternalServerError,
-			true,
-		).WithOrigin(err)
+		return realtimeexceptions.NewCacheException("RateLimitRecord").UpdateFailed(err)
 	}
 
 	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully batch synchronized rate limit records in Redis shard %d", shardIndex))
@@ -297,14 +227,14 @@ func (s *RateLimitRecordCacheClient) BatchSynchronize(
 func (s *RateLimitRecordCacheClient) BatchDelete(
 	identifiers []string,
 	backendServerName platformredis.BackendServerName,
-) *exceptions.Exception {
+) error {
 	if len(identifiers) == 0 {
 		return nil
 	}
 
-	redisClient, shardIndex, exception := s.getRedisClient(backendServerName)
-	if exception != nil {
-		return exception
+	redisClient, shardIndex, err := s.getRedisClient(backendServerName)
+	if err != nil {
+		return err
 	}
 
 	keys := make([]interface{}, 0, len(identifiers))
@@ -319,14 +249,7 @@ func (s *RateLimitRecordCacheClient) BatchDelete(
 	}
 	command = append(command, keys...)
 	if _, err := redisClient.Do(command...).Result(); err != nil {
-		return exceptions.New(
-			"FailedToDelete",
-			"Cache",
-			"BatchDeleteRateLimitRecords",
-			"Failed to delete rate limit records",
-			http.StatusInternalServerError,
-			true,
-		).WithOrigin(err)
+		return realtimeexceptions.NewCacheException("RateLimitRecord").DeleteFailed(err)
 	}
 
 	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully batch deleted rate limit records from Redis shard %d", shardIndex))

@@ -1,0 +1,78 @@
+package exceptions
+
+import (
+	"fmt"
+	"net/http"
+
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+)
+
+type RoutineTaskException struct {
+	DurableJobException
+}
+
+func NewRoutineTaskException(domain string) RoutineTaskException {
+	return RoutineTaskException{DurableJobException: NewDurableJobException(domain)}
+}
+
+func (e RoutineTaskException) InvalidPayload(cause error) *exceptions.Exception {
+	return exceptions.New(
+		"InvalidRoutineTaskPayload",
+		e.Domain,
+		"PrepareRoutineTask",
+		"The routine task payload is invalid",
+		http.StatusBadRequest,
+	).WithOrigin(cause)
+}
+
+func (e RoutineTaskException) Canceled(cause error) *exceptions.Exception {
+	return exceptions.New(
+		"Canceled",
+		e.Domain,
+		"ExecuteRoutineTask",
+		"The routine task was canceled",
+		http.StatusRequestTimeout,
+	).WithOrigin(cause)
+}
+
+func (e RoutineTaskException) Timeout(cause error) *exceptions.Exception {
+	return exceptions.New(
+		"Timeout",
+		e.Domain,
+		"ExecuteRoutineTask",
+		"The routine task timed out",
+		http.StatusRequestTimeout,
+		true,
+	).WithOrigin(cause)
+}
+
+func (e RoutineTaskException) TargetNotFound(cause error) *exceptions.Exception {
+	return exceptions.New(
+		"TargetNotFound",
+		e.Domain,
+		"ExecuteRoutineTask",
+		"The routine task target was not found",
+		http.StatusNotFound,
+	).WithOrigin(cause)
+}
+
+func (e RoutineTaskException) PermissionDenied(cause error) *exceptions.Exception {
+	return exceptions.New(
+		"PermissionDenied",
+		e.Domain,
+		"ExecuteRoutineTask",
+		"The routine task is not permitted",
+		http.StatusForbidden,
+	).WithOrigin(cause)
+}
+
+func (e RoutineTaskException) HandlerFailed(cause error) *exceptions.Exception {
+	return exceptions.New(
+		"HandlerFailed",
+		e.Domain,
+		"ExecuteRoutineTask",
+		fmt.Sprintf("The routine task handler failed: %v", cause),
+		http.StatusInternalServerError,
+		true,
+	).WithOrigin(cause)
+}

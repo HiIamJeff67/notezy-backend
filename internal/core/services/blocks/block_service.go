@@ -102,7 +102,7 @@ func (s *BlockService) GetMyBlockById(
 	ctx context.Context, requestDto *apicontract.GetMyBlockByIdRequestDto,
 ) (*apicontract.GetMyBlockByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.Block.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewBlockException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -135,7 +135,7 @@ func (s *BlockService) GetMyBlocksByIds(
 	ctx context.Context, requestDto *apicontract.GetMyBlocksByIdsRequestDto,
 ) (*apicontract.GetMyBlocksByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.Block.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewBlockException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -173,7 +173,7 @@ func (s *BlockService) GetMyBlocksByBlockPackId(
 	ctx context.Context, requestDto *apicontract.GetMyBlocksByBlockPackIdRequestDto,
 ) (*apicontract.GetMyBlocksByBlockPackIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.Block.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewBlockException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -194,7 +194,7 @@ func (s *BlockService) GetMyBlocksByBlockPackId(
 		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	) {
-		return nil, apiexceptions.Block.NoPermission("get the block pack of blocks")
+		return nil, apiexceptions.NewBlockException().NoPermission("get the block pack of blocks")
 	}
 
 	var blocks []schemas.Block
@@ -203,7 +203,7 @@ func (s *BlockService) GetMyBlocksByBlockPackId(
 		Order("created_at ASC").
 		Order("id ASC").
 		Find(&blocks).Error; err != nil {
-		return nil, apiexceptions.Block.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewBlockException().NotFound().WithOrigin(err)
 	}
 
 	responseDto := make(apicontract.GetMyBlocksByBlockPackIdResponseDto, len(blocks))
@@ -651,7 +651,7 @@ func (s *BlockService) SearchPrivateBlocks(
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
 		searchCursor, err := searchcursor.Decode[gqlmodels.SearchBlockCursorFields](*gqlInput.After)
 		if err != nil {
-			return nil, apiexceptions.Search.FailedToDecode().WithOrigin(err)
+			return nil, apiexceptions.NewSearchException().FailedToDecode().WithOrigin(err)
 		}
 
 		query = query.Where(`"BlockTable".id > ?`, searchCursor.Fields.ID)
@@ -684,7 +684,7 @@ func (s *BlockService) SearchPrivateBlocks(
 
 	var blocks []schemas.Block
 	if err := query.Find(&blocks).Error; err != nil {
-		return nil, apiexceptions.Block.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewBlockException().NotFound().WithOrigin(err)
 	}
 
 	hasNextPage := len(blocks) > limit
@@ -693,10 +693,10 @@ func (s *BlockService) SearchPrivateBlocks(
 		searchCursor := searchcursor.SearchCursor[gqlmodels.SearchBlockCursorFields]{Fields: gqlmodels.SearchBlockCursorFields{ID: block.Id}}
 		encodedSearchCursor, err := searchCursor.Encode()
 		if err != nil {
-			return nil, apiexceptions.Search.FailedToEncode().WithOrigin(err)
+			return nil, apiexceptions.NewSearchException().FailedToEncode().WithOrigin(err)
 		}
 		if encodedSearchCursor == nil {
-			return nil, apiexceptions.Search.FailedToUnmarshalSearchCursor()
+			return nil, apiexceptions.NewSearchException().FailedToUnmarshalSearchCursor()
 		}
 
 		searchEdges[index] = &gqlmodels.SearchBlockEdge{EncodedSearchCursor: *encodedSearchCursor, Node: block.ToPrivateBlock()}

@@ -42,8 +42,8 @@ func (r *UserSettingRepository) GetOneByUserId(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&userSetting)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.UserSetting.NotFound().WithOrigin(result.Error)},
-		{First: userSetting.Id == uuid.Nil, Second: apiexceptions.UserSetting.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewUserSettingException().NotFound().WithOrigin(result.Error)},
+		{First: userSetting.Id == uuid.Nil, Second: apiexceptions.NewUserSettingException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -61,15 +61,15 @@ func (r *UserSettingRepository) CreateOneByUserId(
 	var newUserSetting schemas.UserSetting
 	newUserSetting.UserId = userId
 	if err := copier.Copy(&newUserSetting, &input); err != nil {
-		return nil, apiexceptions.UserSetting.FailedToCreate().WithOrigin(err)
+		return nil, apiexceptions.NewUserSettingException().FailedToCreate().WithOrigin(err)
 	}
 
 	result := parsedOptions.DB.Model(&schemas.UserSetting{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newUserSetting)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.UserSetting.FailedToCreate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.UserSetting.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewUserSettingException().FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewUserSettingException().NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -102,8 +102,8 @@ func (r *UserSettingRepository) UpdateOneByUserId(
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.UserSetting.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.UserSetting.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewUserSettingException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewUserSettingException().NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}

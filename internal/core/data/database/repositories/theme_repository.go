@@ -52,7 +52,7 @@ func (r *ThemeRepository) GetOneById(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&theme)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.Theme.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewThemeException().NotFound().WithOrigin(err)
 	}
 
 	return &theme, nil
@@ -67,7 +67,7 @@ func (r *ThemeRepository) GetAll(
 	result := parsedOptions.DB.Table(schemas.Theme{}.TableName()).
 		Find(&themes)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.Theme.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewThemeException().NotFound().WithOrigin(err)
 	}
 
 	return themes, nil
@@ -84,14 +84,14 @@ func (r *ThemeRepository) CreateOneByAuthorId(
 	newTheme.AuthorId = authorId
 
 	if err := copier.Copy(&newTheme, &input); err != nil {
-		return nil, apiexceptions.Theme.FailedToCreate().WithOrigin(err)
+		return nil, apiexceptions.NewThemeException().FailedToCreate().WithOrigin(err)
 	}
 
 	result := parsedOptions.DB.Model(&schemas.Theme{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newTheme)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.Theme.FailedToCreate().WithOrigin(err)
+		return nil, apiexceptions.NewThemeException().FailedToCreate().WithOrigin(err)
 	}
 
 	return &newTheme.Id, nil
@@ -124,10 +124,10 @@ func (r *ThemeRepository) UpdateOneById(
 		Select("*").
 		Updates(&updates)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.Theme.FailedToUpdate().WithOrigin(err)
+		return nil, apiexceptions.NewThemeException().FailedToUpdate().WithOrigin(err)
 	}
 	if result.RowsAffected == 0 { // check if we do update it or not
-		return nil, apiexceptions.Theme.NoChanges()
+		return nil, apiexceptions.NewThemeException().NoChanges()
 	}
 
 	return &updates, nil
@@ -152,10 +152,10 @@ func (r *ThemeRepository) DeleteOneById(
 		Where("id = ? AND author_id = ?", id, authorId).
 		Delete(&schemas.Theme{})
 	if err := result.Error; err != nil {
-		return apiexceptions.Theme.FailedToDelete().WithOrigin(err)
+		return apiexceptions.NewThemeException().FailedToDelete().WithOrigin(err)
 	}
 	if result.RowsAffected == 0 {
-		return apiexceptions.Theme.NotFound()
+		return apiexceptions.NewThemeException().NotFound()
 	}
 
 	return nil

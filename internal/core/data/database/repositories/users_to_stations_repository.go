@@ -46,7 +46,7 @@ func (r *UsersToStationsRepository) GetOne(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&relation)
 	if result.Error != nil {
-		return nil, apiexceptions.Station.NotFound().WithOrigin(result.Error)
+		return nil, apiexceptions.NewStationException().NotFound().WithOrigin(result.Error)
 	}
 
 	return &relation, nil
@@ -66,7 +66,7 @@ func (r *UsersToStationsRepository) GetMany(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&relations)
 	if result.Error != nil {
-		return nil, apiexceptions.Station.NotFound().WithOrigin(result.Error)
+		return nil, apiexceptions.NewStationException().NotFound().WithOrigin(result.Error)
 	}
 
 	return relations, nil
@@ -86,7 +86,7 @@ func (r *UsersToStationsRepository) GetManyByStationIdsAndUserId(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&relations)
 	if result.Error != nil {
-		return nil, apiexceptions.Station.NotFound().WithOrigin(result.Error)
+		return nil, apiexceptions.NewStationException().NotFound().WithOrigin(result.Error)
 	}
 
 	return relations, nil
@@ -107,10 +107,10 @@ func (r *UsersToStationsRepository) CreateOne(
 	}
 	result := parsedOptions.DB.Create(&relation)
 	if result.Error != nil {
-		return nil, apiexceptions.Station.FailedToCreate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewStationException().FailedToCreate().WithOrigin(result.Error)
 	}
 	if result.RowsAffected == 0 {
-		return nil, apiexceptions.Station.NoChanges()
+		return nil, apiexceptions.NewStationException().NoChanges()
 	}
 
 	return r.GetOne(
@@ -127,7 +127,7 @@ func (r *UsersToStationsRepository) UpsertMany(
 	opts ...options.RepositoryOptions,
 ) ([]schemas.UsersToStations, *exceptions.Exception) {
 	if len(userIds) != len(permissions) {
-		return nil, apiexceptions.Station.InvalidInput("userIds and permissions must have equal lengths")
+		return nil, apiexceptions.NewStationException().InvalidInput("userIds and permissions must have equal lengths")
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -158,7 +158,7 @@ func (r *UsersToStationsRepository) UpsertMany(
 		).
 		CreateInBatches(&relations, parsedOptions.BatchSize)
 	if result.Error != nil {
-		return nil, apiexceptions.Station.FailedToUpdate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewStationException().FailedToUpdate().WithOrigin(result.Error)
 	}
 
 	return relations, nil
@@ -182,10 +182,10 @@ func (r *UsersToStationsRepository) UpdateOne(
 		Select("permission").
 		Updates(&relation)
 	if result.Error != nil {
-		return nil, apiexceptions.Station.FailedToUpdate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewStationException().FailedToUpdate().WithOrigin(result.Error)
 	}
 	if result.RowsAffected == 0 {
-		return nil, apiexceptions.Station.NotFound()
+		return nil, apiexceptions.NewStationException().NotFound()
 	}
 
 	return r.GetOne(
@@ -205,10 +205,10 @@ func (r *UsersToStationsRepository) DeleteOne(
 		Where("station_id = ? AND user_id = ?", stationId, userId).
 		Delete(&schemas.UsersToStations{})
 	if result.Error != nil {
-		return apiexceptions.Station.FailedToDelete().WithOrigin(result.Error)
+		return apiexceptions.NewStationException().FailedToDelete().WithOrigin(result.Error)
 	}
 	if result.RowsAffected == 0 {
-		return apiexceptions.Station.NotFound()
+		return apiexceptions.NewStationException().NotFound()
 	}
 
 	return nil
@@ -225,10 +225,10 @@ func (r *UsersToStationsRepository) DeleteMany(
 		Where("station_id = ? AND user_id IN ?", stationId, userIds).
 		Delete(&schemas.UsersToStations{})
 	if result.Error != nil {
-		return apiexceptions.Station.FailedToDelete().WithOrigin(result.Error)
+		return apiexceptions.NewStationException().FailedToDelete().WithOrigin(result.Error)
 	}
 	if result.RowsAffected != int64(len(userIds)) {
-		return apiexceptions.Station.NotFound()
+		return apiexceptions.NewStationException().NotFound()
 	}
 
 	return nil
@@ -245,10 +245,10 @@ func (r *UsersToStationsRepository) DeleteManyByStationIdsAndUserId(
 		Where("station_id IN ? AND user_id = ?", stationIds, userId).
 		Delete(&schemas.UsersToStations{})
 	if result.Error != nil {
-		return apiexceptions.Station.FailedToDelete().WithOrigin(result.Error)
+		return apiexceptions.NewStationException().FailedToDelete().WithOrigin(result.Error)
 	}
 	if result.RowsAffected != int64(len(stationIds)) {
-		return apiexceptions.Station.NotFound()
+		return apiexceptions.NewStationException().NotFound()
 	}
 
 	return nil

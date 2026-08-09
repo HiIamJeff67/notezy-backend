@@ -87,7 +87,7 @@ func (s *MaterialService) GetMyMaterialById(
 	ctx context.Context, requestDto *apicontract.GetMyMaterialByIdRequestDto,
 ) (*apicontract.GetMyMaterialByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -143,7 +143,7 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 	ctx context.Context, requestDto *apicontract.GetMyMaterialAndItsParentByIdRequestDto,
 ) (*apicontract.GetMyMaterialAndItsParentByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -190,10 +190,10 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 			&resDto.ParentSubShelfCreatedAt,
 		)
 	if err != nil {
-		return nil, apiexceptions.Material.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().NotFound().WithOrigin(err)
 	}
 	if len(strings.TrimSpace(contentKey)) == 0 {
-		return nil, apiexceptions.Material.NotFound()
+		return nil, apiexceptions.NewMaterialException().NotFound()
 	}
 
 	downloadURL, err := s.storage.PresignGetObjectByKey(ctx, contentKey, nil)
@@ -209,7 +209,7 @@ func (s *MaterialService) GetMyMaterialsByParentSubShelfId(
 	ctx context.Context, requestDto *apicontract.GetMyMaterialsByParentSubShelfIdRequestDto,
 ) (*apicontract.GetMyMaterialsByParentSubShelfIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -245,7 +245,7 @@ func (s *MaterialService) GetMyMaterialsByParentSubShelfId(
 		Limit(int(data.MaxMaterialsOfSubShelf)).
 		Find(&materials)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.Material.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().NotFound().WithOrigin(err)
 	}
 
 	resDto := apicontract.GetMyMaterialsByParentSubShelfIdResponseDto{}
@@ -275,7 +275,7 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 	ctx context.Context, requestDto *apicontract.GetAllMyMaterialsByRootShelfIdRequestDto,
 ) (*apicontract.GetAllMyMaterialsByRootShelfIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -309,7 +309,7 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 		Order("name ASC").
 		Find(&materials)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.Material.NotFound()
+		return nil, apiexceptions.NewMaterialException().NotFound()
 	}
 
 	resDto := apicontract.GetAllMyMaterialsByRootShelfIdResponseDto{}
@@ -339,7 +339,7 @@ func (s *MaterialService) CreateMyMaterial(
 	ctx context.Context, requestDto *apicontract.CreateMyMaterialRequestDto,
 ) (*apicontract.CreateMyMaterialResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -384,11 +384,11 @@ func (s *MaterialService) CreateMyMaterial(
 
 	object, err := s.storage.NewObject(newContentKey, newContentFile, zeroSize)
 	if err != nil {
-		return nil, apiexceptions.Storage.FailedToReadObjectBytes().WithOrigin(err)
+		return nil, apiexceptions.NewStorageException().FailedToReadObjectBytes().WithOrigin(err)
 	}
 
 	if err := s.storage.PutObjectByKey(ctx, newContentKey, object); err != nil {
-		return nil, apiexceptions.Storage.FailedToPutObject(object).WithOrigin(err)
+		return nil, apiexceptions.NewStorageException().FailedToPutObject(object).WithOrigin(err)
 	}
 
 	return &apicontract.CreateMyMaterialResponseDto{
@@ -401,7 +401,7 @@ func (s *MaterialService) UpdateMyMaterialById(
 	ctx context.Context, requestDto *apicontract.UpdateMyMaterialByIdRequestDto,
 ) (*apicontract.UpdateMyMaterialByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -439,11 +439,11 @@ func (s *MaterialService) SaveMyMaterialById(
 	ctx context.Context, requestDto *apicontract.SaveMyMaterialByIdRequestDto,
 ) (*apicontract.SaveMyMaterialByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().InvalidDto().WithOrigin(err)
 	}
 	// check if there does exist a file in the requestDto
 	if requestDto.Body.ContentFile == nil {
-		return nil, apiexceptions.Material.InvalidDto()
+		return nil, apiexceptions.NewMaterialException().InvalidDto()
 	}
 
 	db := s.db.WithContext(ctx)
@@ -477,16 +477,16 @@ func (s *MaterialService) SaveMyMaterialById(
 	// extract the data in it and get its content type, parse media type, and actual size, etc.
 	object, err := s.storage.NewObject(contentKey, bytes.NewReader(requestDto.Body.ContentFile), fileHeaderSize)
 	if err != nil {
-		return nil, apiexceptions.Storage.FailedToReadObjectBytes().WithOrigin(err)
+		return nil, apiexceptions.NewStorageException().FailedToReadObjectBytes().WithOrigin(err)
 	}
 	if object == nil {
-		return nil, apiexceptions.Material.CannotGetFileObjects()
+		return nil, apiexceptions.NewMaterialException().CannotGetFileObjects()
 	}
 
 	size := object.Size
 	contentType, err := enums.ConvertStringToMaterialContentType(object.ContentType)
 	if err != nil {
-		return nil, apiexceptions.Material.InvalidType(object.ContentType).WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().InvalidType(object.ContentType).WithOrigin(err)
 	}
 	partialUpdate.Values.ParseMediaType = object.ParseMediaType
 	partialUpdate.Values.Size = &size
@@ -505,7 +505,7 @@ func (s *MaterialService) SaveMyMaterialById(
 
 	// if there does exist a file, then put the file at the end to ensure the entire operation is consistent
 	if err := s.storage.PutObjectByKey(ctx, material.ContentKey, object); err != nil {
-		return nil, apiexceptions.Storage.FailedToPutObject(object).WithOrigin(err)
+		return nil, apiexceptions.NewStorageException().FailedToPutObject(object).WithOrigin(err)
 	}
 
 	return &apicontract.SaveMyMaterialByIdResponseDto{
@@ -517,7 +517,7 @@ func (s *MaterialService) MoveMyMaterialById(
 	ctx context.Context, requestDto *apicontract.MoveMyMaterialByIdRequestDto,
 ) (*apicontract.MoveMyMaterialByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -541,10 +541,10 @@ func (s *MaterialService) MoveMyMaterialById(
 		pg.Array(allowedPermissions),
 	)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.Material.FailedToUpdate().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().FailedToUpdate().WithOrigin(err)
 	}
 	if result.RowsAffected == 0 {
-		return nil, apiexceptions.Material.NoChanges()
+		return nil, apiexceptions.NewMaterialException().NoChanges()
 	}
 
 	return &apicontract.MoveMyMaterialByIdResponseDto{
@@ -556,7 +556,7 @@ func (s *MaterialService) MoveMyMaterialsByIds(
 	ctx context.Context, requestDto *apicontract.MoveMyMaterialsByIdsRequestDto,
 ) (*apicontract.MoveMyMaterialsByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -580,10 +580,10 @@ func (s *MaterialService) MoveMyMaterialsByIds(
 		pg.Array(allowedPermissions),
 	)
 	if err := result.Error; err != nil {
-		return nil, apiexceptions.Material.FailedToUpdate().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().FailedToUpdate().WithOrigin(err)
 	}
 	if result.RowsAffected == 0 {
-		return nil, apiexceptions.Material.NoChanges()
+		return nil, apiexceptions.NewMaterialException().NoChanges()
 	}
 
 	return &apicontract.MoveMyMaterialsByIdsResponseDto{
@@ -595,7 +595,7 @@ func (s *MaterialService) RestoreMyMaterialById(
 	ctx context.Context, requestDto *apicontract.RestoreMyMaterialByIdRequestDto,
 ) (*apicontract.RestoreMyMaterialByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -641,7 +641,7 @@ func (s *MaterialService) RestoreMyMaterialsByIds(
 	ctx context.Context, requestDto *apicontract.RestoreMyMaterialsByIdsRequestDto,
 ) (*apicontract.RestoreMyMaterialsByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -690,7 +690,7 @@ func (s *MaterialService) DeleteMyMaterialById(
 	ctx context.Context, requestDto *apicontract.DeleteMyMaterialByIdRequestDto,
 ) (*apicontract.DeleteMyMaterialByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -722,7 +722,7 @@ func (s *MaterialService) DeleteMyMaterialsByIds(
 	ctx context.Context, requestDto *apicontract.DeleteMyMaterialsByIdsRequestDto,
 ) (*apicontract.DeleteMyMaterialsByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -794,7 +794,7 @@ func (s *MaterialService) SearchPrivateMaterials(
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
 		searchCursor, err := searchcursor.Decode[gqlmodels.SearchMaterialCursorFields](*gqlInput.After)
 		if err != nil {
-			return nil, apiexceptions.Search.FailedToDecode().WithOrigin(err)
+			return nil, apiexceptions.NewSearchException().FailedToDecode().WithOrigin(err)
 		}
 
 		query = query.Where(`"MaterialTable".id > ?`, searchCursor.Fields.ID)
@@ -845,7 +845,7 @@ func (s *MaterialService) SearchPrivateMaterials(
 
 	var materials []schemas.Material
 	if err := query.Find(&materials).Error; err != nil {
-		return nil, apiexceptions.Material.NotFound().WithOrigin(err)
+		return nil, apiexceptions.NewMaterialException().NotFound().WithOrigin(err)
 	}
 
 	hasNextPage := len(materials) > limit
@@ -859,10 +859,10 @@ func (s *MaterialService) SearchPrivateMaterials(
 		}
 		encodedSearchCursor, err := searchCursor.Encode()
 		if err != nil {
-			return nil, apiexceptions.Search.FailedToEncode().WithOrigin(err)
+			return nil, apiexceptions.NewSearchException().FailedToEncode().WithOrigin(err)
 		}
 		if encodedSearchCursor == nil {
-			return nil, apiexceptions.Search.FailedToUnmarshalSearchCursor()
+			return nil, apiexceptions.NewSearchException().FailedToUnmarshalSearchCursor()
 		}
 
 		searchEdges[index] = &gqlmodels.SearchMaterialEdge{

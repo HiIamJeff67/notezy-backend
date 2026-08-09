@@ -6,11 +6,15 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 )
 
-type userSettingExceptionDomain struct{}
+type UserSettingException struct {
+	CoreException
+}
 
-var UserSetting = userSettingExceptionDomain{}
+func NewUserSettingException() UserSettingException {
+	return UserSettingException{CoreException: NewCoreException("UserSetting")}
+}
 
-func (userSettingExceptionDomain) NotFound() *exceptions.Exception {
+func (UserSettingException) NotFound() *exceptions.Exception {
 	return exceptions.New(
 		"NotFound",
 		"UserSetting",
@@ -20,7 +24,7 @@ func (userSettingExceptionDomain) NotFound() *exceptions.Exception {
 	)
 }
 
-func (userSettingExceptionDomain) FailedToCreate() *exceptions.Exception {
+func (UserSettingException) FailedToCreate() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToCreate",
 		"UserSetting",
@@ -31,7 +35,7 @@ func (userSettingExceptionDomain) FailedToCreate() *exceptions.Exception {
 	)
 }
 
-func (userSettingExceptionDomain) FailedToUpdate() *exceptions.Exception {
+func (UserSettingException) FailedToUpdate() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToUpdate",
 		"UserSetting",
@@ -42,7 +46,7 @@ func (userSettingExceptionDomain) FailedToUpdate() *exceptions.Exception {
 	)
 }
 
-func (userSettingExceptionDomain) FailedToDelete() *exceptions.Exception {
+func (UserSettingException) FailedToDelete() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToDelete",
 		"UserSetting",
@@ -53,7 +57,7 @@ func (userSettingExceptionDomain) FailedToDelete() *exceptions.Exception {
 	)
 }
 
-func (userSettingExceptionDomain) NoChanges() *exceptions.Exception {
+func (UserSettingException) NoChanges() *exceptions.Exception {
 	return exceptions.New(
 		"NoChanges",
 		"UserSetting",

@@ -139,8 +139,8 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneById(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&blockPack)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.BlockPack.NotFound().WithOrigin(result.Error)},
-		{First: blockPack.Id == uuid.Nil, Second: apiexceptions.BlockPack.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewBlockPackException().NotFound().WithOrigin(result.Error)},
+		{First: blockPack.Id == uuid.Nil, Second: apiexceptions.NewBlockPackException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -166,8 +166,8 @@ func (r *BlockPackRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&blockPacks)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.BlockPack.NotFound().WithOrigin(result.Error)},
-		{First: len(blockPacks) == 0, Second: apiexceptions.BlockPack.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewBlockPackException().NotFound().WithOrigin(result.Error)},
+		{First: len(blockPacks) == 0, Second: apiexceptions.NewBlockPackException().NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -209,8 +209,8 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneWithOwnerIdById(
 	}
 	result := query.First(&blockPackWithOwnerId)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.BlockPack.NotFound().WithOrigin(result.Error)},
-		{First: blockPackWithOwnerId.OwnerId == uuid.Nil, Second: apiexceptions.BlockPack.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewBlockPackException().NotFound().WithOrigin(result.Error)},
+		{First: blockPackWithOwnerId.OwnerId == uuid.Nil, Second: apiexceptions.NewBlockPackException().NotFound()},
 	}); exception != nil {
 		return nil, nil, exception
 	}
@@ -252,8 +252,8 @@ func (r *BlockPackRepository) CheckPermissionsAndGetManyWithOwnerIdsByIds(
 	}
 	result := query.Find(&blockPacksWithOwnerIds)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.BlockPack.NotFound().WithOrigin(result.Error)},
-		{First: len(blockPacksWithOwnerIds) == 0, Second: apiexceptions.BlockPack.NotFound()},
+		{First: result.Error != nil, Second: apiexceptions.NewBlockPackException().NotFound().WithOrigin(result.Error)},
+		{First: len(blockPacksWithOwnerIds) == 0, Second: apiexceptions.NewBlockPackException().NotFound()},
 	}); exception != nil {
 		return nil, nil, exception
 	}
@@ -297,7 +297,7 @@ func (r *BlockPackRepository) GetManyByRootShelfIds(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&blockPacks)
 	if result.Error != nil {
-		return nil, apiexceptions.BlockPack.NotFound().WithOrigin(result.Error)
+		return nil, apiexceptions.NewBlockPackException().NotFound().WithOrigin(result.Error)
 	}
 
 	return blockPacks, nil
@@ -317,7 +317,7 @@ func (r *BlockPackRepository) GetIdsByParentSubShelfIds(
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Find(&blockPackIds)
 	if result.Error != nil {
-		return nil, apiexceptions.BlockPack.NotFound().WithOrigin(result.Error)
+		return nil, apiexceptions.NewBlockPackException().NotFound().WithOrigin(result.Error)
 	}
 
 	return blockPackIds, nil
@@ -342,7 +342,7 @@ func (r *BlockPackRepository) GetIdsBySubShelfIdsAndDescendants(
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&blockPackIds)
 	if result.Error != nil {
-		return nil, apiexceptions.BlockPack.NotFound().WithOrigin(result.Error)
+		return nil, apiexceptions.NewBlockPackException().NotFound().WithOrigin(result.Error)
 	}
 
 	return blockPackIds, nil
@@ -374,14 +374,14 @@ func (r *BlockPackRepository) CreateOneBySubShelfId(
 			opts...,
 		) {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Shelf.NoPermission("create a block pack under this shelf")
+			return nil, apiexceptions.NewShelfException().NoPermission("create a block pack under this shelf")
 		}
 	}
 
 	var newBlockPack schemas.BlockPack
 	if err := copier.Copy(&newBlockPack, &input); err != nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.BlockPack.FailedToCreate().WithOrigin(err)
+		return nil, apiexceptions.NewBlockPackException().FailedToCreate().WithOrigin(err)
 	}
 	if newBlockPack.Id == uuid.Nil {
 		newBlockPack.Id = uuid.New()
@@ -391,9 +391,9 @@ func (r *BlockPackRepository) CreateOneBySubShelfId(
 	result := parsedOptions.DB.Model(&schemas.BlockPack{}).
 		Create(&newBlockPack)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.BlockPack.FailedToCreate().WithOrigin(result.Error)},
-		{First: newBlockPack.Id == uuid.Nil, Second: apiexceptions.BlockPack.FailedToCreate()},
-		{First: result.RowsAffected == 0, Second: apiexceptions.BlockPack.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewBlockPackException().FailedToCreate().WithOrigin(result.Error)},
+		{First: newBlockPack.Id == uuid.Nil, Second: apiexceptions.NewBlockPackException().FailedToCreate()},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewBlockPackException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -402,7 +402,7 @@ func (r *BlockPackRepository) CreateOneBySubShelfId(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewBlockPackException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -462,7 +462,7 @@ func (r *BlockPackRepository) CreateManyBySubShelfIds(
 		var newBlockPack schemas.BlockPack
 		if err := copier.Copy(&newBlockPack, &in); err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.BlockPack.InvalidInput().WithOrigin(err)
+			return nil, apiexceptions.NewBlockPackException().InvalidInput().WithOrigin(err)
 		}
 		if newBlockPack.Id == uuid.Nil {
 			newBlockPack.Id = uuid.New()
@@ -473,8 +473,8 @@ func (r *BlockPackRepository) CreateManyBySubShelfIds(
 	result := parsedOptions.DB.Model(&schemas.BlockPack{}).
 		CreateInBatches(&newBlockPacks, parsedOptions.BatchSize)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.Block.FailedToCreate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.BlockPack.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewBlockException().FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewBlockPackException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -488,7 +488,7 @@ func (r *BlockPackRepository) CreateManyBySubShelfIds(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewBlockPackException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -533,7 +533,7 @@ func (r *BlockPackRepository) UpdateOneById(
 			opts...,
 		) {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.Shelf.NoPermission("move a block pack to this shelf")
+			return nil, apiexceptions.NewShelfException().NoPermission("move a block pack to this shelf")
 		}
 	}
 
@@ -548,8 +548,8 @@ func (r *BlockPackRepository) UpdateOneById(
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.BlockPack.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.BlockPack.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewBlockPackException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewBlockPackException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -558,7 +558,7 @@ func (r *BlockPackRepository) UpdateOneById(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewBlockPackException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -681,8 +681,8 @@ func (r *BlockPackRepository) UpdateManyByIds(
 	`, strings.Join(valuePlaceholders, ","))
 	result := parsedOptions.DB.Exec(sql, valueArgs...)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.BlockPack.FailedToCreate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.BlockPack.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewBlockPackException().FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewBlockPackException().NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return exception
@@ -691,7 +691,7 @@ func (r *BlockPackRepository) UpdateManyByIds(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return apiexceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
+			return apiexceptions.NewBlockPackException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -718,8 +718,8 @@ func (r *BlockPackRepository) RestoreSoftDeletedOneById(
 		Where(`"BlockPackTable".id = ?`, id).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.BlockPack.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.BlockPack.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewBlockPackException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewBlockPackException().NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -733,7 +733,7 @@ func (r *BlockPackRepository) RestoreSoftDeletedManyByIds(
 	opts ...options.RepositoryOptions,
 ) ([]schemas.BlockPack, *exceptions.Exception) {
 	if len(ids) == 0 {
-		return nil, apiexceptions.BlockPack.NoChanges()
+		return nil, apiexceptions.NewBlockPackException().NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
@@ -751,8 +751,8 @@ func (r *BlockPackRepository) RestoreSoftDeletedManyByIds(
 		Where(`"BlockPackTable".id IN ?`, ids).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.BlockPack.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.BlockPack.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewBlockPackException().FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewBlockPackException().NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -777,8 +777,8 @@ func (r *BlockPackRepository) SoftDeleteOneById(
 		Where(`"BlockPackTable".id = ?`, id).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.BlockPack.FailedToDelete().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.BlockPack.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewBlockPackException().FailedToDelete().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewBlockPackException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -792,7 +792,7 @@ func (r *BlockPackRepository) SoftDeleteManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(ids) == 0 {
-		return apiexceptions.BlockPack.NoChanges()
+		return apiexceptions.NewBlockPackException().NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
@@ -808,8 +808,8 @@ func (r *BlockPackRepository) SoftDeleteManyByIds(
 		Where(`"BlockPackTable".id IN ?`, ids).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.BlockPack.FailedToDelete().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.BlockPack.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewBlockPackException().FailedToDelete().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewBlockPackException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -834,8 +834,8 @@ func (r *BlockPackRepository) HardDeleteOneById(
 		Where(`"BlockPackTable".id = ?`, id).
 		Delete(&schemas.BlockPack{})
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.BlockPack.FailedToDelete().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.BlockPack.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewBlockPackException().FailedToDelete().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewBlockPackException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -849,7 +849,7 @@ func (r *BlockPackRepository) HardDeleteManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(ids) == 0 {
-		return apiexceptions.BlockPack.NoChanges()
+		return apiexceptions.NewBlockPackException().NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
@@ -865,8 +865,8 @@ func (r *BlockPackRepository) HardDeleteManyByIds(
 		Where(`"BlockPackTable".id IN ?`, ids).
 		Delete(&schemas.BlockPack{})
 	if exception := exceptions.Cover(nil, []exceptions.Pair{
-		{First: result.Error != nil, Second: apiexceptions.BlockPack.FailedToDelete().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: apiexceptions.BlockPack.NoChanges()},
+		{First: result.Error != nil, Second: apiexceptions.NewBlockPackException().FailedToDelete().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: apiexceptions.NewBlockPackException().NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -912,7 +912,7 @@ func (r *BlockPackRepository) BulkCheckPermissionsAndGetManyByIds(
 			Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 			Scan(&validTargets)
 		if result.Error != nil {
-			return nil, nil, apiexceptions.BlockPack.NotFound().WithOrigin(result.Error)
+			return nil, nil, apiexceptions.NewBlockPackException().NotFound().WithOrigin(result.Error)
 		}
 
 		for _, validTarget := range validTargets {
@@ -927,7 +927,7 @@ func (r *BlockPackRepository) BulkCheckPermissionsAndGetManyByIds(
 			Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 			Scan(&validIds)
 		if result.Error != nil {
-			return nil, nil, apiexceptions.BlockPack.NotFound().WithOrigin(result.Error)
+			return nil, nil, apiexceptions.NewBlockPackException().NotFound().WithOrigin(result.Error)
 		}
 
 		for _, validId := range validIds {
@@ -955,7 +955,7 @@ func (r *BlockPackRepository) BulkCheckPermissionsAndGetManyByIds(
 		Order(`"BlockPackTable".id ASC`).
 		Find(&blockPacks)
 	if result.Error != nil {
-		return nil, nil, apiexceptions.BlockPack.NotFound().WithOrigin(result.Error)
+		return nil, nil, apiexceptions.NewBlockPackException().NotFound().WithOrigin(result.Error)
 	}
 
 	foundIdSet := make(map[uuid.UUID]bool, len(blockPacks))
@@ -978,7 +978,7 @@ func (r *BlockPackRepository) BulkCreateMany(
 	opts ...options.RepositoryOptions,
 ) ([]bool, *exceptions.Exception) {
 	if len(inputs) == 0 {
-		return []bool{}, apiexceptions.BlockPack.NoChanges()
+		return []bool{}, apiexceptions.NewBlockPackException().NoChanges()
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -1008,7 +1008,7 @@ func (r *BlockPackRepository) BulkCreateMany(
 		Scan(&validTargets)
 	if result.Error != nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.BlockPack.FailedToCreate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewBlockPackException().FailedToCreate().WithOrigin(result.Error)
 	}
 
 	validTargetByUserId := make(map[[2]uuid.UUID]bool, len(validTargets))
@@ -1049,13 +1049,13 @@ func (r *BlockPackRepository) BulkCreateMany(
 		CreateInBatches(&newBlockPacks, parsedOptions.BatchSize)
 	if result.Error != nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.BlockPack.FailedToCreate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewBlockPackException().FailedToCreate().WithOrigin(result.Error)
 	}
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewBlockPackException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -1071,7 +1071,7 @@ func (r *BlockPackRepository) BulkUpdateMany(
 	opts ...options.RepositoryOptions,
 ) ([]bool, *exceptions.Exception) {
 	if len(bulkInputs) == 0 {
-		return []bool{}, apiexceptions.BlockPack.NoChanges()
+		return []bool{}, apiexceptions.NewBlockPackException().NoChanges()
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -1126,7 +1126,7 @@ func (r *BlockPackRepository) BulkUpdateMany(
 			Scan(&validTargets)
 		if result.Error != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.BlockPack.FailedToUpdate().WithOrigin(result.Error)
+			return nil, apiexceptions.NewBlockPackException().FailedToUpdate().WithOrigin(result.Error)
 		}
 
 		validTargetByUserId := make(map[[2]uuid.UUID]bool, len(validTargets))
@@ -1208,13 +1208,13 @@ func (r *BlockPackRepository) BulkUpdateMany(
 	result := parsedOptions.DB.Raw(sql, valueArgs...).Scan(&updatedIndexes)
 	if result.Error != nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.BlockPack.FailedToUpdate().WithOrigin(result.Error)
+		return nil, apiexceptions.NewBlockPackException().FailedToUpdate().WithOrigin(result.Error)
 	}
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewBlockPackException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -1233,7 +1233,7 @@ func (r *BlockPackRepository) BulkDeleteMany(
 	opts ...options.RepositoryOptions,
 ) ([]bool, *exceptions.Exception) {
 	if len(bulkInputs) == 0 {
-		return []bool{}, apiexceptions.BlockPack.NoChanges()
+		return []bool{}, apiexceptions.NewBlockPackException().NoChanges()
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -1284,13 +1284,13 @@ func (r *BlockPackRepository) BulkDeleteMany(
 		Updates(map[string]interface{}{"deleted_at": time.Now(), "updated_at": time.Now()})
 	if result.Error != nil {
 		parsedOptions.DB.Rollback()
-		return nil, apiexceptions.BlockPack.FailedToDelete().WithOrigin(result.Error)
+		return nil, apiexceptions.NewBlockPackException().FailedToDelete().WithOrigin(result.Error)
 	}
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, apiexceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
+			return nil, apiexceptions.NewBlockPackException().FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 

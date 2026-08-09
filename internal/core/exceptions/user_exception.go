@@ -7,11 +7,15 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 )
 
-type userExceptionDomain struct{}
+type UserException struct {
+	CoreException
+}
 
-var User = userExceptionDomain{}
+func NewUserException() UserException {
+	return UserException{CoreException: NewCoreException("User")}
+}
 
-func (userExceptionDomain) NotFound() *exceptions.Exception {
+func (UserException) NotFound() *exceptions.Exception {
 	return exceptions.New(
 		"NotFound",
 		"User",
@@ -21,7 +25,7 @@ func (userExceptionDomain) NotFound() *exceptions.Exception {
 	)
 }
 
-func (userExceptionDomain) FailedToCreate() *exceptions.Exception {
+func (UserException) FailedToCreate() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToCreate",
 		"User",
@@ -32,7 +36,7 @@ func (userExceptionDomain) FailedToCreate() *exceptions.Exception {
 	)
 }
 
-func (userExceptionDomain) FailedToUpdate() *exceptions.Exception {
+func (UserException) FailedToUpdate() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToUpdate",
 		"User",
@@ -43,7 +47,7 @@ func (userExceptionDomain) FailedToUpdate() *exceptions.Exception {
 	)
 }
 
-func (userExceptionDomain) FailedToDelete() *exceptions.Exception {
+func (UserException) FailedToDelete() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToDelete",
 		"User",
@@ -54,7 +58,7 @@ func (userExceptionDomain) FailedToDelete() *exceptions.Exception {
 	)
 }
 
-func (userExceptionDomain) NoChanges() *exceptions.Exception {
+func (UserException) NoChanges() *exceptions.Exception {
 	return exceptions.New(
 		"NoChanges",
 		"User",
@@ -64,7 +68,7 @@ func (userExceptionDomain) NoChanges() *exceptions.Exception {
 	)
 }
 
-func (userExceptionDomain) FailedToCommitTransaction() *exceptions.Exception {
+func (UserException) FailedToCommitTransaction() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToCommitTransaction",
 		"User",
@@ -75,7 +79,7 @@ func (userExceptionDomain) FailedToCommitTransaction() *exceptions.Exception {
 	)
 }
 
-func (userExceptionDomain) InvalidInput() *exceptions.Exception {
+func (UserException) InvalidInput() *exceptions.Exception {
 	return exceptions.New(
 		"InvalidInput",
 		"User",
@@ -85,7 +89,7 @@ func (userExceptionDomain) InvalidInput() *exceptions.Exception {
 	)
 }
 
-func (userExceptionDomain) DuplicateName(name string) *exceptions.Exception {
+func (UserException) DuplicateName(name string) *exceptions.Exception {
 	return exceptions.New(
 		"DuplicateName",
 		"User",
@@ -95,7 +99,7 @@ func (userExceptionDomain) DuplicateName(name string) *exceptions.Exception {
 	)
 }
 
-func (userExceptionDomain) DuplicateEmail(email string) *exceptions.Exception {
+func (UserException) DuplicateEmail(email string) *exceptions.Exception {
 	return exceptions.New(
 		"DuplicateEmail",
 		"User",

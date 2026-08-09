@@ -1,10 +1,10 @@
 # Notification Frontend Integration
 
 This document is the frontend integration contract for Linear `NOT-71`.
-The backend Notification Runtime and Gateway routes are available for
-integration, but `NOT-71` remains in progress until the remaining backend
-deletion/anonymization flow, full integration coverage, and production
-observability are completed.
+The backend Notification Runtime, Gateway routes, Core lifecycle handling, and
+RealtimeGateway delivery path are available for integration. The remaining
+NOT-71 work is frontend inbox/UI acceptance and staging verification of the
+production metrics and dead-letter alerting configuration.
 
 ## Boundaries
 
@@ -20,6 +20,12 @@ Events:    Notification Runtime -> Kafka -> RealtimeGateway -> WebSocket
 
 The current authenticated user is always taken from the access-token context.
 The client must not send a user ID to select another user's notifications.
+
+For browser requests, include cookies (`credentials: "include"` in `fetch`,
+or the equivalent TanStack Query client configuration). The Gateway may refresh
+the access token during a request; the browser must accept the resulting
+`Set-Cookie` headers. Do not copy access or refresh tokens into JSON, query
+parameters, or WebSocket URLs.
 
 ## HTTP routes
 
@@ -155,6 +161,55 @@ Response:
 This is a soft delete. The client should remove the item from the visible
 inbox immediately and refetch if it needs server confirmation.
 
+## Realtime ticket APIs
+
+Notification delivery uses the public RealtimeGateway WebSocket. The ticket
+APIs are served by the Gateway and are authenticated with the same cookies as
+the notification HTTP routes.
+
+### Connection ticket
+
+```http
+POST /api/development/v1/realtime/connection/ticket
+```
+
+The request has no JSON body. The browser's `User-Agent` header is captured by
+the Gateway and bound to the short-lived ticket. The successful response is a
+`ClientResponse` whose `data` contains:
+
+```json
+{
+  "realtimeEndpoint": "/realtime/development/v1",
+  "realtimeProtocolVersion": 1,
+  "connectionTicket": "<short-lived-ticket>",
+  "expiresAt": "2026-08-09T12:05:00Z"
+}
+```
+
+Use `data.realtimeEndpoint` with the public RealtimeGateway origin. The
+connection ticket is a single-use capability and must be sent as the only
+WebSocket subprotocol. It is not a bearer token for REST calls.
+
+### BlockPack channel ticket
+
+Issue one channel ticket for each BlockPack subscription:
+
+```http
+POST /api/development/v1/realtime/channel/block-pack/ticket
+Content-Type: application/json
+
+{
+  "blockPackId": "4e4b3c2e-2ae4-4c5f-90fd-6e92ef2f4a19",
+  "permission": "read"
+}
+```
+
+`permission` is `read` or `write`; Core checks the authenticated user's
+current BlockPack permission before issuing the ticket. The response includes
+`channelTicket`, `channelId`, `permission`, room/document metadata, sequence
+checkpoints, and `expiresAt`. The channel ticket is also single-use and is
+sent in the WebSocket `subscribe` frame, not in the URL.
+
 ## Error handling
 
 Errors use the same public envelope:
@@ -188,12 +243,31 @@ wss://<host>/realtime/development/v1
 
 The normal flow is:
 
-1. Call the existing authenticated realtime connection-ticket API through the
+1. Call `POST /api/development/v1/realtime/connection/ticket` through the
    Gateway.
-2. Connect to RealtimeGateway using the returned connection ticket as the
-   single `Sec-WebSocket-Protocol` value.
-3. Complete the existing connection and BlockPack channel handshake.
-4. Listen for frames whose `type` is `notification`.
+2. Connect directly to RealtimeGateway using `data.realtimeEndpoint` and the
+   returned connection ticket as the single `Sec-WebSocket-Protocol` value.
+3. Wait for the `ready` frame. A BlockPack `subscribe` frame is optional and
+   is independent of notification delivery.
+4. Listen on the root connection for frames whose `type` is `notification`.
+
+Example browser connection:
+
+```ts
+const ticketHttpResponse = await fetch(
+  "/api/development/v1/realtime/connection/ticket",
+  { method: "POST", credentials: "include" },
+);
+const ticketEnvelope = await ticketHttpResponse.json();
+const socket = new WebSocket(
+  `${realtimeGatewayOrigin}${ticketEnvelope.data.realtimeEndpoint}`,
+  [ticketEnvelope.data.connectionTicket],
+);
+```
+
+The WebSocket upgrade does not use access-token cookies or an Authorization
+header. RealtimeGateway authenticates the upgrade solely with the signed,
+single-use connection ticket and the browser `User-Agent` binding.
 
 Notification frame shape:
 
@@ -222,6 +296,11 @@ On reconnect, the frontend must call the list endpoint with its last known
 cursor and deduplicate by `notificationId` (or `eventId`). A frame may arrive
 before or after the HTTP response, so the UI store must merge both sources
 idempotently.
+
+Notification frames are delivered on every authenticated root connection; the
+client does not need to subscribe to a BlockPack to receive them. The frame's
+`payload` is JSON with a type-specific shape selected by `templateKey` and
+`templateVersion`.
 
 ## Suggested Zod contracts
 

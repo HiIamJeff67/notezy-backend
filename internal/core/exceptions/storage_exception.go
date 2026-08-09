@@ -7,11 +7,15 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 )
 
-type storageExceptionDomain struct{}
+type StorageException struct {
+	CoreException
+}
 
-var Storage = storageExceptionDomain{}
+func NewStorageException() StorageException {
+	return StorageException{CoreException: NewCoreException("Storage")}
+}
 
-func (storageExceptionDomain) FailedToReadObjectBytes() *exceptions.Exception {
+func (StorageException) FailedToReadObjectBytes() *exceptions.Exception {
 	return exceptions.New(
 		"FailedToReadObjectBytes",
 		"Storage",
@@ -22,7 +26,7 @@ func (storageExceptionDomain) FailedToReadObjectBytes() *exceptions.Exception {
 	)
 }
 
-func (storageExceptionDomain) FailedToPutObject(object any) *exceptions.Exception {
+func (StorageException) FailedToPutObject(object any) *exceptions.Exception {
 	return exceptions.New(
 		"FailedToPutObject",
 		"Storage",
@@ -33,7 +37,7 @@ func (storageExceptionDomain) FailedToPutObject(object any) *exceptions.Exceptio
 	)
 }
 
-func (storageExceptionDomain) FailedToPresignedGetObject(object any) *exceptions.Exception {
+func (StorageException) FailedToPresignedGetObject(object any) *exceptions.Exception {
 	return exceptions.New(
 		"FailedToPresignedGetObject",
 		"Storage",

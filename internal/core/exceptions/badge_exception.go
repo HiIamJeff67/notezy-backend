@@ -6,11 +6,15 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 )
 
-type badgeExceptionDomain struct{}
+type BadgeException struct {
+	CoreException
+}
 
-var Badge = badgeExceptionDomain{}
+func NewBadgeException() BadgeException {
+	return BadgeException{CoreException: NewCoreException("Badge")}
+}
 
-func (badgeExceptionDomain) NotFound() *exceptions.Exception {
+func (BadgeException) NotFound() *exceptions.Exception {
 	return exceptions.New(
 		"NotFound",
 		"Badge",
