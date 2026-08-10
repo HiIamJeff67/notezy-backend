@@ -18,8 +18,8 @@ func (e RequestException) RecipientRequired() *exceptions.Exception {
 	return exceptions.New("RecipientUserPublicIdRequired", e.Domain, "ValidateRequest", "The recipient user public ID is required", http.StatusBadRequest)
 }
 
-func (e RequestException) InvalidListRequest(cause error) *exceptions.Exception {
-	return exceptions.New("InvalidListRequest", e.Domain, "ListNotifications", "The notification list request is invalid", http.StatusBadRequest).WithOrigin(cause)
+func (e RequestException) InvalidSearchRequest(cause error) *exceptions.Exception {
+	return exceptions.New("InvalidSearchRequest", e.Domain, "SearchPrivateNotifications", "The private notification search request is invalid", http.StatusBadRequest).WithOrigin(cause)
 }
 
 func (e RequestException) InvalidCountRequest(cause error) *exceptions.Exception {
@@ -35,5 +35,5 @@ func (e RequestException) InvalidDeleteRequest(cause error) *exceptions.Exceptio
 }
 
 func (e RequestException) UserRequired() *exceptions.Exception {
-	return exceptions.New("UserPublicIdRequired", e.Domain, "DeleteForUser", "The user public ID is required", http.StatusBadRequest)
+	return exceptions.New("UserPublicIdRequired", e.Domain, "DeleteAllNotificationsForUser", "The user public ID is required", http.StatusBadRequest)
 }

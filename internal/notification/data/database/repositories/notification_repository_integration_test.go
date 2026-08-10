@@ -7,12 +7,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	notificationtypescontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/types"
 	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/notification/data/database/schemas"
 )
 
 func TestNotificationRepositoryDeleteTombstoneSuppressesDelayedRequests(t *testing.T) {
@@ -43,12 +45,68 @@ func TestNotificationRepositoryDeleteTombstoneSuppressesDelayedRequests(t *testi
 		t.Fatalf("process delayed notification request: %v", err)
 	}
 
-	notifications, err := repository.List(context.Background(), userPublicId, nil, 100)
+	notifications, err := repository.List(context.Background(), userPublicId, nil, nil, 100)
 	if err != nil {
 		t.Fatalf("list notifications after deletion: %v", err)
 	}
 	if len(notifications) != 0 {
 		t.Fatalf("notifications after user deletion = %d, want 0", len(notifications))
+	}
+}
+
+func TestNotificationRepositoryListUsesCompositeCursor(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file:notification-repository-cursor-test?mode=memory&cache=shared"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open test database: %v", err)
+	}
+	if err := createNotificationRepositoryTestTables(db); err != nil {
+		t.Fatalf("create test database tables: %v", err)
+	}
+
+	repository := NewNotificationRepository(db)
+	userPublicId := uuid.New()
+	createdAt := time.Now().UTC().Truncate(time.Microsecond)
+	for index := 0; index < 3; index++ {
+		if err := db.Create(&schemas.Notification{
+			Id:                    uuid.New(),
+			RecipientUserPublicId: userPublicId,
+			Type:                  "news",
+			Priority:              "normal",
+			TemplateKey:           "news",
+			TemplateVersion:       1,
+			Payload:               datatypes.JSON(`{"title":"Title","summary":"Summary","body":"Body"}`),
+			DedupeKey:             "cursor-test:" + uuid.NewString(),
+			CreatedAt:             createdAt,
+		}).Error; err != nil {
+			t.Fatalf("create notification %d: %v", index, err)
+		}
+	}
+
+	firstPage, err := repository.List(context.Background(), userPublicId, nil, nil, 1)
+	if err != nil {
+		t.Fatalf("load first notification page: %v", err)
+	}
+	if len(firstPage) != 1 {
+		t.Fatalf("first page count = %d, want 1", len(firstPage))
+	}
+
+	secondPage, err := repository.List(
+		context.Background(),
+		userPublicId,
+		&firstPage[0].CreatedAt,
+		&firstPage[0].Id,
+		10,
+	)
+	if err != nil {
+		t.Fatalf("load second notification page: %v", err)
+	}
+	if len(secondPage) != 2 {
+		t.Fatalf("second page count = %d, want 2", len(secondPage))
+	}
+	for _, notification := range secondPage {
+		if notification.Id == firstPage[0].Id {
+			t.Fatal("composite cursor returned the previous notification again")
+		}
 	}
 }
 

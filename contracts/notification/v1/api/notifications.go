@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	ListMyNotificationsOperation        = "ListMyNotifications"
+	SearchPrivateNotificationsOperation = "SearchPrivateNotifications"
 	CountMyUnreadNotificationsOperation = "CountMyUnreadNotifications"
 	MarkMyNotificationsReadOperation    = "MarkMyNotificationsRead"
 	DeleteMyNotificationsOperation      = "DeleteMyNotifications"
@@ -27,15 +27,34 @@ type NotificationResponseDto struct {
 	ExpiresAt             *time.Time     `json:"expiresAt,omitempty"`
 }
 
-type ListNotificationsRequestDto struct {
-	RecipientUserPublicId uuid.UUID  `json:"recipientUserPublicId" validate:"required"`
-	Before                *time.Time `json:"before,omitempty" validate:"omitempty"`
-	Limit                 int        `json:"limit" validate:"omitempty,min=1,max=100"`
+type SearchPrivateNotificationsRequestDto struct {
+	RecipientUserPublicId uuid.UUID `json:"recipientUserPublicId" validate:"required"`
+	After                 *string   `json:"after,omitempty" validate:"omitempty"`
+	First                 int       `json:"first" validate:"omitempty,min=1,max=100"`
 }
 
-type ListNotificationsResponseDto struct {
-	Items      []NotificationResponseDto `json:"items"`
-	NextBefore *time.Time                `json:"nextBefore,omitempty"`
+type SearchPrivateNotificationsResponseDto struct {
+	SearchEdges    []SearchPrivateNotificationEdge `json:"searchEdges"`
+	SearchPageInfo SearchNotificationPageInfo      `json:"searchPageInfo"`
+	TotalCount     int32                           `json:"totalCount"`
+	SearchTime     float64                         `json:"searchTime"`
+}
+
+type SearchPrivateNotificationEdge struct {
+	EncodedSearchCursor string                  `json:"encodedSearchCursor"`
+	Node                NotificationResponseDto `json:"node"`
+}
+
+type SearchNotificationPageInfo struct {
+	HasNextPage              bool    `json:"hasNextPage"`
+	HasPreviousPage          bool    `json:"hasPreviousPage"`
+	StartEncodedSearchCursor *string `json:"startEncodedSearchCursor,omitempty"`
+	EndEncodedSearchCursor   *string `json:"endEncodedSearchCursor,omitempty"`
+}
+
+type SearchNotificationCursorFields struct {
+	CreatedAt time.Time `json:"createdAt"`
+	Id        uuid.UUID `json:"id"`
 }
 
 type CountUnreadNotificationsRequestDto struct {

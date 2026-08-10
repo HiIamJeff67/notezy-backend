@@ -8,7 +8,7 @@ import (
 )
 
 type Notification struct {
-	Id                    uuid.UUID      `json:"id" gorm:"column:id;type:uuid;primaryKey;default:gen_random_uuid();"`
+	Id                    uuid.UUID      `json:"id" gorm:"column:id;type:uuid;primaryKey;default:gen_random_uuid();index:notification_recipient_created_index,priority:3,sort:desc;"`
 	RecipientUserPublicId uuid.UUID      `json:"recipientUserPublicId" gorm:"column:recipient_user_public_id;type:uuid;not null;index:notification_recipient_created_index,priority:1;"`
 	Type                  string         `json:"type" gorm:"column:type;type:varchar(64);not null;"`
 	Priority              string         `json:"priority" gorm:"column:priority;type:varchar(32);not null;"`

@@ -41,11 +41,11 @@ func configureDevelopmentNotificationRoutes(
 			"/",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware("listMyNotifications"),
-					middlewares.ApplyMeterMiddleware("server.requests.notifications.list"),
+					middlewares.ApplyTracerMiddleware("searchPrivateNotifications"),
+					middlewares.ApplyMeterMiddleware("server.requests.notifications.search"),
 				},
 				defaultMiddlewares,
-				notificationBinder.BindList(notificationController.List),
+				notificationBinder.BindSearch(notificationController.Search),
 			)...,
 		)
 		notificationRoutes.GET(

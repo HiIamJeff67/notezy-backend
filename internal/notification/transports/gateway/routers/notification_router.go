@@ -15,9 +15,9 @@ func ConfigureNotificationRoutes(
 ) {
 	notificationRoutes := router.Group("/notifications")
 	notificationRoutes.POST(
-		"/list",
-		middlewares.DelegationAuthenticatedMiddleware(notificationscontract.ListMyNotificationsOperation),
-		endpoint.List,
+		"/search",
+		middlewares.DelegationAuthenticatedMiddleware(notificationscontract.SearchPrivateNotificationsOperation),
+		endpoint.Search,
 	)
 	notificationRoutes.POST(
 		"/unread-count",

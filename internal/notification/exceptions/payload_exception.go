@@ -31,7 +31,7 @@ func (e PayloadException) InvalidImportantPayload(cause error) *exceptions.Excep
 }
 
 func (e PayloadException) ResponsePayloadDecodeFailed(cause error) *exceptions.Exception {
-	exception := exceptions.New("ResponsePayloadDecodeFailed", e.Domain, "ListNotifications", "Failed to decode a notification response payload", http.StatusInternalServerError, true)
+	exception := exceptions.New("ResponsePayloadDecodeFailed", e.Domain, "SearchPrivateNotifications", "Failed to decode a notification response payload", http.StatusInternalServerError, true)
 	exception.Retryable = true
 	return exception.WithOrigin(cause)
 }

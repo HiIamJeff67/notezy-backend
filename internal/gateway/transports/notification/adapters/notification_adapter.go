@@ -3,6 +3,7 @@ package adapters
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -175,6 +176,20 @@ func CallSecurly[RequestDto any, ResponseDto any](
 			true,
 		).WithOrigin(err)
 	}
+	if httpResponse.StatusCode < http.StatusOK || httpResponse.StatusCode >= http.StatusMultipleChoices {
+		response := &gatewaycontract.Response[ResponseDto]{}
+		if err := json.Unmarshal(responseBody, response); err == nil && response.Exception != nil {
+			return nil, response.Exception.Clone(httpResponse.StatusCode)
+		}
+		return nil, exceptions.New(
+			"NotificationResponseFailed",
+			"Gateway",
+			operation,
+			"The Notification service returned an unsuccessful response",
+			httpResponse.StatusCode,
+			true,
+		).WithOrigin(fmt.Errorf("status %d: %s", httpResponse.StatusCode, strings.TrimSpace(string(responseBody))))
+	}
 	response := &gatewaycontract.Response[ResponseDto]{}
 	if err := json.Unmarshal(responseBody, response); err != nil {
 		return nil, exceptions.New(
@@ -206,19 +221,5 @@ func CallSecurly[RequestDto any, ResponseDto any](
 			true,
 		)
 	}
-	if httpResponse.StatusCode < http.StatusOK || httpResponse.StatusCode >= http.StatusMultipleChoices {
-		if response.Exception != nil {
-			return nil, response.Exception.Clone(httpResponse.StatusCode)
-		}
-		return nil, exceptions.New(
-			"NotificationResponseFailed",
-			"Gateway",
-			operation,
-			"The Notification service returned an unsuccessful response",
-			httpResponse.StatusCode,
-			true,
-		)
-	}
-
 	return response, nil
 }

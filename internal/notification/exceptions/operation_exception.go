@@ -20,8 +20,8 @@ func (e OperationException) CreateFailed(cause error) *exceptions.Exception {
 	return exception.WithOrigin(cause)
 }
 
-func (e OperationException) ListFailed(cause error) *exceptions.Exception {
-	exception := exceptions.New("ListFailed", e.Domain, "ListNotifications", "Failed to list notifications", http.StatusInternalServerError, true)
+func (e OperationException) SearchFailed(cause error) *exceptions.Exception {
+	exception := exceptions.New("SearchFailed", e.Domain, "SearchPrivateNotifications", "Failed to search private notifications", http.StatusInternalServerError, true)
 	exception.Retryable = true
 	return exception.WithOrigin(cause)
 }
@@ -50,8 +50,8 @@ func (e OperationException) HardDeleteFailed(cause error) *exceptions.Exception 
 	return exception.WithOrigin(cause)
 }
 
-func (e OperationException) DeleteForUserFailed(cause error) *exceptions.Exception {
-	exception := exceptions.New("DeleteForUserFailed", e.Domain, "DeleteForUser", "Failed to delete notifications for the user", http.StatusInternalServerError, true)
+func (e OperationException) DeleteAllForUserFailed(cause error) *exceptions.Exception {
+	exception := exceptions.New("DeleteAllForUserFailed", e.Domain, "DeleteAllNotificationsForUser", "Failed to delete notifications for the user", http.StatusInternalServerError, true)
 	exception.Retryable = true
 	return exception.WithOrigin(cause)
 }

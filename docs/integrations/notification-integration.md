@@ -1,10 +1,10 @@
 # Notification Frontend Integration
 
 This document is the frontend integration contract for Linear `NOT-71`.
-The backend Notification Runtime, Gateway routes, Core lifecycle handling, and
-RealtimeGateway delivery path are available for integration. The remaining
-NOT-71 work is frontend inbox/UI acceptance and staging verification of the
-production metrics and dead-letter alerting configuration.
+The backend Notification Runtime, Gateway routes, Core lifecycle handling,
+RealtimeGateway delivery path, and frontend contract are implemented. The
+remaining NOT-71 work is live staging verification of production metrics,
+dead-letter alerting, and end-to-end delivery.
 
 ## Boundaries
 
@@ -46,52 +46,68 @@ returns the public `ClientResponse` envelope:
 }
 ```
 
-### List notifications
+### Search private notifications
 
 ```http
-GET /api/development/v1/notifications/?limit=20&before=2026-08-09T12:00:00Z
+GET /api/development/v1/notifications/?first=20&after=<endEncodedSearchCursor>
 ```
 
 Query parameters:
 
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `limit` | integer | no | `1..100`; omit to use the backend default (`50`). |
-| `before` | RFC3339 timestamp | no | Cursor returned as `data.nextBefore`. |
+| `first` | integer | no | `1..100`; omit to use the backend default (`50`). |
+| `after` | opaque string | no | Use `data.searchPageInfo.endEncodedSearchCursor` from the previous page. |
 
-Response:
+The response follows the same connection shape used by the GraphQL search
+contracts:
 
 ```json
 {
   "success": true,
   "data": {
-    "items": [
+    "searchEdges": [
       {
-        "id": "4e4b3c2e-2ae4-4c5f-90fd-6e92ef2f4a19",
-        "recipientUserPublicId": "00000000-0000-0000-0000-000000000000",
-        "type": "news",
-        "priority": "normal",
-        "templateKey": "news",
-        "templateVersion": 1,
-        "payload": {
-          "title": "Welcome to Notezy",
-          "summary": "Your Notezy account is ready.",
-          "body": "Start organizing your notes, shelves, and routines in one place."
-        },
-        "createdAt": "2026-08-09T12:00:00Z",
-        "readAt": null,
-        "deletedAt": null,
-        "expiresAt": null
+        "encodedSearchCursor": "<opaque-cursor>",
+        "node": {
+          "id": "4e4b3c2e-2ae4-4c5f-90fd-6e92ef2f4a19",
+          "recipientUserPublicId": "00000000-0000-0000-0000-000000000000",
+          "type": "news",
+          "priority": "normal",
+          "templateKey": "news",
+          "templateVersion": 1,
+          "payload": {
+            "title": "Welcome to Notezy",
+            "summary": "Your Notezy account is ready.",
+            "body": "Start organizing your notes, shelves, and routines in one place."
+          },
+          "createdAt": "2026-08-09T12:00:00Z",
+          "readAt": null,
+          "deletedAt": null,
+          "expiresAt": null
+        }
       }
     ],
-    "nextBefore": "2026-08-09T11:58:00Z"
+    "searchPageInfo": {
+      "hasNextPage": true,
+      "hasPreviousPage": false,
+      "startEncodedSearchCursor": "<opaque-cursor>",
+      "endEncodedSearchCursor": "<opaque-cursor>"
+    },
+    "totalCount": 1,
+    "searchTime": 1.42
   },
   "exception": null
 }
 ```
 
-When `nextBefore` is `null` or absent, there is no next page. The backend
-does not return deleted or expired notifications from this endpoint.
+The cursor is opaque and must not be decoded or constructed by the frontend.
+When placing it in the URL, let the HTTP client URL-encode it (for example,
+use `URLSearchParams` rather than string concatenation).
+When `searchPageInfo.hasNextPage` is `false`, there is no next page. The
+backend does not return deleted or expired notifications from this endpoint.
+The query uses `(createdAt, id)` as a stable keyset, so equal timestamps do
+not cause duplicate or skipped notifications.
 
 ### Unread count
 
@@ -330,7 +346,7 @@ break an older frontend deployment.
 ## TanStack Query integration checklist
 
 - Keep `notifications` and `unread-count` as separate query keys.
-- Use `nextBefore` as the cursor for infinite pagination.
+- Use `searchPageInfo.endEncodedSearchCursor` as the cursor for infinite pagination.
 - Insert a WebSocket notification into the list cache only if its
   `notificationId` is not already present.
 - Increment or invalidate unread count for a new unread frame.
@@ -349,11 +365,12 @@ Already available:
 - Core outbox producer, including registration welcome notification.
 - Notification consumer, idempotency inbox, and Notification outbox relay.
 - RealtimeGateway Kafka consumer and live WebSocket notification frames.
-- Gateway authenticated list, unread count, read, and soft-delete routes.
+- Gateway authenticated private-search, unread count, read, and soft-delete routes.
 - Kafka contract coverage for Core notification requests and user-deletion
   lifecycle events (run with `NOTEZY_RUN_INTEGRATION=1`).
 
 Still tracked in NOT-71:
 
 - Production metrics/DLQ deployment verification in the staging environment.
-- Frontend Notification inbox/panel implementation and end-to-end acceptance.
+- End-to-end acceptance against the deployed Gateway, Notification Runtime,
+  Kafka, and RealtimeGateway runtimes.

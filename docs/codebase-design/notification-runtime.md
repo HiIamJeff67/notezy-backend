@@ -35,10 +35,12 @@ application registers shared and notification validators once, then injects
 the configured validator into `NotificationService`, which calls
 `s.validator.Struct(...)` after decoding each payload. The shared
 NotificationService dispatches by notification type, template key, and
-template version; list, unread, read, and delete queries stay in the shared
-repository and never iterate over type-specific services.
+template version; private notification search, unread, read, and delete
+queries stay in the shared repository and never iterate over type-specific
+services. Private search uses a GraphQL-style opaque composite cursor over
+`created_at` and `id`, with a matching descending database order.
 
-The runtime exposes internal endpoints for list, unread count, mark-read, and
+The runtime exposes internal endpoints for private search, unread count, mark-read, and
 soft-delete operations. The Gateway remains the public authentication boundary;
 the Notification internal router verifies the delegated token, and the Gateway
 adapter injects the authenticated `user_public_id` into these internal requests.

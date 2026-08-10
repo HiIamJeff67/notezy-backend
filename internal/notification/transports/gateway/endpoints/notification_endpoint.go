@@ -1,6 +1,7 @@
 package endpoints
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
@@ -16,41 +17,48 @@ import (
 )
 
 type NotificationEndpoint struct {
-	service *services.NotificationService
+	service services.NotificationServiceInterface
 }
 
-func NewNotificationEndpoint(service *services.NotificationService) *NotificationEndpoint {
+func NewNotificationEndpoint(service services.NotificationServiceInterface) *NotificationEndpoint {
 	return &NotificationEndpoint{service: service}
 }
 
-func (e *NotificationEndpoint) List(ctx *gin.Context) {
-	request := &gatewaycontract.Request[notificationscontract.ListNotificationsRequestDto]{}
+func (e *NotificationEndpoint) Search(ctx *gin.Context) {
+	request := &gatewaycontract.Request[notificationscontract.SearchPrivateNotificationsRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 	request.Dto.RecipientUserPublicId = ctx.MustGet(sharedcontexts.ContextFieldName_User_PublicId.String()).(uuid.UUID)
-	responseDto, err := e.service.List(ctx.Request.Context(), &request.Dto)
+	responseDto, err := e.service.SearchPrivateNotifications(ctx.Request.Context(), &request.Dto)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gatewaycontract.Response[struct{}]{
+		responseException := exceptions.New(
+			"NotificationSearchFailed",
+			"Notification",
+			"SearchPrivateNotifications",
+			"Failed to search private notifications",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+		var serviceException *exceptions.Exception
+		if errors.As(err, &serviceException) {
+			responseException = serviceException
+		}
+		publicException := responseException.ToPublic()
+
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
 			Version: gatewaycontract.Version,
 			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
-			Data: struct{}{},
-			Exception: exceptions.New(
-				"NotificationListFailed",
-				"Notification",
-				"List",
-				"Failed to list notifications",
-				http.StatusInternalServerError,
-				true,
-			).WithOrigin(err),
+			Data:      struct{}{},
+			Exception: publicException,
 		})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[notificationscontract.ListNotificationsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[notificationscontract.SearchPrivateNotificationsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -67,7 +75,7 @@ func (e *NotificationEndpoint) CountUnread(ctx *gin.Context) {
 		return
 	}
 	request.Dto.RecipientUserPublicId = ctx.MustGet(sharedcontexts.ContextFieldName_User_PublicId.String()).(uuid.UUID)
-	responseDto, err := e.service.CountUnread(ctx.Request.Context(), &request.Dto)
+	responseDto, err := e.service.CountMyUnreadNotifications(ctx.Request.Context(), &request.Dto)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gatewaycontract.Response[struct{}]{
 			Version: gatewaycontract.Version,
@@ -104,7 +112,7 @@ func (e *NotificationEndpoint) MarkRead(ctx *gin.Context) {
 		return
 	}
 	request.Dto.RecipientUserPublicId = ctx.MustGet(sharedcontexts.ContextFieldName_User_PublicId.String()).(uuid.UUID)
-	responseDto, err := e.service.MarkRead(ctx.Request.Context(), &request.Dto)
+	responseDto, err := e.service.MarkMyNotificationsRead(ctx.Request.Context(), &request.Dto)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gatewaycontract.Response[struct{}]{
 			Version: gatewaycontract.Version,
@@ -141,7 +149,7 @@ func (e *NotificationEndpoint) Delete(ctx *gin.Context) {
 		return
 	}
 	request.Dto.RecipientUserPublicId = ctx.MustGet(sharedcontexts.ContextFieldName_User_PublicId.String()).(uuid.UUID)
-	responseDto, err := e.service.SoftDelete(ctx.Request.Context(), &request.Dto)
+	responseDto, err := e.service.SoftDeleteMyNotifications(ctx.Request.Context(), &request.Dto)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gatewaycontract.Response[struct{}]{
 			Version: gatewaycontract.Version,

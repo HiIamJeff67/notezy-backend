@@ -12,7 +12,7 @@ import (
 )
 
 type NotificationBinderInterface interface {
-	BindList(controllers.Func[*notificationscontract.ListNotificationsRequestDto]) gin.HandlerFunc
+	BindSearch(controllers.Func[*notificationscontract.SearchPrivateNotificationsRequestDto]) gin.HandlerFunc
 	BindCountUnread(controllers.Func[*notificationscontract.CountUnreadNotificationsRequestDto]) gin.HandlerFunc
 	BindMarkRead(controllers.Func[*notificationscontract.MarkNotificationsReadRequestDto]) gin.HandlerFunc
 	BindDelete(controllers.Func[*notificationscontract.DeleteNotificationsRequestDto]) gin.HandlerFunc
@@ -24,11 +24,11 @@ func NewNotificationBinder() NotificationBinderInterface {
 	return &NotificationBinder{}
 }
 
-func (b *NotificationBinder) BindList(
-	controllerFunc controllers.Func[*notificationscontract.ListNotificationsRequestDto],
+func (b *NotificationBinder) BindSearch(
+	controllerFunc controllers.Func[*notificationscontract.SearchPrivateNotificationsRequestDto],
 ) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &notificationscontract.ListNotificationsRequestDto{}
+		requestDto := &notificationscontract.SearchPrivateNotificationsRequestDto{}
 		if err := ctx.ShouldBindQuery(requestDto); err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Notification").WithOrigin(err), ctx)
 			return

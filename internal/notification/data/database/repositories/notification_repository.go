@@ -20,7 +20,13 @@ import (
 
 type NotificationRepository interface {
 	CreateFromRequest(ctx context.Context, event eventcontract.EventEnvelope[coreeventscontract.NotificationRequestedData]) error
-	List(ctx context.Context, userPublicId uuid.UUID, before *time.Time, limit int) ([]schemas.Notification, error)
+	List(
+		ctx context.Context,
+		userPublicId uuid.UUID,
+		beforeCreatedAt *time.Time,
+		beforeId *uuid.UUID,
+		limit int,
+	) ([]schemas.Notification, error)
 	CountUnread(ctx context.Context, userPublicId uuid.UUID) (int64, error)
 	MarkRead(ctx context.Context, userPublicId uuid.UUID, notificationIds []uuid.UUID) (int64, error)
 	SoftDelete(ctx context.Context, userPublicId uuid.UUID, notificationIds []uuid.UUID) (int64, error)
@@ -146,7 +152,8 @@ func (r *NotificationRepositoryImpl) CreateFromRequest(
 func (r *NotificationRepositoryImpl) List(
 	ctx context.Context,
 	userPublicId uuid.UUID,
-	before *time.Time,
+	beforeCreatedAt *time.Time,
+	beforeId *uuid.UUID,
 	limit int,
 ) ([]schemas.Notification, error) {
 	if limit <= 0 || limit > 100 {
@@ -157,9 +164,15 @@ func (r *NotificationRepositoryImpl) List(
 		Where("deleted_at IS NULL").
 		Where("expires_at IS NULL OR expires_at > ?", time.Now().UTC()).
 		Order("created_at DESC").
+		Order("id DESC").
 		Limit(limit)
-	if before != nil {
-		query = query.Where("created_at < ?", *before)
+	if beforeCreatedAt != nil && beforeId != nil {
+		query = query.Where(
+			"(created_at < ? OR (created_at = ? AND id < ?))",
+			*beforeCreatedAt,
+			*beforeCreatedAt,
+			*beforeId,
+		)
 	}
 
 	var notifications []schemas.Notification

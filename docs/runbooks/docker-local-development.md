@@ -68,7 +68,9 @@ docker compose \
 The production-like file currently wires the database, Redis, Kafka-dependent
 runtimes, Yjs worker, Gateway, Realtime Gateway, and Nginx. The health checks
 and `depends_on` conditions ensure that a dependent service is not started
-until its required runtime reports healthy.
+until its required runtime reports healthy. Application runtime health checks
+run every 60 seconds; dependency checks for databases, Redis, and Kafka retain
+their shorter intervals so startup ordering remains responsive.
 
 Run the staging smoke checks against this local stack when the local
 environment contains all required settings:

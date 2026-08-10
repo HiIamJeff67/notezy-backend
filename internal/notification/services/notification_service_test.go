@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	notificationscontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/api"
 	notificationtypescontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/types"
 	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 
@@ -24,6 +25,7 @@ type notificationRepositoryStub struct {
 	createErr          error
 	deleteForUserCalls int
 	deleteForUserErr   error
+	notifications      []schemas.Notification
 }
 
 func (r *notificationRepositoryStub) CreateFromRequest(
@@ -34,8 +36,8 @@ func (r *notificationRepositoryStub) CreateFromRequest(
 	return r.createErr
 }
 
-func (r *notificationRepositoryStub) List(context.Context, uuid.UUID, *time.Time, int) ([]schemas.Notification, error) {
-	return nil, nil
+func (r *notificationRepositoryStub) List(context.Context, uuid.UUID, *time.Time, *uuid.UUID, int) ([]schemas.Notification, error) {
+	return r.notifications, nil
 }
 
 func (r *notificationRepositoryStub) CountUnread(context.Context, uuid.UUID) (int64, error) {
@@ -75,7 +77,7 @@ func (r *notificationRepositoryStub) DeletePublishedOutbox(context.Context, time
 	return 0, nil
 }
 
-func newNotificationServiceForTest(repository *notificationRepositoryStub) *NotificationService {
+func newNotificationServiceForTest(repository *notificationRepositoryStub) NotificationServiceInterface {
 	validate := validator.New()
 	sharedvalidations.RegisterStringsValidation(validate)
 	sharedvalidations.RegisterTimesValidation(validate)
@@ -120,7 +122,7 @@ func TestConsumeRequestedValidatesPayloadBeforePersisting(t *testing.T) {
 		},
 	}
 
-	if err := service.ConsumeRequested(context.Background(), event); err != nil {
+	if err := service.ConsumeNotificationRequested(context.Background(), event); err != nil {
 		t.Fatalf("expected valid notification request, got %v", err)
 	}
 	if repository.createCalls != 1 {
@@ -155,7 +157,7 @@ func TestConsumeRequestedRejectsInvalidPayloadBeforePersisting(t *testing.T) {
 		},
 	}
 
-	if err := service.ConsumeRequested(context.Background(), event); err == nil {
+	if err := service.ConsumeNotificationRequested(context.Background(), event); err == nil {
 		t.Fatal("expected invalid notification payload to be rejected")
 	}
 	if repository.createCalls != 0 {
@@ -167,10 +169,60 @@ func TestDeleteForUserDelegatesToRepository(t *testing.T) {
 	repository := &notificationRepositoryStub{}
 	service := newNotificationServiceForTest(repository)
 
-	if err := service.DeleteForUser(context.Background(), uuid.New()); err != nil {
+	if err := service.DeleteAllNotificationsForUser(context.Background(), uuid.New()); err != nil {
 		t.Fatalf("expected user notification deletion to succeed, got %v", err)
 	}
 	if repository.deleteForUserCalls != 1 {
 		t.Fatalf("expected one user notification deletion call, got %d", repository.deleteForUserCalls)
+	}
+}
+
+func TestSearchPrivateNotificationsReturnsGraphQLStyleCursorPage(t *testing.T) {
+	recipientUserPublicId := uuid.New()
+	createdAt := time.Now().UTC().Truncate(time.Microsecond)
+	repository := &notificationRepositoryStub{
+		notifications: []schemas.Notification{
+			{
+				Id:                    uuid.New(),
+				RecipientUserPublicId: recipientUserPublicId,
+				Type:                  "news",
+				Priority:              "normal",
+				TemplateKey:           "news",
+				TemplateVersion:       1,
+				Payload:               []byte(`{"title":"Release","summary":"Summary","body":"Body"}`),
+				CreatedAt:             createdAt,
+			},
+			{
+				Id:                    uuid.New(),
+				RecipientUserPublicId: recipientUserPublicId,
+				Type:                  "news",
+				Priority:              "normal",
+				TemplateKey:           "news",
+				TemplateVersion:       1,
+				Payload:               []byte(`{"title":"Older release","summary":"Summary","body":"Body"}`),
+				CreatedAt:             createdAt.Add(-time.Minute),
+			},
+		},
+	}
+	service := newNotificationServiceForTest(repository)
+
+	response, err := service.SearchPrivateNotifications(context.Background(), &notificationscontract.SearchPrivateNotificationsRequestDto{
+		RecipientUserPublicId: recipientUserPublicId,
+		First:                 1,
+	})
+	if err != nil {
+		t.Fatalf("search notifications: %v", err)
+	}
+	if len(response.SearchEdges) != 1 {
+		t.Fatalf("search edge count = %d, want 1", len(response.SearchEdges))
+	}
+	if !response.SearchPageInfo.HasNextPage {
+		t.Fatal("expected a next page")
+	}
+	if response.SearchPageInfo.EndEncodedSearchCursor == nil || *response.SearchPageInfo.EndEncodedSearchCursor == "" {
+		t.Fatal("expected an opaque end cursor")
+	}
+	if response.SearchEdges[0].Node.Payload["title"] != "Release" {
+		t.Fatalf("unexpected notification payload: %#v", response.SearchEdges[0].Node.Payload)
 	}
 }

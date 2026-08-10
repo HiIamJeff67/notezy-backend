@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -13,10 +14,36 @@ import (
 	notificationscontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/api"
 	notificationtypescontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/types"
 	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
 
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/notification/data/database/repositories"
 	notificationexceptions "github.com/HiIamJeff67/notezy-backend/internal/notification/exceptions"
 )
+
+type NotificationServiceInterface interface {
+	ConsumeNotificationRequested(
+		ctx context.Context,
+		event eventcontract.EventEnvelope[coreeventscontract.NotificationRequestedData],
+	) error
+	SearchPrivateNotifications(
+		ctx context.Context,
+		request *notificationscontract.SearchPrivateNotificationsRequestDto,
+	) (*notificationscontract.SearchPrivateNotificationsResponseDto, error)
+	CountMyUnreadNotifications(
+		ctx context.Context,
+		request *notificationscontract.CountUnreadNotificationsRequestDto,
+	) (*notificationscontract.CountUnreadNotificationsResponseDto, error)
+	MarkMyNotificationsRead(
+		ctx context.Context,
+		request *notificationscontract.MarkNotificationsReadRequestDto,
+	) (*notificationscontract.MarkNotificationsReadResponseDto, error)
+	SoftDeleteMyNotifications(
+		ctx context.Context,
+		request *notificationscontract.DeleteNotificationsRequestDto,
+	) (*notificationscontract.DeleteNotificationsResponseDto, error)
+	HardDeleteExpiredNotifications(ctx context.Context, now time.Time, retention time.Duration) (int64, error)
+	DeleteAllNotificationsForUser(ctx context.Context, userPublicId uuid.UUID) error
+}
 
 type NotificationService struct {
 	repository repositories.NotificationRepository
@@ -26,14 +53,16 @@ type NotificationService struct {
 func NewNotificationService(
 	repository repositories.NotificationRepository,
 	notificationValidator *validator.Validate,
-) *NotificationService {
+) NotificationServiceInterface {
 	return &NotificationService{
 		repository: repository,
 		validator:  notificationValidator,
 	}
 }
 
-func (s *NotificationService) ConsumeRequested(
+/* ============================== Service Methods for Notification ============================== */
+
+func (s *NotificationService) ConsumeNotificationRequested(
 	ctx context.Context,
 	event eventcontract.EventEnvelope[coreeventscontract.NotificationRequestedData],
 ) error {
@@ -101,26 +130,67 @@ func (s *NotificationService) ConsumeRequested(
 	return nil
 }
 
-func (s *NotificationService) List(
+func (s *NotificationService) SearchPrivateNotifications(
 	ctx context.Context,
-	request *notificationscontract.ListNotificationsRequestDto,
-) (*notificationscontract.ListNotificationsResponseDto, error) {
+	request *notificationscontract.SearchPrivateNotificationsRequestDto,
+) (*notificationscontract.SearchPrivateNotificationsResponseDto, error) {
+	startTime := time.Now()
+
 	if request == nil || request.RecipientUserPublicId == uuid.Nil {
 		return nil, notificationexceptions.NewRequestException("Notification").RecipientRequired()
 	}
 	if err := s.validator.Struct(request); err != nil {
-		return nil, notificationexceptions.NewRequestException("Notification").InvalidListRequest(err)
+		return nil, notificationexceptions.NewRequestException("Notification").InvalidSearchRequest(err)
 	}
-	limit := request.Limit
+
+	limit := request.First
 	if limit <= 0 || limit > 100 {
 		limit = 50
 	}
-	notifications, err := s.repository.List(ctx, request.RecipientUserPublicId, request.Before, limit)
-	if err != nil {
-		return nil, notificationexceptions.NewOperationException("Notification").ListFailed(err)
+
+	var cursor *searchcursor.SearchCursor[notificationscontract.SearchNotificationCursorFields]
+	if request.After != nil && strings.TrimSpace(*request.After) != "" {
+		decodedCursor, err := searchcursor.Decode[notificationscontract.SearchNotificationCursorFields](*request.After)
+		if err != nil {
+			return nil, notificationexceptions.NewRequestException("Notification").InvalidSearchRequest(err)
+		}
+		if decodedCursor.Fields.CreatedAt.IsZero() || decodedCursor.Fields.Id == uuid.Nil {
+			return nil, notificationexceptions.NewRequestException("Notification").InvalidSearchRequest(
+				fmt.Errorf("notification search cursor is incomplete"),
+			)
+		}
+		cursor = decodedCursor
 	}
-	response := &notificationscontract.ListNotificationsResponseDto{
-		Items: make([]notificationscontract.NotificationResponseDto, len(notifications)),
+
+	var beforeCreatedAt *time.Time
+	var beforeId *uuid.UUID
+	if cursor != nil {
+		beforeCreatedAt = &cursor.Fields.CreatedAt
+		beforeId = &cursor.Fields.Id
+	}
+
+	notifications, err := s.repository.List(
+		ctx,
+		request.RecipientUserPublicId,
+		beforeCreatedAt,
+		beforeId,
+		limit+1,
+	)
+	if err != nil {
+		return nil, notificationexceptions.NewOperationException("Notification").SearchFailed(err)
+	}
+
+	hasNextPage := len(notifications) > limit
+	if hasNextPage {
+		notifications = notifications[:limit]
+	}
+
+	response := &notificationscontract.SearchPrivateNotificationsResponseDto{
+		SearchEdges: make([]notificationscontract.SearchPrivateNotificationEdge, len(notifications)),
+		SearchPageInfo: notificationscontract.SearchNotificationPageInfo{
+			HasNextPage:     hasNextPage,
+			HasPreviousPage: cursor != nil,
+		},
 	}
 	for index, notification := range notifications {
 		payload := map[string]any{}
@@ -129,7 +199,7 @@ func (s *NotificationService) List(
 				return nil, notificationexceptions.NewPayloadException("Notification").ResponsePayloadDecodeFailed(err)
 			}
 		}
-		response.Items[index] = notificationscontract.NotificationResponseDto{
+		notificationResponse := notificationscontract.NotificationResponseDto{
 			Id:                    notification.Id,
 			RecipientUserPublicId: notification.RecipientUserPublicId,
 			Type:                  notification.Type,
@@ -142,15 +212,32 @@ func (s *NotificationService) List(
 			DeletedAt:             notification.DeletedAt,
 			ExpiresAt:             notification.ExpiresAt,
 		}
+		encodedCursor, err := searchcursor.EncodeFromData(notificationscontract.SearchNotificationCursorFields{
+			CreatedAt: notification.CreatedAt,
+			Id:        notification.Id,
+		})
+		if err != nil || encodedCursor == nil {
+			if err == nil {
+				err = fmt.Errorf("encoded notification cursor is nil")
+			}
+			return nil, notificationexceptions.NewOperationException("Notification").SearchFailed(err)
+		}
+		response.SearchEdges[index] = notificationscontract.SearchPrivateNotificationEdge{
+			EncodedSearchCursor: *encodedCursor,
+			Node:                notificationResponse,
+		}
 	}
-	if len(notifications) == limit && len(notifications) > 0 {
-		response.NextBefore = &notifications[len(notifications)-1].CreatedAt
+	if len(response.SearchEdges) > 0 {
+		response.SearchPageInfo.StartEncodedSearchCursor = &response.SearchEdges[0].EncodedSearchCursor
+		response.SearchPageInfo.EndEncodedSearchCursor = &response.SearchEdges[len(response.SearchEdges)-1].EncodedSearchCursor
 	}
+	response.TotalCount = int32(len(response.SearchEdges))
+	response.SearchTime = float64(time.Since(startTime).Nanoseconds()) / 1e6
 
 	return response, nil
 }
 
-func (s *NotificationService) CountUnread(
+func (s *NotificationService) CountMyUnreadNotifications(
 	ctx context.Context,
 	request *notificationscontract.CountUnreadNotificationsRequestDto,
 ) (*notificationscontract.CountUnreadNotificationsResponseDto, error) {
@@ -168,7 +255,7 @@ func (s *NotificationService) CountUnread(
 	return &notificationscontract.CountUnreadNotificationsResponseDto{Count: count}, nil
 }
 
-func (s *NotificationService) MarkRead(
+func (s *NotificationService) MarkMyNotificationsRead(
 	ctx context.Context,
 	request *notificationscontract.MarkNotificationsReadRequestDto,
 ) (*notificationscontract.MarkNotificationsReadResponseDto, error) {
@@ -186,7 +273,7 @@ func (s *NotificationService) MarkRead(
 	return &notificationscontract.MarkNotificationsReadResponseDto{UpdatedCount: count}, nil
 }
 
-func (s *NotificationService) SoftDelete(
+func (s *NotificationService) SoftDeleteMyNotifications(
 	ctx context.Context,
 	request *notificationscontract.DeleteNotificationsRequestDto,
 ) (*notificationscontract.DeleteNotificationsResponseDto, error) {
@@ -204,7 +291,7 @@ func (s *NotificationService) SoftDelete(
 	return &notificationscontract.DeleteNotificationsResponseDto{DeletedCount: count}, nil
 }
 
-func (s *NotificationService) HardDelete(
+func (s *NotificationService) HardDeleteExpiredNotifications(
 	ctx context.Context,
 	now time.Time,
 	retention time.Duration,
@@ -216,7 +303,7 @@ func (s *NotificationService) HardDelete(
 	return count, nil
 }
 
-func (s *NotificationService) DeleteForUser(
+func (s *NotificationService) DeleteAllNotificationsForUser(
 	ctx context.Context,
 	userPublicId uuid.UUID,
 ) error {
@@ -226,7 +313,7 @@ func (s *NotificationService) DeleteForUser(
 
 	_, err := s.repository.DeleteForUser(ctx, userPublicId)
 	if err != nil {
-		return notificationexceptions.NewOperationException("Notification").DeleteForUserFailed(err)
+		return notificationexceptions.NewOperationException("Notification").DeleteAllForUserFailed(err)
 	}
 	return nil
 }

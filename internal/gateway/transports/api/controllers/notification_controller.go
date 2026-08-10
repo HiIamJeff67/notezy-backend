@@ -2,18 +2,18 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 
 	notificationscontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/api"
 	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
 
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 
+	gatewaycontexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
 	notificationadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/notification/adapters"
 )
 
 type NotificationControllerInterface interface {
-	List(ctx *gin.Context, requestDto *notificationscontract.ListNotificationsRequestDto)
+	Search(ctx *gin.Context, requestDto *notificationscontract.SearchPrivateNotificationsRequestDto)
 	CountUnread(ctx *gin.Context, requestDto *notificationscontract.CountUnreadNotificationsRequestDto)
 	MarkRead(ctx *gin.Context, requestDto *notificationscontract.MarkNotificationsReadRequestDto)
 	Delete(ctx *gin.Context, requestDto *notificationscontract.DeleteNotificationsRequestDto)
@@ -29,15 +29,24 @@ func NewNotificationController(
 	return &NotificationController{notificationClient: notificationClient}
 }
 
-func (c *NotificationController) List(
+func (c *NotificationController) Search(
 	ctx *gin.Context,
-	requestDto *notificationscontract.ListNotificationsRequestDto,
+	requestDto *notificationscontract.SearchPrivateNotificationsRequestDto,
 ) {
-	requestDto.RecipientUserPublicId = ctx.MustGet(sharedcontexts.ContextFieldName_User_PublicId.String()).(uuid.UUID)
+	recipientUserPublicId, exception := gatewaycontexts.GetAndConvertContextFieldToUUID(
+		ctx,
+		sharedcontexts.ContextFieldName_User_PublicId,
+	)
+	if exception != nil {
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		return
+	}
+	requestDto.RecipientUserPublicId = *recipientUserPublicId
+
 	response, exception := notificationadapters.CallSecurly[
-		notificationscontract.ListNotificationsRequestDto,
-		notificationscontract.ListNotificationsResponseDto,
-	](ctx, c.notificationClient, requestDto, notificationscontract.ListMyNotificationsOperation, "/internal/v1/notifications/list")
+		notificationscontract.SearchPrivateNotificationsRequestDto,
+		notificationscontract.SearchPrivateNotificationsResponseDto,
+	](ctx, c.notificationClient, requestDto, notificationscontract.SearchPrivateNotificationsOperation, "/internal/v1/notifications/search")
 	if exception != nil {
 		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
@@ -49,7 +58,16 @@ func (c *NotificationController) CountUnread(
 	ctx *gin.Context,
 	requestDto *notificationscontract.CountUnreadNotificationsRequestDto,
 ) {
-	requestDto.RecipientUserPublicId = ctx.MustGet(sharedcontexts.ContextFieldName_User_PublicId.String()).(uuid.UUID)
+	recipientUserPublicId, exception := gatewaycontexts.GetAndConvertContextFieldToUUID(
+		ctx,
+		sharedcontexts.ContextFieldName_User_PublicId,
+	)
+	if exception != nil {
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		return
+	}
+	requestDto.RecipientUserPublicId = *recipientUserPublicId
+
 	response, exception := notificationadapters.CallSecurly[
 		notificationscontract.CountUnreadNotificationsRequestDto,
 		notificationscontract.CountUnreadNotificationsResponseDto,
@@ -65,7 +83,16 @@ func (c *NotificationController) MarkRead(
 	ctx *gin.Context,
 	requestDto *notificationscontract.MarkNotificationsReadRequestDto,
 ) {
-	requestDto.RecipientUserPublicId = ctx.MustGet(sharedcontexts.ContextFieldName_User_PublicId.String()).(uuid.UUID)
+	recipientUserPublicId, exception := gatewaycontexts.GetAndConvertContextFieldToUUID(
+		ctx,
+		sharedcontexts.ContextFieldName_User_PublicId,
+	)
+	if exception != nil {
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		return
+	}
+	requestDto.RecipientUserPublicId = *recipientUserPublicId
+
 	response, exception := notificationadapters.CallSecurly[
 		notificationscontract.MarkNotificationsReadRequestDto,
 		notificationscontract.MarkNotificationsReadResponseDto,
@@ -81,7 +108,16 @@ func (c *NotificationController) Delete(
 	ctx *gin.Context,
 	requestDto *notificationscontract.DeleteNotificationsRequestDto,
 ) {
-	requestDto.RecipientUserPublicId = ctx.MustGet(sharedcontexts.ContextFieldName_User_PublicId.String()).(uuid.UUID)
+	recipientUserPublicId, exception := gatewaycontexts.GetAndConvertContextFieldToUUID(
+		ctx,
+		sharedcontexts.ContextFieldName_User_PublicId,
+	)
+	if exception != nil {
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		return
+	}
+	requestDto.RecipientUserPublicId = *recipientUserPublicId
+
 	response, exception := notificationadapters.CallSecurly[
 		notificationscontract.DeleteNotificationsRequestDto,
 		notificationscontract.DeleteNotificationsResponseDto,

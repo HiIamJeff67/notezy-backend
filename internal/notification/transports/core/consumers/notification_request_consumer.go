@@ -19,12 +19,12 @@ import (
 )
 
 type NotificationRequestConsumer struct {
-	service     *services.NotificationService
+	service     services.NotificationServiceInterface
 	kafkaConfig platformkafka.ConsumerConfig
 }
 
 func NewNotificationRequestConsumer(
-	service *services.NotificationService,
+	service services.NotificationServiceInterface,
 	kafkaConfig platformkafka.ConsumerConfig,
 ) *NotificationRequestConsumer {
 	return &NotificationRequestConsumer{
@@ -98,7 +98,7 @@ func (c *NotificationRequestConsumer) consume(
 				Origin:         errors.New("user deletion event timestamp is missing"),
 			}
 		}
-		if err := c.service.DeleteForUser(ctx, event.AggregateId); err != nil {
+		if err := c.service.DeleteAllNotificationsForUser(ctx, event.AggregateId); err != nil {
 			return &platformkafka.ConsumerError{
 				Classification: platformkafka.ErrorClassification_Transient,
 				Origin:         err,
@@ -129,7 +129,7 @@ func (c *NotificationRequestConsumer) consume(
 		Trace:         event.Trace,
 		Data:          data,
 	}
-	if err := c.service.ConsumeRequested(ctx, eventWithData); err != nil {
+	if err := c.service.ConsumeNotificationRequested(ctx, eventWithData); err != nil {
 		return &platformkafka.ConsumerError{
 			Classification: platformkafka.ErrorClassification_Transient,
 			Origin:         err,

@@ -11,13 +11,13 @@ import (
 )
 
 type CleanupWorker struct {
-	service   *services.NotificationService
+	service   services.NotificationServiceInterface
 	interval  time.Duration
 	retention time.Duration
 }
 
 func NewCleanupWorker(
-	service *services.NotificationService,
+	service services.NotificationServiceInterface,
 	interval time.Duration,
 	retention time.Duration,
 ) *CleanupWorker {
@@ -37,7 +37,7 @@ func (w *CleanupWorker) Start(ctx context.Context) func() {
 		ticker := time.NewTicker(w.interval)
 		defer ticker.Stop()
 		for {
-			if _, err := w.service.HardDelete(workerCtx, time.Now().UTC(), w.retention); err != nil && logs.NotezyLogger != nil {
+			if _, err := w.service.HardDeleteExpiredNotifications(workerCtx, time.Now().UTC(), w.retention); err != nil && logs.NotezyLogger != nil {
 				logs.NotezyLogger.Error(workerCtx, err, "Failed to clean Notification records")
 			}
 			select {
