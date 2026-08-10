@@ -3,11 +3,11 @@
 set -eu
 
 root_directory=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
-compose_file=${COMPOSE_FILE:-"$root_directory/docker-compose.prod.yaml"}
+compose_file=${COMPOSE_FILE:-"$root_directory/infra/docker/docker-compose.prod.yaml"}
 compose_env_file=${COMPOSE_ENV_FILE:-/etc/notezy/staging.env}
 
 compose() {
-	docker compose --env-file "$compose_env_file" -f "$compose_file" "$@"
+	docker compose --project-directory "$root_directory" --env-file "$compose_env_file" -f "$compose_file" "$@"
 }
 
 check_http() {

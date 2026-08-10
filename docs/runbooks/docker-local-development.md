@@ -1,0 +1,107 @@
+# Docker local development
+
+This runbook describes the supported local Compose workflows. The root
+`docker-compose.yaml` is the development stack. The production-like stack is
+maintained at
+`infra/docker/docker-compose.prod.yaml` and uses the same runtime boundaries,
+health checks, and dependency ordering as the deployment configuration.
+
+## Development stack
+
+Start the development stack in the background and wait for its health checks:
+
+```sh
+docker compose up --build -d --wait
+```
+
+This is preferred for local development and CI-style shell sessions:
+
+- `--build` rebuilds images when source or Dockerfile changes.
+- `-d` detaches from the long-running service logs.
+- `--wait` waits for services to become running or healthy and returns a
+  non-zero status when they cannot reach that state.
+
+Inspect status and logs with:
+
+```sh
+docker compose ps
+docker compose logs -f notezy-gateway
+```
+
+Stop the development stack with:
+
+```sh
+docker compose down
+```
+
+## Production-like local validation
+
+The production Compose file can be exercised locally; deployment is not
+required to validate its Compose wiring. Use a separate project name to isolate
+its Compose network and lifecycle. The file currently sets explicit
+`container_name` values, so stop the development stack first or provide
+distinct `DOCKER_*_SERVICE_NAME` values if both stacks must run simultaneously:
+
+```sh
+docker compose \
+  --project-name notezy-prod-local \
+  --project-directory . \
+  --env-file .env \
+  -f infra/docker/docker-compose.prod.yaml \
+  config --quiet
+
+docker compose \
+  --project-name notezy-prod-local \
+  --project-directory . \
+  --env-file .env \
+  -f infra/docker/docker-compose.prod.yaml \
+  up --build -d --wait
+
+docker compose \
+  --project-name notezy-prod-local \
+  --project-directory . \
+  --env-file .env \
+  -f infra/docker/docker-compose.prod.yaml \
+  ps
+```
+
+The production-like file currently wires the database, Redis, Kafka-dependent
+runtimes, Yjs worker, Gateway, Realtime Gateway, and Nginx. The health checks
+and `depends_on` conditions ensure that a dependent service is not started
+until its required runtime reports healthy.
+
+Run the staging smoke checks against this local stack when the local
+environment contains all required settings:
+
+```sh
+COMPOSE_FILE=infra/docker/docker-compose.prod.yaml \
+COMPOSE_PROJECT_NAME=notezy-prod-local \
+COMPOSE_ENV_FILE=.env \
+make staging-smoke
+```
+
+Clean up the production-like stack with the same project name and file:
+
+```sh
+docker compose \
+  --project-name notezy-prod-local \
+  --project-directory . \
+  --env-file .env \
+  -f infra/docker/docker-compose.prod.yaml \
+  down
+```
+
+## What local validation proves
+
+Local production-like Compose validation covers:
+
+- Compose interpolation and service names.
+- Image builds and runtime entrypoints.
+- Dependency ordering and `startedz`/`healthz` checks.
+- Runtime-to-runtime DNS and internal port wiring.
+- Basic startup and smoke behavior.
+
+It cannot prove production-only concerns such as registry pulls, external
+managed databases or Kafka, secret rotation, TLS certificates, DNS/load
+balancers, resource limits, network policies, or multi-host failure behavior.
+Those require a staging deployment before production rollout.

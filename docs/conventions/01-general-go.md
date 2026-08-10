@@ -1,12 +1,12 @@
 # General Go Style
 
-## 格式與檔案
+## Formatting and Files
 
-- 所有 Go 程式碼必須可被 `gofmt` 格式化；工作區已設定 Go formatter 於存檔時執行。
-- 檔名採 `snake_case.go`，並依功能命名，例如 `root_shelf_service.go`、`root_shelf_controller_test.go`。
-- package 名稱維持小寫單數或既有複數慣例；不要為單一用途建立新 package。`contracts/core/v1/types/<domain>/` 各資料夾是獨立 Go package，但 package clause 統一使用 `coretypes`；同一檔案若同時引用多個 domain，import alias 可使用領域前綴避免衝突。
-- import 由 `gofmt` 排序，並依責任以空行分組：標準函式庫、第三方 Go module、`shared/`（不含 `lib`／`util`）、`shared/lib`、`shared/util`、`contracts`、platform 與 runtime-owned imports。所有專案內 import 都必須使用顯式且準確的 package alias，例如 `dtos`、`schemas`、`exceptions`、`types`、`apitransport`、`coreadapters`；不得依賴 import path 最後一段的隱式名稱。
-- 所有非空 struct literal 一律展開為多行，每個 field 各佔一行並保留 trailing comma；不可將 DTO、response 或任何只有一個 field 的 struct literal 寫在一行。這也適用於 `return` 的 struct literal 與巢狀 struct literal。
+- Every Go file must be formatable by `gofmt`; the workspace runs the Go formatter on save.
+- Use `snake_case.go` filenames named after their responsibility, such as `root_shelf_service.go` and `root_shelf_controller_test.go`.
+- Keep package names lowercase and singular unless an established plural convention exists; do not create a package for a single use. Each directory under `contracts/core/v1/types/<domain>/` is an independent Go package, but its package clause consistently uses `coretypes`; when a file imports multiple domains, use domain-prefixed aliases to avoid collisions.
+- Let `gofmt` order imports and group them by responsibility with blank lines: standard library, third-party Go modules, `shared/` (excluding `lib`/`util`), `shared/lib`, `shared/util`, `contracts`, platform, and runtime-owned imports. Every project import must use an explicit, accurate package alias such as `dtos`, `schemas`, `exceptions`, `types`, `apitransport`, or `coreadapters`; do not rely on the implicit name derived from the final import-path segment.
+- Expand every non-empty struct literal across multiple lines, with one field per line and a trailing comma. Do not put DTO, response, or even a one-field struct literal on one line. This also applies to struct literals in `return` statements and nested struct literals.
 
   ```go
   return &UpdateMyStationByIdResponse{
@@ -14,11 +14,11 @@
   }, nil
   ```
 
-## Method call 參數格式
+## Method Call Arguments
 
-- method/function call 的參數只在少量且簡單時保留一行。參數超過兩個、包含 nested expression、代表不同語意群組，或閱讀時需要橫向捲動/難以辨認各值角色時，必須展開為一個參數一行並保留 trailing comma。
-- repository call 特別嚴格：正常 domain arguments 與 `options.With...` 是不同語意群組；有兩個以上 options 時一律多行。即使只有一個 option，只要 call 本身已有多個 domain arguments，也應多行。
-- 不要把多個 `options.With...` 壓在同一行，也不要為了維持單行而省略命名清楚的 option。每個 option 佔一行，順序維持 DB/transaction、permission、soft-delete、locking、batch 等既有語意順序。
+- Keep method/function call arguments on one line only when there are few and they are simple. When a call has more than two arguments, nested expressions, distinct semantic groups, or enough horizontal content to obscure each argument's role, expand to one argument per line with a trailing comma.
+- Repository calls are especially strict: normal domain arguments and `options.With...` arguments are separate semantic groups; two or more options always require multiple lines. Even one option should be multiline when the call already has multiple domain arguments.
+- Do not compress multiple `options.With...` calls onto one line or omit clearly named options to preserve a one-line call. Put each option on its own line and keep the established semantic order: DB/transaction, permission, soft-delete, locking, then batch.
 
 ```go
 station, permission, exception := s.stationRepository.CheckPermissionAndGetOneById(
@@ -33,20 +33,20 @@ station, permission, exception := s.stationRepository.CheckPermissionAndGetOneBy
 )
 ```
 
-## 命名與型別
+## Naming and Types
 
-- exported type/function 使用 `PascalCase`；未匯出識別字使用 `camelCase`；縮寫沿用 Go 慣例，如 `Id`、`Url`、`Db` 的專案既有寫法，不在同一領域混用兩種拼法。
-- 版本化 transport DTO 使用完整 `XxxRequestDto`、`XxxResponseDto`；資料庫寫入資料使用 `XxxInput`；資料庫 table 使用 `schemas.Xxx`。`gatewaycontract.Request[Dto]` 與 `gatewaycontract.Response[Dto]` 是 Gateway 與 Core service 的 transport envelope，DTO 才是操作資料單位。
-- 新功能以領域名對齊檔案、transport controller、adapter、service、repository、scope，例如 `station_*`。
-- interface 僅在呼叫端需要替換實作、邊界已存在或測試確有必要時建立。新 interface 以 `XxxInterface` 對齊現有程式；不要為單一 struct 預先抽象。
+- Use `PascalCase` for exported types/functions and `camelCase` for unexported identifiers. Follow the project's existing Go abbreviation style, such as `Id`, `Url`, and `Db`; do not mix spellings within one domain.
+- Versioned transport DTOs use the complete `XxxRequestDto` and `XxxResponseDto` names; database write models use `XxxInput`; database tables use `schemas.Xxx`. `gatewaycontract.Request[Dto]` and `gatewaycontract.Response[Dto]` are the transport envelopes between Gateway and Core; the DTO is the operation data unit.
+- Align new files, transport controllers, adapters, services, repositories, and scopes by domain, for example `station_*`.
+- Create an interface only when the caller needs a replaceable implementation, a boundary already exists, or tests genuinely require it. New interfaces follow the existing `XxxInterface` convention; do not pre-abstract a single struct.
 
-## Service DTO 與 repository input 的邊界
+## Service DTO and Repository Input Boundaries
 
-- `internal/<service>/data/.../inputs` 的 `XxxInput` 是 repository persistence contract：描述 create、update、partial update 或 bulk SQL 所需的資料，只能作為 repository method 的 input。service、controller 或 gateway 不得把它當成 transport request/response contract。
-- service method 若參數很多、代表同一個完整意圖，或由 Gateway 接收後要輸出到外部，就使用 `*XxxRequestDto` 作為單一 request parameter，並以 `*XxxResponseDto` 回傳資料。request / response 變數命名為 `request` / `response`；不新增不清楚的 `req`、`res` 縮寫。
-- service-only 或 gateway-only workflow 也可使用具體的 `XxxRequestDto` / `XxxResponseDto` 封裝相關資料、context 與輸出，而不是用長串零散 parameters 或 anonymous struct；名稱必須描述操作，不可使用泛用的 `Data`、`Params` 或 `Payload`。
-- 參數少且語意清楚時保留直接參數，不為了套用 DTO 強行包裝。只有 parameter 數量、共同 lifecycle 或呼叫邊界確實使 DTO 提高可讀性時才建立。
-- service 是兩種 contract 的轉換邊界：將已驗證的 `request` 映射為 `inputs.CreateXxxInput`、`inputs.PartialUpdateXxxInput` 或 bulk input，再呼叫 repository；repository 不得 import 或依賴 transport request/response。
+- `XxxInput` under `internal/<service>/data/.../inputs` is a repository persistence contract: it describes data for create, update, partial-update, or bulk SQL and may only be used as repository input. Services, controllers, and Gateways must not use it as a transport request/response contract.
+- When a service method has many parameters, represents one complete intent, or receives a Gateway request that must produce an external response, use `*XxxRequestDto` as the single request parameter and return `*XxxResponseDto`. Name variables `request` and `response`; do not introduce unclear `req` or `res` abbreviations.
+- Service-only or Gateway-only workflows may also use concrete `XxxRequestDto`/`XxxResponseDto` types to group related data, context, and output instead of long parameter lists or anonymous structs. The name must describe the operation; do not use generic names such as `Data`, `Params`, or `Payload`.
+- Keep direct parameters when there are few and their meaning is clear; do not force a DTO merely to apply a pattern. Create one only when parameter count, shared lifecycle, or a call boundary materially improves readability.
+- A service is the conversion boundary between the two contracts: map the validated `request` to `inputs.CreateXxxInput`, `inputs.PartialUpdateXxxInput`, or a bulk input, then call the repository. Repositories must not import or depend on transport request/response types.
 
 ```go
 func (s *StationService) UpdateMyStationById(
@@ -75,30 +75,30 @@ func (s *StationService) UpdateMyStationById(
 }
 ```
 
-## 實作原則
+## Implementation Principles
 
-- 先延續同一領域相鄰檔案的模式，再寫新 helper；可用既有 repository、scope、option、validator 或 exception 時不要重做。
-- 函式只負責一個層級的工作。public HTTP parsing/validation 與 HTTP response 留在 Gateway controller，流程與交易留在 service，查詢與權限 SQL 留在 repository/scope。
-- 使用 `context.Context` 往下傳遞：HTTP service 從 `ctx.Request.Context()` 取得，DB 以 `db.WithContext(ctx)` 建立本次操作的 session。
-- 不要吞掉 error。預期的業務/基礎設施錯誤轉為 `*exceptions.Exception`，並附 `WithOrigin(err)` 保留原因。
-- 優先寫直接可讀的程式，不以泛型、反射、全域狀態或新依賴解決單一功能問題。
+- Follow the pattern of adjacent files in the same domain before writing a helper; reuse an existing repository, scope, option, validator, or exception instead of recreating it.
+- Each function should work at one layer. Keep public HTTP parsing/validation and HTTP responses in the Gateway controller, workflows and transactions in services, and queries/permission SQL in repositories/scopes.
+- Pass `context.Context` downward: HTTP services obtain it from `ctx.Request.Context()`, and DB sessions use `db.WithContext(ctx)`.
+- Never swallow errors. Map expected business/infrastructure failures to `*exceptions.Exception` and preserve the cause with `WithOrigin(err)`.
+- Prefer direct, readable code; do not use generics, reflection, global state, or a new dependency to solve a single feature.
 
-## 批次資料庫操作（硬性規範）
+## Batch Database Operations (Mandatory)
 
-**絕對不允許 per-row database operations。** `for` 只能用於整理輸入、建立 set/map、組裝 batch input、placeholder 或 response；迴圈內不得執行任何會碰觸資料庫的操作，包括：
+**Per-row database operations are strictly forbidden.** A `for` loop may only normalize input, build sets/maps, assemble batch inputs/placeholders, or construct a response; it must not perform any database operation, including:
 
 - raw SQL：`Exec`、`Raw`、`Scan`。
-- GORM query/mutation：`Model`、`Create`、`Updates`、`Update`、`Delete`、`Find`、`First`、`Count`、`Pluck` 等。
-- repository method、其他 service method，或任何間接執行 SQL 的 helper。
+- GORM queries/mutations: `Model`, `Create`, `Updates`, `Update`, `Delete`, `Find`, `First`, `Count`, `Pluck`, and so on.
+- Repository methods, other service methods, or any helper that indirectly executes SQL.
 
-這項規範不因資料筆數小而放寬。若需求看似只能逐筆處理，必須先改成 batch 介面、集合查詢或 SQL set-based 操作；不能在當前 function 中保留 N+1 寫法。資料庫參數或 statement 大小有限制時，可將資料切成固定大小的 batch，但每一批仍然只能是一個集合操作，不能退化成一筆一個 query。
+This rule is not relaxed for small data sets. If a requirement appears to require per-row work, first change it to a batch interface, collection query, or set-based SQL operation; do not leave an N+1 implementation in the function. When database parameter or statement-size limits apply, split the work into fixed-size batches, but each batch must still be one set operation rather than one query per row.
 
-優先順序如下：
+Use the following order of preference:
 
-1. 一次讀取使用 `IN ?`、join、preload、CTE 或既有 bulk repository method，將資料在記憶體中以 map/set 對應。
-2. 批次新增使用 `CreateInBatches` 或既有 `CreateMany`/bulk repository method。
-3. 批次更新、upsert 或關聯異動，先在迴圈中組裝 `valuePlaceholders` 與 `valueArgs`，再以單一 `VALUES`/CTE statement 執行；所有值都必須以 bound parameter 傳入，不能把使用者資料字串串進 SQL。
-4. 在 SQL 需要保留輸入順序或逐筆結果時，讓 `VALUES` 帶入 index，並一次 `RETURNING`/`Scan` 結果後再於記憶體中對應。
+1. For one read, use `IN ?`, joins, preloads, CTEs, or an existing bulk repository method, then match the data in memory with a map/set.
+2. For batch inserts, use `CreateInBatches` or an existing `CreateMany`/bulk repository method.
+3. For batch updates, upserts, or relation changes, assemble `valuePlaceholders` and `valueArgs` in a loop, then execute one `VALUES`/CTE statement; every value must be a bound parameter, never a user-data string interpolated into SQL.
+4. When SQL must preserve input order or return per-row results, include an index in `VALUES`, then map one `RETURNING`/`Scan` result in memory.
 
 ```go
 valuePlaceholders := make([]string, 0, len(bulkInputs))
@@ -117,17 +117,17 @@ sql := fmt.Sprintf(`
 result := tx.Exec(sql, valueArgs...)
 ```
 
-先處理空 input，避免建立無效的 `VALUES` statement；單一 bulk query 的 `Error`、`RowsAffected` 與 transaction 收尾依既有 exception/transaction 規範處理。
+Handle empty input first to avoid invalid `VALUES` statements. Handle the `Error`, `RowsAffected`, and transaction completion of a single bulk query according to the existing exception and transaction conventions.
 
-## 共用函式庫
+## Shared Libraries
 
-- 新增 helper 前，先檢查 [shared/lib](../../shared/lib/) 是否已有可直接使用的函式庫。已有相同責任的實作時必須重用，不能在 service/repository 複製一份。
-- 依問題選用既有 package：去重/set 使用 `shared/lib/array`，游標分頁使用 `shared/lib/searchcursor`，併發工作使用 `shared/lib/concurrency`，佇列與堆疊使用 `shared/lib/queue`、`shared/lib/stack`。EditableBlock tree 的扁平化使用 `shared/util/editableblock.FlattenEditableBlock(s)`；跨 runtime 的 HTTP response formatting 與 public exception rendering 使用 `shared/util/responsewriter` 與 `shared/util/exceptionwriter`；rate limit 仍由各 Gateway runtime 自己持有。
-- `shared/lib` 僅放跨領域、可重用且與 application layer 無關的邏輯。它不可 import Notezy project code；必要的第三方 library 可以使用。僅由單一領域使用的商業規則留在該領域，不要為了「可能重用」移入 shared。
-- 若既有 library 接近但不完全符合需求，優先在該 library 補最小且通用的能力；若需求只屬於單一領域，使用領域內的小 helper，避免為一次性需求建立新的 shared package。
+- Before adding a helper, check [shared/lib](../../shared/lib/) for a package that already provides the responsibility. Reuse an existing implementation instead of copying it into a service/repository.
+- Choose the existing package for the problem: use `shared/lib/array` for deduplication/sets, `shared/lib/searchcursor` for cursor pagination, `shared/lib/concurrency` for concurrent work, and `shared/lib/queue`/`shared/lib/stack` for queues/stacks. Flatten EditableBlock trees with `shared/util/editableblock.FlattenEditableBlock(s)`; use `shared/util/responsewriter` and `shared/util/exceptionwriter` for cross-runtime HTTP response formatting and public exception rendering. Rate limiting remains owned by each Gateway runtime.
+- `shared/lib` contains only cross-domain, reusable logic independent of the application layer. It must not import Notezy project code; required third-party libraries are allowed. Business rules used by one domain stay in that domain instead of moving to shared for possible future reuse.
+- When an existing library is close but not an exact fit, add the smallest generic capability to that library. If the need belongs to one domain, use a small domain-local helper and avoid creating a one-off shared package.
 
-## 變更範圍
+## Change Scope
 
-- 一個功能變更只修改必要層與其測試；不要順手重排無關檔案或大規模改名。
-- 既有未提交的使用者變更不屬於目前工作範圍，除非需求明確要求或與本次檔案有直接衝突。
-- 新設定、環境變數、API 欄位、資料表欄位或事件格式都屬 contract；需要同步更新相對應文件與使用端。
+- A feature change modifies only the necessary layers and their tests; do not reformat unrelated files or perform broad renames as cleanup.
+- Existing uncommitted user changes are outside the current scope unless explicitly requested or directly conflicting with the files being changed.
+- New settings, environment variables, API fields, database columns, and event formats are contracts; update the corresponding documentation and consumers in the same change.

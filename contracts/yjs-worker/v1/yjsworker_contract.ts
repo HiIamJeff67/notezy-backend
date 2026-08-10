@@ -9,9 +9,9 @@ export const YjsCompactionUpdateThreshold = 500;
 export const YjsMaintenanceMaximumPayloadBytes = 64 * 1024 * 1024;
 export const InternalFrameHeaderSize = 39;
 
-export const YjsWorkerCoreCommandTopic = "notezy.yjsworker.core.command.v1";
-export const CoreYjsWorkerReplyTopic = "notezy.core.yjsworker.reply.v1";
+export const YjsWorkerCoreCommandTopic = "notezy.adapters.core.command.v1";
+export const CoreYjsWorkerReplyTopic = "notezy.core.adapters.reply.v1";
 export const CoreYjsWorkerMaintenanceCommandTopic =
-  "notezy.core.yjsworker.maintenance-command.v1";
+  "notezy.core.adapters.maintenance-command.v1";
 export const YjsWorkerCoreMaintenanceResultTopic =
-  "notezy.yjsworker.core.maintenance-result.v1";
+  "notezy.adapters.core.maintenance-result.v1";

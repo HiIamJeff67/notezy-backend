@@ -1,4 +1,6 @@
-.PHONY: test test-architecture test-integration test-integration-kafka test-load-websocket test-soak-websocket test-load-kafka-lag
+.PHONY: test test-architecture test-integration test-integration-run test-integration-kafka test-integration-kafka-run test-load-websocket test-soak-websocket test-load-kafka-lag
+
+KAFKA_BROKERS ?= 127.0.0.1:19094
 
 test:
 	go test ./...
@@ -7,10 +9,16 @@ test-architecture:
 	go test ./architecture
 
 test-integration:
-	@if [ -d integration ]; then go test ./integration/...; else echo "no root integration tests"; fi
+	$(MAKE) test-integration-run
+
+test-integration-run:
+	@if [ -d integration ]; then NOTEZY_RUN_INTEGRATION=1 KAFKA_BROKERS=$(KAFKA_BROKERS) go test ./integration ./integration/infrastructure; else echo "no root integration tests"; fi
 
 test-integration-kafka:
-	@NOTEZY_RUN_INTEGRATION=1 go test -count=1 ./integration/kafka
+	$(MAKE) test-integration-kafka-run
+
+test-integration-kafka-run:
+	@NOTEZY_RUN_INTEGRATION=1 KAFKA_BROKERS=$(KAFKA_BROKERS) go test -count=1 ./integration/kafka
 
 test-load-websocket:
 	@command -v k6 >/dev/null 2>&1 || { echo "k6 is required; see test/load/README.md"; exit 1; }

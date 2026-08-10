@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
 	kafkatopics "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka/topics"
-	"github.com/spf13/cobra"
 )
 
 func init() {

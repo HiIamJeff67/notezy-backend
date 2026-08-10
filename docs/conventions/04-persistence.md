@@ -2,29 +2,29 @@
 
 ## Service
 
-- service 是商業 workflow 與 transaction boundary。每個公開 workflow 先用 `validation.Validator.Struct(request)` 驗證，再用 `s.db.WithContext(ctx)` 取得 request-scoped DB。
-- service 回傳 response DTO 或必要領域資料與 `*exceptions.Exception`，不回傳 `gin.Context`、HTTP status 或 `gin.H`。
-- cache、email、token、storage 和 realtime 操作應在 service 的 workflow 中明確排序。失敗補償與可重試語意要與資料庫提交關係一致。
+- A service is the business workflow and transaction boundary. Validate every public workflow with `validation.Validator.Struct(request)` first, then obtain a request-scoped DB with `s.db.WithContext(ctx)`.
+- A service returns a response DTO or necessary domain data with `*exceptions.Exception`; it must not return `gin.Context`, an HTTP status, or `gin.H`.
+- Cache, email, token, storage, and realtime operations must have an explicit order in the service workflow. Failure compensation and retry semantics must remain consistent with database commit semantics.
 
-## Service method 的區塊與留白
+## Service Method Blocks and Spacing
 
-一個 service method 應依「同一個語意區塊緊鄰，不同階段以一個空白行分隔」閱讀，而不是依行數或固定模板切割。常見順序是：輸入驗證 → 前置條件/準備資料 → 建立 DB session 或 transaction → 讀寫 workflow → commit → response。沒有發生的階段不需要補空白或註解。
+A service method should read as adjacent statements within one semantic block, with one blank line between separate stages, rather than being divided by line count or a fixed template. A common order is: request validation → preconditions/preparation → DB session or transaction → read/write workflow → commit → response. Do not add empty stages or comments for phases that do not occur.
 
-- 一次操作與緊接的錯誤處理屬於同一語意區塊：repository/DB 呼叫後直接接 `if exception != nil` 或 `if err != nil`，中間不留空行。
-- validation guard 位於 method 最上方；guard 結束後留一個空白行，再開始下一個獨立階段。只有在 validation 後立即接同一個語意的前置條件時，才可不分隔。
-- `db := s.db.WithContext(ctx)` 或 `tx := s.db.WithContext(ctx).Begin()` 是 workflow 的執行環境，應自成一個區塊：與前一個階段及其後第一個 query/workflow 各以空白行分開。
-- 衍生值、input 組裝、查詢結果轉 DTO、迴圈處理等，各自形成連續區塊；切換到另一種工作時以一個空白行分隔。不要在同一區塊內為了視覺效果插入空白行。
-- 一般 method 以空白行表達階段即可。`sep30` 只在同一檔案有兩個以上明確且複雜的獨立 method family（例如 helper、HTTP service、chart service、GraphQL service）時才可使用；若檔案只有 main service methods，不得在它們上方加 `Services for Something` separator：
+- A single operation and its immediate error handling are one semantic block: place `if exception != nil` or `if err != nil` immediately after the repository/DB call without a blank line.
+- Put the validation guard at the top of the method; after the guard, leave one blank line before the next independent stage. The blank line may be omitted only when validation is immediately followed by a precondition in the same semantic stage.
+- `db := s.db.WithContext(ctx)` or `tx := s.db.WithContext(ctx).Begin()` is the workflow execution environment and should form its own block, separated by one blank line from the previous stage and the first query/workflow after it.
+- Derived values, input assembly, query-result-to-DTO mapping, and loop processing each form a continuous block; separate a change of work with one blank line. Do not insert blank lines for visual effect within one block.
+- Ordinary methods use blank lines to express stages. Use `sep30` only when one file contains two or more clearly separate and complex method families (for example helper, HTTP service, chart service, or GraphQL service). When a file contains only main service methods, do not add a `Services for Something` separator above them:
 
   ```go
   /* ============================== Service Methods for GraphQL Station ============================== */
   ```
 
-  `sep30` 用於多個 file-level family 的導覽，不用來分隔單一 method 的每一步、每個 `if` 或每個 struct field，也不用來為唯一的 main methods 加標題；一個同類型的 service 檔案不需要它。
+  `sep30` is for navigating multiple file-level families. Do not use it to separate steps within one method, individual `if` statements, or struct fields, and do not use it to title the only main method family; a service file with one method family does not need it.
 
-## Service validation 與 DB query 格式
+## Service Validation and DB Query Format
 
-每個接收 request 的 service method 一開始先驗證 request，並將 validator error 轉成該領域的 exception。接著才建立 request-scoped DB；兩者是不同階段，所以維持上下空白行。
+Every service method that receives a request validates it first and maps the validator error to a domain exception. Only then does it create the request-scoped DB; these are separate stages, so keep the blank line between them.
 
 ```go
 func (s *StationService) CreateStation(
@@ -52,7 +52,7 @@ func (s *StationService) CreateStation(
 }
 ```
 
-GORM chain 超過一個操作時換行書寫；receiver 的 `.` 留在行尾，讓每個 `Model`、`Where`、`Order`、`Find` 或 `Updates` 都是清楚的一步。query 建立與其執行屬於同一區塊；result/error 判斷緊接在後，不在中間插空白行。
+Break a GORM chain after more than one operation; keep the receiver's `.` at the end of the line so each `Model`, `Where`, `Order`, `Find`, or `Updates` is a clear step. Query construction and execution are one block; check the result/error immediately afterward without an intervening blank line.
 
 ```go
 var blocks []schemas.Block
@@ -74,13 +74,13 @@ if result.Error != nil {
 }
 ```
 
-短且單一的 DB 操作可留在一行；不要為了套用鏈式格式而把簡單的 `tx.Model(&schema).Update(...)` 刻意拆開。
+Short, single DB operations may stay on one line; do not split a simple `tx.Model(&schema).Update(...)` solely to apply chain formatting.
 
-## Service transaction 與 repository transaction
+## Service and Repository Transactions
 
-多個讀寫必須一起成功或一起失敗時，transaction 由 service 開啟並由 service 唯一負責 `Commit` / `Rollback`。傳給 repository 的每一次呼叫都使用同一個 `tx` 和 `options.WithTransactionDB(tx)`；該 option 會同時帶入 DB 並標記 transaction 已開始，避免 repository 因 `IsTransactionStarted` 為 false 而另開 nested transaction。
+When multiple reads and writes must succeed or fail together, the service opens the transaction and is solely responsible for `Commit`/`Rollback`. Every repository call uses the same `tx` and `options.WithTransactionDB(tx)`; that option carries the DB and marks the transaction as started so the repository does not open a nested transaction because `IsTransactionStarted` is false.
 
-`tx` 的建立獨立成一個區塊。若 `Begin()` 回傳 error，尚未有可回滾的交易，直接回傳；開始後的任何失敗，rollback 與 return 是同一個錯誤收尾區塊，兩者必須相鄰、不插空白行或其他程式碼。
+Create `tx` as an independent block. If `Begin()` returns an error, there is no transaction to roll back, so return immediately. After the transaction starts, every failure's rollback and return form one adjacent error-closing block with no blank line or other code between them.
 
 ```go
 tx := s.db.WithContext(ctx).Begin()
@@ -111,24 +111,24 @@ if err := tx.Commit().Error; err != nil {
 }
 ```
 
-當單一 repository method 本身擁有完整的 atomic workflow 時，沿用其既有的「repository 自行開/提交 transaction」行為；service 不可在外層 transaction 中混用另一個 `s.db` 或另一個 transaction。新跨 repository workflow 一律由 service 管理外層 transaction。
+When a single repository method already owns a complete atomic workflow, keep its existing behavior of opening and committing its own transaction; a service must not mix another `s.db` or transaction inside an outer transaction. New workflows spanning repositories are always managed by an outer service transaction.
 
-## Repository 與 scope
+## Repository and Scope
 
-- repository 集中 GORM/raw SQL 的存取，公開方法以動作清楚命名，例如 `GetOneById`、`CreateMany`、`UpdateOneById`。
-- query 請使用 `schemas.Xxx` model 與既有 `scope` 封裝 permission、preload、soft-delete 和 locking；不要在 service/controller 重複手寫存取控制的 `Where` 條件。
-- repository option 透過 `options.WithDB`、`WithAllowedPermissions`、`WithOnlyDeleted`、`WithLockingStrength` 等既有 option 傳入。`WithAllowedPermissions` 存在時套用已驗證的 Gateway route policy；未提供時 repository 直接操作，不另設 skip-permission flag。`HasPermission`、`HavePermissions` 與 `CheckPermission...` 類 methods 仍須以必要參數明確傳入 `allowedPermissions`，service call 並同步傳入 `options.WithAllowedPermissions(allowedPermissions)`。
-- 輸入資料使用 service data `inputs` 的 create/update/partial-update 型別。不要直接把 request 餵給 GORM。
-- GORM result error 要轉為對應領域 exception 並保留 origin；`First`、`Find` 後也要處理空結果的領域語意，不能只看 `result.Error`。
+- Repositories centralize GORM/raw SQL access and use action-oriented public names such as `GetOneById`, `CreateMany`, and `UpdateOneById`.
+- Use `schemas.Xxx` models and existing scopes to encapsulate permission, preload, soft-delete, and locking; do not repeat access-control `Where` clauses in services/controllers.
+- Pass repository options through existing options such as `options.WithDB`, `WithAllowedPermissions`, `WithOnlyDeleted`, and `WithLockingStrength`. When `WithAllowedPermissions` is present, apply the validated Gateway route policy; when it is absent, the repository operates directly and does not use a skip-permission flag. `HasPermission`, `HavePermissions`, and `CheckPermission...` methods must still receive `allowedPermissions` explicitly when required, and the service call must also pass `options.WithAllowedPermissions(allowedPermissions)`.
+- Use create/update/partial-update types from the service data `inputs` package. Do not pass a request directly to GORM.
+- Map GORM result errors to the appropriate domain exception while preserving the origin. After `First` or `Find`, also handle the domain meaning of an empty result rather than checking only `result.Error`.
 
-## Repository partial update
+## Repository Partial Updates
 
-需要支援只更新部分欄位或明確設為 `NULL` 時，使用既有的 partial update flow；不要自行以 map 拼接欄位，也不要把 request 直接交給 `Updates`。
+When an operation supports partial updates or explicitly setting `NULL`, use the existing partial-update flow; do not construct a map manually or pass a request directly to `Updates`.
 
-1. 在 owning service 的 `data/.../inputs/<domain>_input.go` 定義 `UpdateXxxInput`，欄位使用 pointer 表示「本次有提供值」，保留正確的 `json` 與 `gorm:"column:..."` tag。
-2. 將 input 接到同一 data ownership 的 `partial_update_input.go`：`type PartialUpdateXxxInput = PartialUpdateInput[UpdateXxxInput]`。`Values` 載有要覆寫的值，`SetNull` 表示需要設為 `NULL` 的欄位。
-3. repository 在同一筆 transaction 中先取得已存在且已通過 permission check 的 schema，完成任何關聯資源/ownership 驗證後，呼叫 `util.PartialUpdatePreprocess(input.Values, input.SetNull, *existing)`。
-4. 將合併結果用 `Select("*").Updates(&updates)` 寫回；因 processor 已把未提供的欄位保留為既有值，`Select("*")` 才能正確寫入明確要求的零值或 `NULL`。
+1. Define `UpdateXxxInput` in the owning service's `data/.../inputs/<domain>_input.go`; use pointers to distinguish values supplied by this request and keep the correct `json` and `gorm:"column:..."` tags.
+2. Connect the input to `partial_update_input.go` under the same data owner: `type PartialUpdateXxxInput = PartialUpdateInput[UpdateXxxInput]`. `Values` contains values to overwrite, and `SetNull` identifies fields that must become `NULL`.
+3. Within the same transaction, the repository first gets the existing schema after permission checks, validates related resources/ownership, then calls `util.PartialUpdatePreprocess(input.Values, input.SetNull, *existing)`.
+4. Write the merged result with `Select("*").Updates(&updates)`. Because the processor preserves existing values for fields not supplied, `Select("*")` is required to write explicit zero values or `NULL`.
 
 ```go
 type UpdateStationInput struct {
@@ -159,13 +159,13 @@ result := parsedOptions.DB.Model(&schemas.Station{}).
 	Updates(&updates)
 ```
 
-- `SetNull` 的 key 使用對應 Go field name；processor 會處理大小寫與底線差異，但新 API/DTO 應仍維持既有的 camelCase contract。
-- partial update 前的關聯驗證只在該欄位有新值且未標記為 `SetNull` 時執行，例如移動 parent resource 前先檢查目的地 permission。
-- processor error、DB error 與 `RowsAffected == 0` 的結果，使用 [exception conventions](06-exceptions.md) 的 domain exception 與 `exceptions.Cover()` 處理；在自己擁有 transaction 的 repository 中，rollback 和 return 緊鄰。
+- `SetNull` keys use the corresponding Go field name. The processor handles case and underscore differences, but new API/DTO contracts should still use the established camelCase form.
+- Validate related resources before a partial update only when that field has a new value and is not marked in `SetNull`; for example, check destination permission before moving a parent resource.
+- Handle processor errors, DB errors, and `RowsAffected == 0` with domain exceptions and `exceptions.Cover()` according to the [exception conventions](06-exceptions.md); in a repository that owns the transaction, rollback and return remain adjacent.
 
-## Schema、migration 與 SQL
+## Schema, Migration, and SQL
 
-- table schema、enum、constraint、trigger、seed、raw SQL 與 migration 放在 owning service 的 `internal/<service>/data/database/`。遷移過程中的 legacy 路徑只在其 owner 尚未搬遷時保留。
-- 新 table/enum/trigger/constraint 必須註冊至其對應的 `migrate.go`，否則 migration 不會套用。
-- soft-delete、ownership、projection/accounting 等資料庫不變量，優先延續現有 trigger/constraint/scope 模式；不可只依賴 controller 的檢查。
-- 修改 trigger 或 raw SQL 時，確認引用到的表名、欄位與 migration 註冊都同步；資料庫公開語意改動也要更新對應的 `docs/codebase-design/`、`docs/api-route-design/` 或 `docs/system-design/` 文件。
+- Table schemas, enums, constraints, triggers, seeds, raw SQL, and migrations belong under the owning service's `internal/<service>/data/database/`. Keep a legacy path only while its owner has not migrated.
+- Register every new table/enum/trigger/constraint in its corresponding `migrate.go`; otherwise the migration will not apply it.
+- For database invariants such as soft-delete, ownership, projection, and accounting, prefer the existing trigger/constraint/scope patterns; do not rely only on controller checks.
+- When changing a trigger or raw SQL, verify that table names, columns, and migration registration are updated together. Database-facing semantic changes must also update the corresponding `docs/codebase-design/`, `docs/api-route-design/`, or `docs/system-design/` document.

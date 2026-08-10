@@ -6,8 +6,8 @@ owning runtime's `test/testdata/` directory instead.
 
 ## Kafka broker tests
 
-Run `make test-integration-kafka`. When `KAFKA_BROKERS` is set, the tests use
-that broker; otherwise they start a temporary Kafka Testcontainer. Set
-`KAFKA_BROKERS=localhost:9094` to use the development Compose broker. The tests
-require `NOTEZY_RUN_INTEGRATION=1` and are intentionally skipped by ordinary
-`make test-integration` runs.
+Run `make test-integration-kafka` after the integration Compose stack is
+available. The tests use `KAFKA_BROKERS` (defaulting to the integration broker
+at `127.0.0.1:19094`) and do not create or manage a Kafka container themselves.
+They require `NOTEZY_RUN_INTEGRATION=1` and are intentionally kept separate from
+the ordinary `make test-integration` suite.

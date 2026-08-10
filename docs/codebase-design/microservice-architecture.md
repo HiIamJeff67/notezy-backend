@@ -125,11 +125,13 @@ owning runtime's `test/` directory. A root-level `go test ./...` is therefore
 not a supported command; use `make test-all` or `internal/cli`. DurableJob's
 execution protocol is carried by versioned contracts; Core remains the sole
 owner of database-backed task execution and state transitions.
-Root integration tests under `test/integration/` use `testcontainers-go` for
-ephemeral PostgreSQL, Redis, and Kafka dependencies. They skip Docker startup
-unless `NOTEZY_RUN_INTEGRATION=1` is set. WebSocket connection load/soak and
-Kafka consumer-lag checks live as k6 scripts under `test/load/`; they are
-invoked by the root Makefile and remain outside Go modules.
+Root integration tests under `test/integration/` use the committed
+`infra/docker/docker-compose.integration.yaml` stack for PostgreSQL, Redis, and Kafka. Root
+Makefile targets own the Compose lifecycle, while the test module only runs the
+tests; this allows local developers to reuse an already-running stack. The
+same Compose commands are used locally and in GitHub Actions, while
+WebSocket connection load/soak and Kafka consumer-lag checks remain k6 scripts
+under `test/load/`, invoked by the root Makefile and outside Go modules.
 YjsWorker remains a separate Node/TypeScript environment. It follows the same
 runtime layering as the Go services: `transports/` contains Core-facing HTTP and
 Kafka boundaries plus the Realtime WebSocket boundary, `services/` contains Yjs

@@ -5,20 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
 	"os"
-	"os/exec"
-	"strconv"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
-	container "github.com/docker/docker/api/types/container"
-	nat "github.com/docker/go-connections/nat"
 	"github.com/google/uuid"
-	testcontainers "github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
 	franzkgo "github.com/twmb/franz-go/pkg/kgo"
 
 	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/events"
@@ -274,70 +267,8 @@ func configuredKafkaBrokers(t *testing.T) []string {
 		return brokers
 	}
 
-	if err := exec.Command("docker", "info", "--format", "{{.ServerVersion}}").Run(); err != nil {
-		t.Skipf("KAFKA_BROKERS is not set and Docker is unavailable: %v", err)
-	}
-
-	hostPort := freeTCPPort(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
-	t.Cleanup(cancel)
-
-	var broker testcontainers.Container
-	func() {
-		defer func() {
-			if recovered := recover(); recovered != nil {
-				t.Skipf("Kafka Testcontainer is unavailable: %v", recovered)
-			}
-		}()
-
-		container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-			ContainerRequest: testcontainers.ContainerRequest{
-				Image:        "apache/kafka:4.0.0",
-				ExposedPorts: []string{"9094/tcp"},
-				Env: map[string]string{
-					"KAFKA_CLUSTER_ID":                       "MkU3OEVBNTcwNTJENDM2Qk",
-					"KAFKA_NODE_ID":                          "1",
-					"KAFKA_PROCESS_ROLES":                    "broker,controller",
-					"KAFKA_CONTROLLER_QUORUM_VOTERS":         "1@localhost:9093",
-					"KAFKA_LISTENERS":                        "PLAINTEXT://:9094,CONTROLLER://:9093",
-					"KAFKA_ADVERTISED_LISTENERS":             "PLAINTEXT://localhost:" + strconv.Itoa(hostPort),
-					"KAFKA_CONTROLLER_LISTENER_NAMES":        "CONTROLLER",
-					"KAFKA_INTER_BROKER_LISTENER_NAME":       "PLAINTEXT",
-					"KAFKA_LISTENER_SECURITY_PROTOCOL_MAP":   "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT",
-					"KAFKA_AUTO_CREATE_TOPICS_ENABLE":        "true",
-					"KAFKA_NUM_PARTITIONS":                   "3",
-					"KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR": "1",
-				},
-				HostConfigModifier: func(hostConfig *container.HostConfig) {
-					hostConfig.PortBindings = nat.PortMap{
-						nat.Port("9094/tcp"): []nat.PortBinding{{
-							HostIP:   "127.0.0.1",
-							HostPort: strconv.Itoa(hostPort),
-						}},
-					}
-				},
-				WaitingFor: wait.ForListeningPort(nat.Port("9094/tcp")).WithStartupTimeout(2 * time.Minute),
-			},
-			Started: true,
-		})
-		if err != nil {
-			t.Skipf("start Kafka Testcontainer: %v", err)
-		}
-		broker = container
-	}()
-
-	if broker == nil {
-		t.Skip("Kafka Testcontainer did not start")
-	}
-	t.Cleanup(func() {
-		if err := testcontainers.TerminateContainer(broker); err != nil {
-			t.Errorf("terminate Kafka Testcontainer: %v", err)
-		}
-	})
-
-	containerBrokers := []string{"127.0.0.1:" + strconv.Itoa(hostPort)}
-	ensureKafkaTopics(t, containerBrokers)
-	return containerBrokers
+	t.Skip("KAFKA_BROKERS is not set; start the integration Compose stack first")
+	return nil
 }
 
 func ensureKafkaTopics(t *testing.T, brokers []string) {
@@ -360,18 +291,6 @@ func ensureKafkaTopics(t *testing.T, brokers []string) {
 	if err := provisioner.EnsureTopics(ctx, kafkatopics.All()); err != nil {
 		t.Fatalf("ensure Kafka topics: %v", err)
 	}
-}
-
-func freeTCPPort(t *testing.T) int {
-	t.Helper()
-
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Skipf("find free Kafka host port: %v", err)
-	}
-	defer listener.Close()
-
-	return listener.Addr().(*net.TCPAddr).Port
 }
 
 func publishCoreDurableJobEvent(

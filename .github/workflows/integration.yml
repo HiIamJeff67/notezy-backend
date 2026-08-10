@@ -11,10 +11,11 @@ permissions:
 env:
   GOTOOLCHAIN: local
   NOTEZY_RUN_INTEGRATION: '1'
+  KAFKA_BROKERS: 127.0.0.1:19094
 
 jobs:
   integration:
-    name: Testcontainers integration
+    name: Docker Compose integration
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -23,6 +24,8 @@ jobs:
         with:
           go-version: '1.26.x'
           cache: false
+      - name: Start integration Compose stack
+        run: make compose-integration-up
       - name: Run root integration tests
         run: |
           set -o pipefail
@@ -39,3 +42,6 @@ jobs:
           name: integration-reports-${{ github.run_id }}
           path: integration-results/
           retention-days: 14
+      - name: Stop integration Compose stack
+        if: always()
+        run: make compose-integration-down

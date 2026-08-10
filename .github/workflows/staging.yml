@@ -24,7 +24,7 @@ jobs:
     env:
       IMAGE_TAG: ${{ inputs.image_tag }}
       IMAGE_REGISTRY: ghcr.io/${{ github.repository }}
-      COMPOSE_FILE: docker-compose.prod.yaml
+      COMPOSE_FILE: infra/docker/docker-compose.prod.yaml
       COMPOSE_ENV_FILE: /etc/notezy/staging.env
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +38,7 @@ jobs:
         run: make staging-smoke
       - name: Capture staging logs
         if: always()
-        run: docker compose --env-file "$COMPOSE_ENV_FILE" -f "$COMPOSE_FILE" logs --no-color > staging-compose.log
+        run: docker compose --project-directory . --env-file "$COMPOSE_ENV_FILE" -f "$COMPOSE_FILE" logs --no-color > staging-compose.log
       - name: Upload staging logs
         if: always()
         uses: actions/upload-artifact@v4

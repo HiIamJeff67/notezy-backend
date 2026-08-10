@@ -1,14 +1,16 @@
-.env
+/.env
 
-*.temp
-temp/**
-tmp/**
+# Root-level development scratch files.
+/temp/**
+/tmp/**
 
-.gocache/
-.pnpm-store/
+# Root-level package-manager cache.
+/.pnpm-store/
 
-backup-codes-thenotezy.*
-docs/general_designs/
+# Project-wide generated secrets and documentation exports.
+/backup-codes-thenotezy.*
+/docs/general_designs/
 
+# Project-wide operating-system and credential artifacts.
 .DS_Store
 *.pem

@@ -21,6 +21,11 @@ services:
         ipv4_address: 172.30.0.13
     volumes:
       - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "if [ -n \"$$REDIS_PASSWORD\" ]; then redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG; else redis-cli ping | grep -q PONG; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
 
   notezy-db:
     # should be the same as DB_HOST(hosting service)
@@ -173,6 +178,10 @@ services:
         condition: service_healthy
       notezy-notification:
         condition: service_healthy
+      notezy-redis:
+        condition: service_healthy
+      notezy-otel-collector:
+        condition: service_started
 
   notezy-core:
     container_name: ${DOCKER_CORE_SERVICE_NAME:-notezy-core}
@@ -181,7 +190,7 @@ services:
       context: .
       dockerfile: internal/core/Dockerfile
       target: dev
-    command: ["go", "run", "./internal/core/commands"]
+    command: ["go", "run", "./commands"]
     networks:
       notezy-backend-net:
         ipv4_address: 172.30.0.20
@@ -241,9 +250,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 6
-      start_period: 10s
+      start_period: 90s
     depends_on:
       notezy-db:
+        condition: service_healthy
+      notezy-redis:
         condition: service_healthy
       notezy-yjs-worker:
         condition: service_healthy
@@ -251,6 +262,8 @@ services:
         condition: service_healthy
       notezy-kafka-init:
         condition: service_completed_successfully
+      notezy-otel-collector:
+        condition: service_started
 
   notezy-realtime-gateway:
     container_name: ${DOCKER_REALTIME_GATEWAY_SERVICE_NAME:-notezy-realtime-gateway}
@@ -312,10 +325,14 @@ services:
         condition: service_healthy
       notezy-yjs-worker:
         condition: service_healthy
+      notezy-redis:
+        condition: service_healthy
       notezy-kafka:
         condition: service_healthy
       notezy-kafka-init:
         condition: service_completed_successfully
+      notezy-otel-collector:
+        condition: service_started
 
   notezy-durable-job:
     container_name: ${DOCKER_DURABLE_JOB_SERVICE_NAME:-notezy-durable-job}
@@ -374,6 +391,8 @@ services:
         condition: service_healthy
       notezy-kafka-init:
         condition: service_completed_successfully
+      notezy-otel-collector:
+        condition: service_started
 
   notezy-email:
     container_name: ${DOCKER_EMAIL_SERVICE_NAME:-notezy-email}
@@ -491,6 +510,8 @@ services:
         condition: service_healthy
       notezy-kafka-init:
         condition: service_completed_successfully
+      notezy-otel-collector:
+        condition: service_started
 
   notezy-yjs-worker:
     image: ${DOCKER_YJS_WORKER_SERVICE_NAME}:latest
@@ -522,6 +543,8 @@ services:
         condition: service_healthy
       notezy-kafka-init:
         condition: service_completed_successfully
+      notezy-otel-collector:
+        condition: service_started
 
   notezy-nginx:
     image: nginx:1.27-alpine

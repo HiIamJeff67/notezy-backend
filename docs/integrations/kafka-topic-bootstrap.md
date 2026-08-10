@@ -24,9 +24,10 @@ The command reads `KAFKA_BROKERS`, `KAFKA_DIAL_TIMEOUT`, and the Kafka security
 settings from the environment. Runtime services depend on the init service
 completing successfully before they start consuming or producing events.
 
-Integration tests call the same provisioner after the broker is available. This
-keeps Testcontainers, a local broker, and Compose aligned without duplicating a
-second topic list in test code or shell scripts.
+Integration tests use `infra/docker/docker-compose.integration.yaml` to start the same
+Kafka image and then call the same provisioner after the broker is healthy.
+This keeps local and CI broker startup consistent without duplicating a second
+topic list in test code or shell scripts.
 
 `topics.TopicSpec` is deliberately a creation specification, not a runtime topic
 client. It describes partitions, replication factor, retention, cleanup policy,

@@ -1,32 +1,42 @@
 # Notezy Backend Conventions
 
-本目錄是 Codex 與開發者修改後端時的共同基準。內容以現有程式碼為準；標示為「建議」的條目可依團隊偏好調整，調整後應直接修改本文件，讓後續代理可遵守最新版規範。
+This directory is the shared baseline for Codex and developers changing the
+backend. The existing codebase is the source of truth. Items marked as
+recommendations may be adjusted to match team preferences; update these files
+directly after changing a decision so future agents follow the latest rules.
 
-## 使用方式
+## How to Use
 
-1. 開始實作前，先讀與變更範圍相符的文件。
-2. 既有模式與本規範衝突時，先維持既有模式；若要統一，另開明確的重構工作。
-3. 新的跨模組決策應補在本目錄，而不是只留在 PR 或聊天記錄。
+1. Before implementation, read the documents that match the change scope.
+2. When an existing pattern conflicts with these conventions, preserve the
+   existing pattern first; open a clearly scoped refactoring task if it should
+   be unified.
+3. Record new cross-module decisions in this directory instead of leaving them
+   only in a PR or chat history.
 
-## 文件索引
+## Document Index
 
-| 文件 | 適用範圍 |
+| Document | Scope |
 | --- | --- |
-| [01-general-go.md](01-general-go.md) | Go 格式、命名、dependency direction 與變更範圍 |
-| [02-architecture.md](02-architecture.md) | Gateway/API/worker ownership、HTTP request flow、GraphQL 與背景工作 |
-| [03-http-api.md](03-http-api.md) | routes、controllers、adapters、request/response contract、例外與可觀測性 |
-| [04-persistence.md](04-persistence.md) | services、repositories、scopes、schema、交易與 SQL |
-| [05-testing-and-generated-code.md](05-testing-and-generated-code.md) | 測試、測試資料、GraphQL 產生碼與驗證清單 |
-| [06-exceptions.md](06-exceptions.md) | base/service exception domain、error origin 與 `exceptions.Cover()` |
+| [01-general-go.md](01-general-go.md) | Go formatting, naming, dependency direction, and change scope |
+| [02-architecture.md](02-architecture.md) | Gateway/API/worker ownership, HTTP request flow, GraphQL, and background work |
+| [03-http-api.md](03-http-api.md) | routes, controllers, adapters, request/response contracts, exceptions, and observability |
+| [04-persistence.md](04-persistence.md) | services, repositories, scopes, schemas, transactions, and SQL |
+| [05-testing-and-generated-code.md](05-testing-and-generated-code.md) | tests, test data, generated GraphQL code, and verification checklist |
+| [06-exceptions.md](06-exceptions.md) | base/service exception domains, error origins, and `exceptions.Cover()` |
 
-## 優先順序
+## Priority Order
 
-1. 正確性、安全性、資料完整性與既有 API/contract。
-2. 本目錄的明確規範。
-3. 同一個功能附近已建立的模式。
-4. Go 慣例與最小、可讀、可測的實作。
+1. Correctness, security, data integrity, and existing APIs/contracts.
+2. Explicit conventions in this directory.
+3. Established patterns near the same feature.
+4. Go conventions and the smallest readable, testable implementation.
 
-不要為「未來可能需要」新增抽象層、介面或依賴；需求出現且現有模式無法支援時再加入。
+Do not add an abstraction layer, interface, or dependency for a possible future
+need; add one only when the need exists and the current pattern cannot support
+it.
 
-目標 workspace 與 staged migration 的 ownership 以
-[microservice-architecture.md](../codebase-design/microservice-architecture.md) 為準。程式碼尚未遷移到該路徑時，不得為了符合目錄圖建立空 package 或 temporary wrapper。
+Ownership for the target workspace and staged migration follows
+[microservice-architecture.md](../codebase-design/microservice-architecture.md).
+Do not create an empty package or temporary wrapper merely to match the target
+directory diagram before code has migrated to that path.

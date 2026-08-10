@@ -119,10 +119,15 @@ func EnqueueOutboxEvents[D any](
 		createInputs[index] = createInput
 	}
 
-	return NewOutboxEventRepository().CreateMany(
+	exception := NewOutboxEventRepository().CreateMany(
 		createInputs,
 		options.WithTransactionDB(tx),
 	)
+	if exception != nil {
+		return exception
+	}
+
+	return nil
 }
 
 func (r *OutboxEventRepository) CreateMany(

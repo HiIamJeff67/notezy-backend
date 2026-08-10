@@ -87,16 +87,32 @@ and Cobra commands. Runtime code must not import another runtime's source. The
 ### Start the development stack
 
 ```sh
-docker compose up -d --build
+docker compose up --build -d --wait
 make -C internal/core migrate
 make -C internal/core seed
 ```
 
+`docker compose up` is attached to the service logs by default and is intended
+to remain running. The `-d` flag runs the stack in the background, while
+`--wait` makes Compose wait until services are running or healthy and return a
+failure status if they cannot become ready. Use `docker compose ps` to inspect
+the result and `docker compose logs -f <service>` to follow one service.
+
 For a production-like local stack:
 
 ```sh
-docker compose -f docker-compose.prod.yaml up -d --build
+docker compose --project-name notezy-prod-local \
+  --project-directory . \
+  --env-file .env \
+  -f infra/docker/docker-compose.prod.yaml \
+  up --build -d --wait
 ```
+
+The production-like stack is a local pre-deployment check; it does not replace
+staging or production validation against managed infrastructure, real secrets,
+TLS termination, DNS, resource limits, or network policies. See the
+[Docker local development runbook](docs/runbooks/docker-local-development.md)
+for the complete workflow and cleanup commands.
 
 ### Tests and quality checks
 
@@ -123,7 +139,22 @@ make test-soak-websocket
 make test-load-kafka-lag
 ```
 
-Set `NOTEZY_RUN_INTEGRATION=1` when running Testcontainers integration tests.
+The root Compose targets manage the repository's Compose test stack
+(`infra/docker/docker-compose.integration.yaml`). The test targets themselves only execute
+tests, so they can also be run against an already-running local stack:
+
+```sh
+make compose-integration-up
+make test-integration
+make test-integration-kafka
+make compose-integration-down
+```
+
+For a complete local lifecycle, use `make test-integration-managed`; it starts
+the stack, runs both integration suites, and removes the stack even when a test
+fails. CI uses the explicit `compose-integration-up` and
+`compose-integration-down` targets so setup and cleanup remain visible in the
+workflow logs.
 
 ### GraphQL contracts
 

@@ -144,6 +144,10 @@ func (e *Exception) Origin() error {
 }
 
 func (e *Exception) Error() string {
+	if e == nil {
+		return "exception: <nil>"
+	}
+
 	if e.origin != nil {
 		return e.origin.Error()
 	}

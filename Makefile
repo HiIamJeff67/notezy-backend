@@ -2,7 +2,12 @@
 
 WORKSPACE_MODULES := contracts shared internal/cli internal/core internal/gateway internal/durablejob internal/email internal/notification internal/realtimegateway test
 
-.PHONY: ci-format ci-vet ci-unit ci-race ci-generated ci-containers staging-deploy staging-smoke kafka-topics
+.PHONY: ci-format ci-vet ci-unit ci-race ci-generated ci-containers staging-deploy staging-smoke kafka-topics \
+	compose-integration-up compose-integration-down test-integration test-integration-kafka \
+	test-integration-managed
+
+COMPOSE_INTEGRATION_PROJECT := notezy-integration
+COMPOSE_INTEGRATION_FILE := infra/docker/docker-compose.integration.yaml
 
 ci-format:
 	@files="$$(find contracts shared internal test -type f -name '*.go' -not -path '*/vendor/*' -print0 | xargs -0 gofmt -l)"; \
@@ -83,11 +88,24 @@ test-notification:
 test-architecture:
 	$(MAKE) -C test test-architecture
 
+compose-integration-up:
+	docker compose --project-directory . --project-name $(COMPOSE_INTEGRATION_PROJECT) --file $(COMPOSE_INTEGRATION_FILE) up -d --wait
+
+compose-integration-down:
+	docker compose --project-directory . --project-name $(COMPOSE_INTEGRATION_PROJECT) --file $(COMPOSE_INTEGRATION_FILE) down --volumes --remove-orphans
+
 test-integration:
-	$(MAKE) -C test test-integration
+	$(MAKE) -C test test-integration-run
 
 test-integration-kafka:
-	$(MAKE) -C test test-integration-kafka
+	$(MAKE) -C test test-integration-kafka-run
+
+test-integration-managed:
+	@set -e; \
+	trap '$(MAKE) compose-integration-down >/dev/null 2>&1 || true' EXIT; \
+	$(MAKE) compose-integration-up; \
+	$(MAKE) test-integration; \
+	$(MAKE) test-integration-kafka
 
 test-load-websocket:
 	$(MAKE) -C test test-load-websocket

@@ -113,8 +113,14 @@ pipeline {
                 expression { params.RUN_INTEGRATION }
             }
             steps {
+                sh 'make compose-integration-up'
                 sh 'make test-integration'
                 sh 'make test-integration-kafka'
+            }
+            post {
+                always {
+                    sh 'make compose-integration-down || true'
+                }
             }
         }
     }
