@@ -58,6 +58,8 @@ jobs:
             artifact: internal-email
           - module: internal/realtimegateway
             artifact: internal-realtimegateway
+          - module: internal/notification
+            artifact: internal-notification
           - module: test
             artifact: test
     steps:
@@ -97,6 +99,7 @@ jobs:
           - module: internal/durablejob
           - module: internal/email
           - module: internal/realtimegateway
+          - module: internal/notification
           - module: test
     steps:
       - uses: actions/checkout@v4
@@ -142,6 +145,9 @@ jobs:
           - runtime: realtimegateway
             dockerfile: internal/realtimegateway/Dockerfile
             target: production
+          - runtime: notification
+            dockerfile: internal/notification/Dockerfile
+            target: production
           - runtime: yjsworker
             dockerfile: internal/yjsworker/Dockerfile
             target: runtime
@@ -182,6 +188,9 @@ jobs:
           - runtime: realtimegateway
             dockerfile: internal/realtimegateway/Dockerfile
             target: production
+          - runtime: notification
+            dockerfile: internal/notification/Dockerfile
+            target: production
           - runtime: yjsworker
             dockerfile: internal/yjsworker/Dockerfile
             target: runtime
@@ -193,10 +202,13 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Normalize GHCR repository name
+        id: image-repository
+        run: echo "registry=ghcr.io/$(printf '%s' \"$GITHUB_REPOSITORY\" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
       - uses: docker/build-push-action@v6
         with:
           context: .
           file: ${{ matrix.dockerfile }}
           target: ${{ matrix.target }}
           push: true
-          tags: ghcr.io/${{ github.repository }}/notezy-${{ matrix.runtime }}:${{ github.ref_name }}
+          tags: ${{ steps.image-repository.outputs.registry }}/notezy-${{ matrix.runtime }}:${{ github.ref_name }}

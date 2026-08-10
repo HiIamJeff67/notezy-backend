@@ -5,6 +5,9 @@ set -eu
 : "${IMAGE_TAG:?IMAGE_TAG is required}"
 : "${IMAGE_REGISTRY:?IMAGE_REGISTRY is required}"
 
+IMAGE_REGISTRY=$(printf '%s' "$IMAGE_REGISTRY" | tr '[:upper:]' '[:lower:]')
+export IMAGE_REGISTRY
+
 root_directory=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 compose_file=${COMPOSE_FILE:-"$root_directory/infra/docker/docker-compose.prod.yaml"}
 compose_env_file=${COMPOSE_ENV_FILE:-/etc/notezy/staging.env}

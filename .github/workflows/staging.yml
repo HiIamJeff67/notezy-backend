@@ -23,11 +23,12 @@ jobs:
     environment: staging
     env:
       IMAGE_TAG: ${{ inputs.image_tag }}
-      IMAGE_REGISTRY: ghcr.io/${{ github.repository }}
       COMPOSE_FILE: infra/docker/docker-compose.prod.yaml
       COMPOSE_ENV_FILE: /etc/notezy/staging.env
     steps:
       - uses: actions/checkout@v4
+      - name: Normalize GHCR repository name
+        run: echo "IMAGE_REGISTRY=ghcr.io/$(printf '%s' \"$GITHUB_REPOSITORY\" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
       - name: Login to GHCR
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io \
