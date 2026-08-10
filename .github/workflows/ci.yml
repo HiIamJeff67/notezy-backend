@@ -204,7 +204,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Normalize GHCR repository name
         id: image-repository
-        run: echo "registry=ghcr.io/$(printf '%s' \"$GITHUB_REPOSITORY\" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+        run: |
+          repository="$(printf '%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
+          echo "registry=ghcr.io/${repository}" >> "$GITHUB_OUTPUT"
       - uses: docker/build-push-action@v6
         with:
           context: .
