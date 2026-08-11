@@ -33,10 +33,14 @@ immutable images through `infra/staging/deploy.sh`, and checks every runtime's
 `/startedz` and `/healthz` with `infra/staging/smoke.sh`. Compose accepts
 `GATEWAY_IMAGE`, `CORE_IMAGE`, `DURABLE_JOB_IMAGE`, `EMAIL_IMAGE`,
 `REALTIME_GATEWAY_IMAGE`, and `YJS_WORKER_IMAGE`, so promotion does not rebuild
-images. The staging runner must provide environment settings in
-`/etc/notezy/staging.env`; that file is not checked out from the repository and
-secrets must not be committed. Compose logs after deployment are uploaded as an
-artifact with 14-day retention.
+images. The staging runner may provide plaintext settings in
+`/etc/notezy/staging.env` for compatibility, or provide an encrypted
+`/etc/notezy/staging.env.enc` plus an age identity and set
+`COMPOSE_ENCRYPTED_ENV_FILE`, `SOPS_CONFIG_FILE`, and `SOPS_AGE_KEY_FILE`.
+The deployment and smoke scripts verify the private key path, decrypt the
+latter into a temporary file, and remove it on exit. Secrets must not be
+committed or uploaded as artifacts. Compose logs after deployment are uploaded
+as an artifact with 14-day retention.
 
 ## Jenkins
 
@@ -77,8 +81,14 @@ The staging runner's delivery commands are:
 
 ```sh
 IMAGE_REGISTRY=ghcr.io/ORG/REPO IMAGE_TAG=TAG \
-COMPOSE_ENV_FILE=/etc/notezy/staging.env make staging-deploy
+COMPOSE_ENCRYPTED_ENV_FILE=/etc/notezy/secrets/envs/.env.staging.enc \
+SOPS_CONFIG_FILE=/etc/notezy/sops/.sops.yaml \
+SOPS_AGE_KEY_FILE=/etc/notezy/sops/age/keys-staging.txt \
+make staging-deploy
 
+COMPOSE_ENCRYPTED_ENV_FILE=/etc/notezy/secrets/envs/.env.staging.enc \
+SOPS_CONFIG_FILE=/etc/notezy/sops/.sops.yaml \
+SOPS_AGE_KEY_FILE=/etc/notezy/sops/age/keys-staging.txt \
 make staging-smoke
 ```
 

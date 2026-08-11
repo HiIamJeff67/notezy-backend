@@ -22,7 +22,7 @@ processors:
     attributes:
       # Tag all telemetry with the cluster name
       - key: cluster
-        value: lgtm-local
+        value: ${OTEL_RESOURCE_CLUSTER}
         action: upsert
 
   # Add resource attributes to metric labels for PromQL filtering

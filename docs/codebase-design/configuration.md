@@ -55,7 +55,26 @@ OUTBOX_RELAY_CLEANUP_INTERVAL=1h
 
 All credentials, salts, passwords, client secrets, and SASL credentials are
 secrets. They are injected by local development tooling, Compose, or the
-production secret manager and must never be logged or committed.
+CI/CD credential store or deployment host secure storage and must never be
+logged or committed.
+
+## Environment secret storage
+
+The project uses SOPS with age for encrypted environment files. The encrypted
+`.env.enc` for development and `.env.<environment>.enc` for other environments,
+along with `.sops.yaml`, plaintext environment files, and age identities, are
+deployment/local artifacts and are ignored by Git. Transfer encrypted files
+only through an approved private channel; never commit them to GitHub. Each
+developer, CI system, Jenkins agent, and production host owns a separate age
+identity.
+
+New members generate their own identity and send only the public recipient to
+the maintainer. The maintainer uses `make env-updatekeys` to add or remove
+recipients and `make env-rotate` after a removal or compromise. CI/CD decrypts
+only at runtime using its credential-store identity; deployment scripts remove
+temporary plaintext files after Compose exits. See
+`docs/runbooks/environment-secrets.md` for the complete onboarding and
+rotation workflow.
 
 Redis topology is runtime-owned. Each runtime composition root creates an
 immutable `shared/platform/redis.ClientSet` and injects it into its cache stores

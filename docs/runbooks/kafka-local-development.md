@@ -59,8 +59,8 @@ own a producer or consumer.
 | `KAFKA_BROKERS` | `127.0.0.1:9094` | Comma-separated broker addresses. |
 | `KAFKA_DIAL_TIMEOUT` | `3s` | Broker connection timeout as a Go duration. |
 | `KAFKA_TLS_ENABLED` | `false` | Enable TLS with system roots or the file values below. |
-| `KAFKA_TLS_CA_FILE` | empty | PEM CA file path inside the runtime container. |
-| `KAFKA_TLS_CERT_FILE`, `KAFKA_TLS_KEY_FILE` | empty | Optional mTLS pair; both are required together. |
+| `KAFKA_TLS_CA_FILE` | `/run/secrets/kafka/ca.pem` | PEM CA file path inside the runtime container. |
+| `KAFKA_TLS_CERT_FILE`, `KAFKA_TLS_KEY_FILE` | empty | Optional mTLS pair; both are required together and are mounted from `/run/secrets/kafka/`. |
 | `KAFKA_TLS_SERVER_NAME` | empty | Optional TLS certificate server name override. |
 | `KAFKA_SASL_MECHANISM` | empty | `PLAIN`, `SCRAM-SHA-256`, or `SCRAM-SHA-512`. |
 | `KAFKA_SASL_USERNAME`, `KAFKA_SASL_PASSWORD` | empty | Required whenever SASL is configured. |
@@ -69,8 +69,12 @@ own a producer or consumer.
 | `KAFKA_CONSUMER_MAXIMUM_RETRY_BACKOFF` | `5s` | Cap for consumer exponential retry backoff as a Go duration. |
 | `KAFKA_CONSUMER_MAXIMUM_POLL_RECORDS` | `100` | Bound on records held while rebalance is blocked. |
 
-TLS/SASL settings are never committed as Compose secrets. A future deployment
-must mount certificate files and inject credentials through its secret manager.
+TLS/SASL settings are never committed as Compose secrets. Compose mounts the
+host-side `./secrets/kafka/` directory read-only at `/run/secrets/kafka/` for
+Kafka client runtimes. Place `ca.pem` there when TLS is enabled, and use
+`client.crt`/`client.key` when mutual TLS is required. Production deployments
+should provision that directory through the host secret manager or decrypt the
+SOPS-managed artifact before starting Compose.
 
 ## Health and degraded behavior
 

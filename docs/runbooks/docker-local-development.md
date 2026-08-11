@@ -11,8 +11,13 @@ health checks, and dependency ordering as the deployment configuration.
 Start the development stack in the background and wait for its health checks:
 
 ```sh
-docker compose up --build -d --wait
+make compose-up
 ```
+
+`make compose-up` decrypts `secrets/envs/.env.enc` with SOPS into a mode
+`0600` temporary file, passes that file to Docker Compose, and removes it when
+Compose exits. Raw `docker compose up` does not invoke SOPS; it only reads the
+root `.env` file and bypasses the encrypted environment flow.
 
 This is preferred for local development and CI-style shell sessions:
 
@@ -42,7 +47,7 @@ for every runtime use the compiled entrypoint only and do not run a watcher.
 Stop the development stack with:
 
 ```sh
-docker compose down
+make compose-down
 ```
 
 ## Production-like local validation
@@ -54,19 +59,10 @@ its Compose network and lifecycle. The file currently sets explicit
 distinct `DOCKER_*_SERVICE_NAME` values if both stacks must run simultaneously:
 
 ```sh
-docker compose \
-  --project-name notezy-prod-local \
-  --project-directory . \
-  --env-file .env \
-  -f infra/docker/docker-compose.prod.yaml \
-  config --quiet
-
-docker compose \
-  --project-name notezy-prod-local \
-  --project-directory . \
-  --env-file .env \
-  -f infra/docker/docker-compose.prod.yaml \
-  up --build -d --wait
+COMPOSE_PROJECT_NAME=notezy-prod-local \
+COMPOSE_FILE=infra/docker/docker-compose.prod.yaml \
+COMPOSE_ENCRYPTED_ENV_FILE=secrets/envs/.env.production.enc \
+make compose-up
 
 docker compose \
   --project-name notezy-prod-local \
@@ -89,19 +85,18 @@ environment contains all required settings:
 ```sh
 COMPOSE_FILE=infra/docker/docker-compose.prod.yaml \
 COMPOSE_PROJECT_NAME=notezy-prod-local \
-COMPOSE_ENV_FILE=.env \
+COMPOSE_ENCRYPTED_ENV_FILE=secrets/envs/.env.production.enc \
+SOPS_CONFIG_FILE=.sops.yaml \
 make staging-smoke
 ```
 
 Clean up the production-like stack with the same project name and file:
 
 ```sh
-docker compose \
-  --project-name notezy-prod-local \
-  --project-directory . \
-  --env-file .env \
-  -f infra/docker/docker-compose.prod.yaml \
-  down
+COMPOSE_PROJECT_NAME=notezy-prod-local \
+COMPOSE_FILE=infra/docker/docker-compose.prod.yaml \
+COMPOSE_ENCRYPTED_ENV_FILE=secrets/envs/.env.production.enc \
+make compose-down
 ```
 
 ## What local validation proves

@@ -113,10 +113,15 @@ services:
     volumes:
       - .:/notezy-backend
       - /notezy-backend/tmp
+      - ./secrets/kafka:/run/secrets/kafka:ro
     environment:
       KAFKA_BROKERS: notezy-kafka:9092
       KAFKA_DIAL_TIMEOUT: ${KAFKA_DIAL_TIMEOUT:-3s}
       KAFKA_TLS_ENABLED: ${KAFKA_TLS_ENABLED:-false}
+      KAFKA_TLS_CA_FILE: ${KAFKA_TLS_CA_FILE:-/run/secrets/kafka/ca.pem}
+      KAFKA_TLS_CERT_FILE: ${KAFKA_TLS_CERT_FILE:-}
+      KAFKA_TLS_KEY_FILE: ${KAFKA_TLS_KEY_FILE:-}
+      KAFKA_TLS_SERVER_NAME: ${KAFKA_TLS_SERVER_NAME:-}
       KAFKA_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM:-}
       KAFKA_SASL_USERNAME: ${KAFKA_SASL_USERNAME:-}
       KAFKA_SASL_PASSWORD: ${KAFKA_SASL_PASSWORD:-}
@@ -213,6 +218,10 @@ services:
       KAFKA_CONSUMER_GROUP: notezy-core
       KAFKA_DIAL_TIMEOUT: ${KAFKA_DIAL_TIMEOUT:-3s}
       KAFKA_TLS_ENABLED: ${KAFKA_TLS_ENABLED:-false}
+      KAFKA_TLS_CA_FILE: ${KAFKA_TLS_CA_FILE:-/run/secrets/kafka/ca.pem}
+      KAFKA_TLS_CERT_FILE: ${KAFKA_TLS_CERT_FILE:-}
+      KAFKA_TLS_KEY_FILE: ${KAFKA_TLS_KEY_FILE:-}
+      KAFKA_TLS_SERVER_NAME: ${KAFKA_TLS_SERVER_NAME:-}
       KAFKA_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM:-}
       KAFKA_SASL_USERNAME: ${KAFKA_SASL_USERNAME:-}
       KAFKA_SASL_PASSWORD: ${KAFKA_SASL_PASSWORD:-}
@@ -279,6 +288,7 @@ services:
     volumes:
       - .:/notezy-backend
       - /notezy-backend/tmp
+      - ./secrets/kafka:/run/secrets/kafka:ro
     working_dir: /notezy-backend/internal/realtimegateway
     environment:
       REDIS_HOST: ${DOCKER_REDIS_SERVICE_NAME}
@@ -290,6 +300,10 @@ services:
       KAFKA_CONSUMER_GROUP: notezy-realtimegateway-lifecycle-v1
       KAFKA_DIAL_TIMEOUT: ${KAFKA_DIAL_TIMEOUT:-3s}
       KAFKA_TLS_ENABLED: ${KAFKA_TLS_ENABLED:-false}
+      KAFKA_TLS_CA_FILE: ${KAFKA_TLS_CA_FILE:-/run/secrets/kafka/ca.pem}
+      KAFKA_TLS_CERT_FILE: ${KAFKA_TLS_CERT_FILE:-}
+      KAFKA_TLS_KEY_FILE: ${KAFKA_TLS_KEY_FILE:-}
+      KAFKA_TLS_SERVER_NAME: ${KAFKA_TLS_SERVER_NAME:-}
       KAFKA_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM:-}
       KAFKA_SASL_USERNAME: ${KAFKA_SASL_USERNAME:-}
       KAFKA_SASL_PASSWORD: ${KAFKA_SASL_PASSWORD:-}
@@ -348,6 +362,7 @@ services:
     volumes:
       - .:/notezy-backend
       - /notezy-backend/tmp
+      - ./secrets/kafka:/run/secrets/kafka:ro
     working_dir: /notezy-backend/internal/durablejob
     environment:
       DB_HOST: ${DB_HOST}
@@ -358,6 +373,10 @@ services:
       KAFKA_BROKERS: notezy-kafka:9092
       KAFKA_DIAL_TIMEOUT: ${KAFKA_DIAL_TIMEOUT:-3s}
       KAFKA_TLS_ENABLED: ${KAFKA_TLS_ENABLED:-false}
+      KAFKA_TLS_CA_FILE: ${KAFKA_TLS_CA_FILE:-/run/secrets/kafka/ca.pem}
+      KAFKA_TLS_CERT_FILE: ${KAFKA_TLS_CERT_FILE:-}
+      KAFKA_TLS_KEY_FILE: ${KAFKA_TLS_KEY_FILE:-}
+      KAFKA_TLS_SERVER_NAME: ${KAFKA_TLS_SERVER_NAME:-}
       KAFKA_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM:-}
       KAFKA_SASL_USERNAME: ${KAFKA_SASL_USERNAME:-}
       KAFKA_SASL_PASSWORD: ${KAFKA_SASL_PASSWORD:-}
@@ -408,6 +427,7 @@ services:
     volumes:
       - .:/notezy-backend
       - /notezy-backend/tmp
+      - ./secrets/kafka:/run/secrets/kafka:ro
     working_dir: /notezy-backend/internal/email
     environment:
       EMAIL_LISTEN_ADDRESS: 0.0.0.0:8081
@@ -415,11 +435,14 @@ services:
       SMTP_PORT: ${SMTP_PORT}
       NOTEZY_OFFICIAL_NAME: ${NOTEZY_OFFICIAL_NAME}
       NOTEZY_OFFICIAL_GMAIL: ${NOTEZY_OFFICIAL_GMAIL}
-      NOTEZY_OFFICIAL_GOOGLE_PASSWORD: ${NOTEZY_OFFICIAL_GOOGLE_PASSWORD}
       NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD: ${NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD}
       KAFKA_BROKERS: notezy-kafka:9092
       KAFKA_DIAL_TIMEOUT: ${KAFKA_DIAL_TIMEOUT:-3s}
       KAFKA_TLS_ENABLED: ${KAFKA_TLS_ENABLED:-false}
+      KAFKA_TLS_CA_FILE: ${KAFKA_TLS_CA_FILE:-/run/secrets/kafka/ca.pem}
+      KAFKA_TLS_CERT_FILE: ${KAFKA_TLS_CERT_FILE:-}
+      KAFKA_TLS_KEY_FILE: ${KAFKA_TLS_KEY_FILE:-}
+      KAFKA_TLS_SERVER_NAME: ${KAFKA_TLS_SERVER_NAME:-}
       KAFKA_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM:-}
       KAFKA_SASL_USERNAME: ${KAFKA_SASL_USERNAME:-}
       KAFKA_SASL_PASSWORD: ${KAFKA_SASL_PASSWORD:-}
@@ -461,6 +484,7 @@ services:
     volumes:
       - .:/notezy-backend
       - /notezy-backend/tmp
+      - ./secrets/kafka:/run/secrets/kafka:ro
     working_dir: /notezy-backend/internal/notification
     environment:
       NOTIFICATION_LISTEN_ADDRESS: 0.0.0.0:7781
@@ -475,6 +499,10 @@ services:
       KAFKA_BROKERS: notezy-kafka:9092
       KAFKA_DIAL_TIMEOUT: ${KAFKA_DIAL_TIMEOUT:-3s}
       KAFKA_TLS_ENABLED: ${KAFKA_TLS_ENABLED:-false}
+      KAFKA_TLS_CA_FILE: ${KAFKA_TLS_CA_FILE:-/run/secrets/kafka/ca.pem}
+      KAFKA_TLS_CERT_FILE: ${KAFKA_TLS_CERT_FILE:-}
+      KAFKA_TLS_KEY_FILE: ${KAFKA_TLS_KEY_FILE:-}
+      KAFKA_TLS_SERVER_NAME: ${KAFKA_TLS_SERVER_NAME:-}
       KAFKA_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM:-}
       KAFKA_SASL_USERNAME: ${KAFKA_SASL_USERNAME:-}
       KAFKA_SASL_PASSWORD: ${KAFKA_SASL_PASSWORD:-}
@@ -597,6 +625,7 @@ services:
     image: grafana/tempo:2.9.1
     command: ["-config.file=/etc/tempo.yaml", "-config.expand-env=true"]
     environment:
+      TEMPO_METRICS_CLUSTER: ${TEMPO_METRICS_CLUSTER:-lgtm-local}
       DOCKER_TEMPO_PORT: ${DOCKER_TEMPO_PORT}
       DOCKER_OTEL_COLLECTOR_GRPC_PORT: ${DOCKER_OTEL_COLLECTOR_GRPC_PORT}
       DOCKER_OTEL_COLLECTOR_HTTP_PORT: ${DOCKER_OTEL_COLLECTOR_HTTP_PORT}
@@ -666,6 +695,7 @@ services:
     container_name: ${DOCKER_OTEL_COLLECTOR_SERVICE_NAME}
     image: otel/opentelemetry-collector-contrib:latest
     environment:
+      OTEL_RESOURCE_CLUSTER: ${OTEL_RESOURCE_CLUSTER:-lgtm-local}
       DOCKER_LOKI_SERVICE_NAME: ${DOCKER_LOKI_SERVICE_NAME}
       DOCKER_TEMPO_SERVICE_NAME: ${DOCKER_TEMPO_SERVICE_NAME}
       DOCKER_MIMIR_SERVICE_NAME: ${DOCKER_MIMIR_SERVICE_NAME}

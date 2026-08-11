@@ -1,8 +1,13 @@
 /.env
+/.env.*
+
+# SOPS configuration and encrypted environment artifacts stay outside Git.
+/.sops.yaml
+*.enc
 
 # Root-level development scratch files.
-/temp/**
-/tmp/**
+temp/
+tmp/
 
 # Root-level package-manager cache.
 /.pnpm-store/
@@ -14,3 +19,7 @@
 # Project-wide operating-system and credential artifacts.
 .DS_Store
 *.pem
+
+# Runtime-mounted secret material. Keep the complete directory outside Git;
+# operational documentation belongs under docs/.
+/secrets/

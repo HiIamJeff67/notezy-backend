@@ -93,16 +93,10 @@ var migrateDatabaseCommand = &cobra.Command{
 
 		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Start the process of migrating database schema to %v", config.Name))
 
-		if !data.MigrateEnumsToDatabase(db) {
-			return
-		}
-		if !data.MigrateTablesToDatabase(db) {
-			return
-		}
-		if !data.MigrateTriggersToDatabase(db) {
-			return
-		}
-		if !data.MigrateConstraintsToDatabase(db) {
+		if !data.MigrateEnumsToDatabase(db) ||
+			!data.MigrateTablesToDatabase(db) ||
+			!data.MigrateTriggersToDatabase(db) ||
+			!data.MigrateConstraintsToDatabase(db) {
 			return
 		}
 	},

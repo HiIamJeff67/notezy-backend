@@ -4,10 +4,60 @@ WORKSPACE_MODULES := contracts shared internal/cli internal/core internal/gatewa
 
 .PHONY: ci-format ci-vet ci-unit ci-race ci-generated ci-containers staging-deploy staging-smoke kafka-topics \
 	compose-integration-up compose-integration-down test-integration test-integration-kafka \
-	test-integration-managed
+	compose-up compose-down test-integration-managed env-check env-encrypt env-decrypt env-edit env-updatekeys env-rotate
 
 COMPOSE_INTEGRATION_PROJECT := notezy-integration
 COMPOSE_INTEGRATION_FILE := infra/docker/docker-compose.integration.yaml
+COMPOSE_FILE ?= docker-compose.yaml
+COMPOSE_ENCRYPTED_ENV_FILE ?= secrets/envs/.env.enc
+COMPOSE_SOPS_CONFIG ?= .sops.yaml
+SOPS ?= sops
+SOPS_CONFIG ?= .sops.yaml
+ENVIRONMENT ?= development
+ENV_DIRECTORY ?= secrets/envs
+ENV_PLAINTEXT_FILE ?= $(if $(filter development,$(ENVIRONMENT)),.env,$(ENV_DIRECTORY)/.env.$(ENVIRONMENT))
+ENV_ENCRYPTED_FILE ?= $(ENV_DIRECTORY)/$(if $(filter development,$(ENVIRONMENT)),.env,.env.$(ENVIRONMENT)).enc
+
+env-check:
+	@command -v "$(SOPS)" >/dev/null 2>&1 || { echo "sops is required; install SOPS before using env-* targets" >&2; exit 1; }
+	@test -f "$(SOPS_CONFIG)" || { echo "missing $(SOPS_CONFIG); create a local SOPS config with your age recipients" >&2; exit 1; }
+
+env-encrypt: env-check
+	@test -f "$(ENV_PLAINTEXT_FILE)" || { echo "missing $(ENV_PLAINTEXT_FILE)" >&2; exit 1; }
+	@mkdir -p "$(ENV_DIRECTORY)"
+	@temporary_file="$$(mktemp "$(ENV_ENCRYPTED_FILE).tmp.XXXXXX")"; \
+	trap 'rm -f "$$temporary_file"' EXIT INT TERM; \
+	set -e; \
+	umask 077; \
+	"$(SOPS)" --config "$(SOPS_CONFIG)" encrypt --input-type dotenv --output-type dotenv "$(ENV_PLAINTEXT_FILE)" > "$$temporary_file"; \
+	mv "$$temporary_file" "$(ENV_ENCRYPTED_FILE)"; \
+	trap - EXIT INT TERM
+	@echo "Encrypted $(ENV_PLAINTEXT_FILE) -> $(ENV_ENCRYPTED_FILE)"
+
+env-decrypt: env-check
+	@test -f "$(ENV_ENCRYPTED_FILE)" || { echo "missing $(ENV_ENCRYPTED_FILE)" >&2; exit 1; }
+	@mkdir -p "$$(dirname "$(ENV_PLAINTEXT_FILE)")"
+	@temporary_file="$$(mktemp "$$(dirname "$(ENV_PLAINTEXT_FILE)")/.notezy-env.XXXXXX")"; \
+	trap 'rm -f "$$temporary_file"' EXIT INT TERM; \
+	set -e; \
+	umask 077; \
+	"$(SOPS)" --config "$(SOPS_CONFIG)" decrypt --input-type dotenv --output-type dotenv "$(ENV_ENCRYPTED_FILE)" > "$$temporary_file"; \
+	chmod 600 "$$temporary_file"; \
+	mv "$$temporary_file" "$(ENV_PLAINTEXT_FILE)"; \
+	trap - EXIT INT TERM
+	@echo "Decrypted $(ENV_ENCRYPTED_FILE) -> $(ENV_PLAINTEXT_FILE)"
+
+env-edit: env-check
+	@test -f "$(ENV_ENCRYPTED_FILE)" || { echo "missing $(ENV_ENCRYPTED_FILE)" >&2; exit 1; }
+	@"$(SOPS)" --config "$(SOPS_CONFIG)" edit --input-type dotenv --output-type dotenv "$(ENV_ENCRYPTED_FILE)"
+
+env-updatekeys: env-check
+	@test -f "$(ENV_ENCRYPTED_FILE)" || { echo "missing $(ENV_ENCRYPTED_FILE)" >&2; exit 1; }
+	@"$(SOPS)" --config "$(SOPS_CONFIG)" updatekeys "$(ENV_ENCRYPTED_FILE)"
+
+env-rotate: env-check
+	@test -f "$(ENV_ENCRYPTED_FILE)" || { echo "missing $(ENV_ENCRYPTED_FILE)" >&2; exit 1; }
+	@"$(SOPS)" --config "$(SOPS_CONFIG)" rotate --in-place "$(ENV_ENCRYPTED_FILE)"
 
 ci-format:
 	@files="$$(find contracts shared internal test -type f -name '*.go' -not -path '*/vendor/*' -print0 | xargs -0 gofmt -l)"; \
@@ -47,6 +97,28 @@ staging-deploy:
 
 staging-smoke:
 	infra/staging/smoke.sh
+
+compose-up:
+	@set -eu; \
+	command -v "$(SOPS)" >/dev/null 2>&1 || { echo "sops is required; install SOPS before starting Compose" >&2; exit 1; }; \
+	test -f "$(COMPOSE_SOPS_CONFIG)" || { echo "missing $(COMPOSE_SOPS_CONFIG)" >&2; exit 1; }; \
+	test -f "$(COMPOSE_ENCRYPTED_ENV_FILE)" || { echo "missing $(COMPOSE_ENCRYPTED_ENV_FILE)" >&2; exit 1; }; \
+	temporary_file="$$(mktemp "$${TMPDIR:-/tmp}/notezy-compose-env.XXXXXX")"; \
+	trap 'rm -f "$$temporary_file"' EXIT INT TERM; \
+	"$(SOPS)" --config "$(COMPOSE_SOPS_CONFIG)" decrypt --input-type dotenv --output-type dotenv "$(COMPOSE_ENCRYPTED_ENV_FILE)" > "$$temporary_file"; \
+	chmod 600 "$$temporary_file"; \
+	docker compose --project-directory . --env-file "$$temporary_file" --file "$(COMPOSE_FILE)" up --build -d --wait
+
+compose-down:
+	@set -eu; \
+	command -v "$(SOPS)" >/dev/null 2>&1 || { echo "sops is required; install SOPS before stopping Compose" >&2; exit 1; }; \
+	test -f "$(COMPOSE_SOPS_CONFIG)" || { echo "missing $(COMPOSE_SOPS_CONFIG)" >&2; exit 1; }; \
+	test -f "$(COMPOSE_ENCRYPTED_ENV_FILE)" || { echo "missing $(COMPOSE_ENCRYPTED_ENV_FILE)" >&2; exit 1; }; \
+	temporary_file="$$(mktemp "$${TMPDIR:-/tmp}/notezy-compose-env.XXXXXX")"; \
+	trap 'rm -f "$$temporary_file"' EXIT INT TERM; \
+	"$(SOPS)" --config "$(COMPOSE_SOPS_CONFIG)" decrypt --input-type dotenv --output-type dotenv "$(COMPOSE_ENCRYPTED_ENV_FILE)" > "$$temporary_file"; \
+	chmod 600 "$$temporary_file"; \
+	docker compose --project-directory . --env-file "$$temporary_file" --file "$(COMPOSE_FILE)" down --volumes --remove-orphans
 
 CLI_RUN := go -C internal/cli run .
 

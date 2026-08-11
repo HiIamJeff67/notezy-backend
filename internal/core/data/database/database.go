@@ -209,6 +209,10 @@ func MigrateTriggersToDatabase(db *gorm.DB) bool {
 				continue
 			}
 			if err := db.Exec(stmt).Error; err != nil {
+				if strings.Contains(err.Error(), "SQLSTATE 42710") {
+					logs.NotezyLogger.Warn(context.Background(), fmt.Sprintf("Database trigger already exists; skipping: %v", err))
+					continue
+				}
 				logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Failed to execute trigger SQL statement: %v", err))
 				return false
 			}

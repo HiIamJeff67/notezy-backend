@@ -81,31 +81,43 @@ and Cobra commands. Runtime code must not import another runtime's source. The
 - Go `1.26.x`
 - Docker and Docker Compose
 - Node.js `22.x` and pnpm `11.x` for `internal/yjsworker`
-- A local `.env` containing the required database, Redis, Kafka, token, OAuth,
-  SMTP, and observability settings
+- SOPS and age for encrypted environment files
+- A local decrypted `.env` containing the required database, Redis, Kafka, token,
+  OAuth, SMTP, and observability settings
 
 ### Start the development stack
 
 ```sh
-docker compose up --build -d --wait
+make compose-up
 make -C internal/core migrate
 make -C internal/core seed
 ```
 
-`docker compose up` is attached to the service logs by default and is intended
-to remain running. The `-d` flag runs the stack in the background, while
-`--wait` makes Compose wait until services are running or healthy and return a
-failure status if they cannot become ready. Use `docker compose ps` to inspect
-the result and `docker compose logs -f <service>` to follow one service.
+`make compose-up` configures SOPS automatically. It decrypts the development
+artifact `secrets/envs/.env.enc` into a temporary file and passes that file to
+Compose. Raw `docker compose up` does not invoke SOPS and only reads `.env`.
+For encrypted local environments, configure `.sops.yaml` with the intended age
+recipients and use:
+
+```sh
+make compose-up
+```
+
+See the [environment secrets runbook](docs/runbooks/environment-secrets.md) for
+onboarding, CI/CD, and key rotation.
+
+`make compose-up` runs Compose detached, waits for services to become running
+or healthy, and returns a failure status when they cannot become ready. Use
+`docker compose ps` to inspect the result and `docker compose logs -f <service>`
+to follow one service.
 
 For a production-like local stack:
 
 ```sh
-docker compose --project-name notezy-prod-local \
-  --project-directory . \
-  --env-file .env \
-  -f infra/docker/docker-compose.prod.yaml \
-  up --build -d --wait
+COMPOSE_PROJECT_NAME=notezy-prod-local \
+	COMPOSE_FILE=infra/docker/docker-compose.prod.yaml \
+	COMPOSE_ENCRYPTED_ENV_FILE=secrets/envs/.env.production.enc \
+	make compose-up
 ```
 
 The production-like stack is a local pre-deployment check; it does not replace

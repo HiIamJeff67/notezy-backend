@@ -24,12 +24,130 @@ services:
       timeout: 5s
       retries: 5
 
+  # LGTM stack: keep telemetry storage private to the Compose network.
+  notezy-loki:
+    container_name: ${DOCKER_LOKI_SERVICE_NAME:-notezy-loki}
+    image: grafana/loki:latest
+    command: ["-config.file=/etc/loki.yaml", "-config.expand-env=true"]
+    environment:
+      DOCKER_LOKI_PORT: ${DOCKER_LOKI_PORT:-3100}
+    expose:
+      - "${DOCKER_LOKI_PORT:-3100}"
+    volumes:
+      - ../../infra/monitor/loki-config.dev.yaml:/etc/loki.yaml:ro
+      - loki-data:/loki
+
+  notezy-mimir-init:
+    image: busybox:1.37.0
+    command:
+      - sh
+      - -ec
+      - |
+        mkdir -p \
+          /data/mimir/blocks \
+          /data/mimir/tsdb \
+          /data/mimir/sync \
+          /data/mimir/compactor \
+          /data/mimir/alertmanager \
+          /data/mimir/alertmanager-configs
+    volumes:
+      - mimir-data:/data/mimir
+    restart: "no"
+
+  notezy-mimir:
+    container_name: ${DOCKER_MIMIR_SERVICE_NAME:-notezy-mimir}
+    image: grafana/mimir:latest
+    command:
+      ["-config.file=/etc/mimir.yaml", "-target=all,alertmanager", "-config.expand-env=true"]
+    environment:
+      DOCKER_MIMIR_PORT: ${DOCKER_MIMIR_PORT:-9009}
+    expose:
+      - "${DOCKER_MIMIR_PORT:-9009}"
+    volumes:
+      - ../../infra/monitor/mimir-config.dev.yaml:/etc/mimir.yaml:ro
+      - ../../infra/monitor/alertmanager-fallback.dev.yaml:/etc/mimir/alertmanager-fallback.yaml:ro
+      - ../../infra/monitor/alerts:/etc/mimir/rules/anonymous:ro
+      - mimir-data:/data/mimir
+    depends_on:
+      notezy-mimir-init:
+        condition: service_completed_successfully
+
+  notezy-tempo:
+    container_name: ${DOCKER_TEMPO_SERVICE_NAME:-notezy-tempo}
+    image: grafana/tempo:2.9.1
+    command: ["-config.file=/etc/tempo.yaml", "-config.expand-env=true"]
+    environment:
+      TEMPO_METRICS_CLUSTER: ${TEMPO_METRICS_CLUSTER:-lgtm-production}
+      DOCKER_TEMPO_PORT: ${DOCKER_TEMPO_PORT:-3200}
+      DOCKER_OTEL_COLLECTOR_GRPC_PORT: ${DOCKER_OTEL_COLLECTOR_GRPC_PORT:-4317}
+      DOCKER_OTEL_COLLECTOR_HTTP_PORT: ${DOCKER_OTEL_COLLECTOR_HTTP_PORT:-4318}
+      DOCKER_MIMIR_SERVICE_NAME: ${DOCKER_MIMIR_SERVICE_NAME:-notezy-mimir}
+      DOCKER_MIMIR_PORT: ${DOCKER_MIMIR_PORT:-9009}
+    expose:
+      - "${DOCKER_TEMPO_PORT:-3200}"
+    volumes:
+      - ../../infra/monitor/tempo-config.dev.yaml:/etc/tempo.yaml:ro
+      - tempo-data:/var/tempo
+    depends_on:
+      notezy-mimir:
+        condition: service_started
+
+  notezy-otel-collector:
+    container_name: ${DOCKER_OTEL_COLLECTOR_SERVICE_NAME:-notezy-otel-collector}
+    image: otel/opentelemetry-collector-contrib:latest
+    environment:
+      OTEL_RESOURCE_CLUSTER: ${OTEL_RESOURCE_CLUSTER:-lgtm-production}
+      DOCKER_LOKI_SERVICE_NAME: ${DOCKER_LOKI_SERVICE_NAME:-notezy-loki}
+      DOCKER_TEMPO_SERVICE_NAME: ${DOCKER_TEMPO_SERVICE_NAME:-notezy-tempo}
+      DOCKER_MIMIR_SERVICE_NAME: ${DOCKER_MIMIR_SERVICE_NAME:-notezy-mimir}
+      DOCKER_OTEL_COLLECTOR_GRPC_PORT: ${DOCKER_OTEL_COLLECTOR_GRPC_PORT:-4317}
+      DOCKER_OTEL_COLLECTOR_HTTP_PORT: ${DOCKER_OTEL_COLLECTOR_HTTP_PORT:-4318}
+    expose:
+      - "${DOCKER_OTEL_COLLECTOR_GRPC_PORT:-4317}"
+      - "${DOCKER_OTEL_COLLECTOR_HTTP_PORT:-4318}"
+    volumes:
+      - ../../infra/monitor/otel-collector-config.dev.yaml:/etc/otelcol-contrib/config.yaml:ro
+    depends_on:
+      notezy-loki:
+        condition: service_started
+      notezy-mimir:
+        condition: service_started
+      notezy-tempo:
+        condition: service_started
+
+  notezy-grafana:
+    container_name: ${DOCKER_GRAFANA_SERVICE_NAME:-notezy-grafana}
+    image: grafana/grafana:latest
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
+      GF_FEATURE_TOGGLE_ENABLE: ${GF_FEATURE_TOGGLE_ENABLE:-traceqlEditor}
+      DOCKER_MIMIR_SERVICE_NAME: ${DOCKER_MIMIR_SERVICE_NAME:-notezy-mimir}
+      DOCKER_MIMIR_PORT: ${DOCKER_MIMIR_PORT:-9009}
+      DOCKER_TEMPO_SERVICE_NAME: ${DOCKER_TEMPO_SERVICE_NAME:-notezy-tempo}
+      DOCKER_TEMPO_PORT: ${DOCKER_TEMPO_PORT:-3200}
+      DOCKER_LOKI_SERVICE_NAME: ${DOCKER_LOKI_SERVICE_NAME:-notezy-loki}
+      DOCKER_LOKI_PORT: ${DOCKER_LOKI_PORT:-3100}
+    ports:
+      - "${GRAFANA_PORT:-3000}:${DOCKER_GRAFANA_PORT:-3000}"
+    volumes:
+      - ../../infra/monitor/grafana/datasources.dev.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+      - ../../infra/monitor/grafana/dashboards.dev.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
+      - ../../infra/monitor/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      notezy-loki:
+        condition: service_started
+      notezy-tempo:
+        condition: service_started
+      notezy-mimir:
+        condition: service_started
+
   notezy-gateway:
     container_name: ${DOCKER_GATEWAY_SERVICE_NAME:-notezy-gateway}
     image: ${GATEWAY_IMAGE:-notezy-gateway:latest}
     # restart: always
     build:
-      context: .
+      context: ../..
       dockerfile: internal/gateway/Dockerfile
       target: production
     # entrypoint: ["${ENTRYPOINT_CMD}"]
@@ -63,14 +181,18 @@ services:
     depends_on:
       notezy-core:
         condition: service_healthy
+      notezy-otel-collector:
+        condition: service_started
 
   notezy-core:
     container_name: ${DOCKER_CORE_SERVICE_NAME:-notezy-core}
     image: ${CORE_IMAGE:-notezy-core:latest}
     build:
-      context: .
+      context: ../..
       dockerfile: internal/core/Dockerfile
       target: production
+    volumes:
+      - ../../secrets/kafka:/run/secrets/kafka:ro
     environment:
       DB_HOST: ${DB_HOST}
       DB_USER: ${DB_USER}
@@ -85,6 +207,10 @@ services:
       KAFKA_BROKERS: ${KAFKA_BROKERS:-notezy-kafka:9092}
       KAFKA_DIAL_TIMEOUT: ${KAFKA_DIAL_TIMEOUT:-3s}
       KAFKA_TLS_ENABLED: ${KAFKA_TLS_ENABLED:-false}
+      KAFKA_TLS_CA_FILE: ${KAFKA_TLS_CA_FILE:-/run/secrets/kafka/ca.pem}
+      KAFKA_TLS_CERT_FILE: ${KAFKA_TLS_CERT_FILE:-}
+      KAFKA_TLS_KEY_FILE: ${KAFKA_TLS_KEY_FILE:-}
+      KAFKA_TLS_SERVER_NAME: ${KAFKA_TLS_SERVER_NAME:-}
       KAFKA_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM:-}
       KAFKA_SASL_USERNAME: ${KAFKA_SASL_USERNAME:-}
       KAFKA_SASL_PASSWORD: ${KAFKA_SASL_PASSWORD:-}
@@ -127,14 +253,18 @@ services:
         condition: service_healthy
       notezy-yjs-worker:
         condition: service_healthy
+      notezy-otel-collector:
+        condition: service_started
 
   notezy-realtime-gateway:
     container_name: ${DOCKER_REALTIME_GATEWAY_SERVICE_NAME:-notezy-realtime-gateway}
     image: ${REALTIME_GATEWAY_IMAGE:-notezy-realtime-gateway:latest}
     build:
-      context: .
+      context: ../..
       dockerfile: internal/realtimegateway/Dockerfile
       target: production
+    volumes:
+      - ../../secrets/kafka:/run/secrets/kafka:ro
     environment:
       REDIS_HOST: ${DOCKER_REDIS_SERVICE_NAME}
       REDIS_PORT: ${DOCKER_REDIS_PORT}
@@ -143,6 +273,10 @@ services:
       KAFKA_BROKERS: ${KAFKA_BROKERS:-notezy-kafka:9092}
       KAFKA_DIAL_TIMEOUT: ${KAFKA_DIAL_TIMEOUT:-3s}
       KAFKA_TLS_ENABLED: ${KAFKA_TLS_ENABLED:-false}
+      KAFKA_TLS_CA_FILE: ${KAFKA_TLS_CA_FILE:-/run/secrets/kafka/ca.pem}
+      KAFKA_TLS_CERT_FILE: ${KAFKA_TLS_CERT_FILE:-}
+      KAFKA_TLS_KEY_FILE: ${KAFKA_TLS_KEY_FILE:-}
+      KAFKA_TLS_SERVER_NAME: ${KAFKA_TLS_SERVER_NAME:-}
       KAFKA_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM:-}
       KAFKA_SASL_USERNAME: ${KAFKA_SASL_USERNAME:-}
       KAFKA_SASL_PASSWORD: ${KAFKA_SASL_PASSWORD:-}
@@ -178,14 +312,18 @@ services:
         condition: service_healthy
       notezy-yjs-worker:
         condition: service_healthy
+      notezy-otel-collector:
+        condition: service_started
 
   notezy-durable-job:
     container_name: ${DOCKER_DURABLE_JOB_SERVICE_NAME:-notezy-durable-job}
     image: ${DURABLE_JOB_IMAGE:-notezy-durable-job:latest}
     build:
-      context: .
+      context: ../..
       dockerfile: internal/durablejob/Dockerfile
       target: production
+    volumes:
+      - ../../secrets/kafka:/run/secrets/kafka:ro
     environment:
       DB_HOST: ${DB_HOST}
       DB_USER: ${DB_USER}
@@ -195,6 +333,10 @@ services:
       KAFKA_BROKERS: ${KAFKA_BROKERS:-notezy-kafka:9092}
       KAFKA_DIAL_TIMEOUT: ${KAFKA_DIAL_TIMEOUT:-3s}
       KAFKA_TLS_ENABLED: ${KAFKA_TLS_ENABLED:-false}
+      KAFKA_TLS_CA_FILE: ${KAFKA_TLS_CA_FILE:-/run/secrets/kafka/ca.pem}
+      KAFKA_TLS_CERT_FILE: ${KAFKA_TLS_CERT_FILE:-}
+      KAFKA_TLS_KEY_FILE: ${KAFKA_TLS_KEY_FILE:-}
+      KAFKA_TLS_SERVER_NAME: ${KAFKA_TLS_SERVER_NAME:-}
       KAFKA_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM:-}
       KAFKA_SASL_USERNAME: ${KAFKA_SASL_USERNAME:-}
       KAFKA_SASL_PASSWORD: ${KAFKA_SASL_PASSWORD:-}
@@ -226,25 +368,32 @@ services:
         condition: service_healthy
       notezy-yjs-worker:
         condition: service_healthy
+      notezy-otel-collector:
+        condition: service_started
 
   notezy-email:
     container_name: ${DOCKER_EMAIL_SERVICE_NAME:-notezy-email}
     image: ${EMAIL_IMAGE:-notezy-email:latest}
     build:
-      context: .
+      context: ../..
       dockerfile: internal/email/Dockerfile
       target: production
+    volumes:
+      - ../../secrets/kafka:/run/secrets/kafka:ro
     environment:
       EMAIL_LISTEN_ADDRESS: 0.0.0.0:8081
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       NOTEZY_OFFICIAL_NAME: ${NOTEZY_OFFICIAL_NAME}
       NOTEZY_OFFICIAL_GMAIL: ${NOTEZY_OFFICIAL_GMAIL}
-      NOTEZY_OFFICIAL_GOOGLE_PASSWORD: ${NOTEZY_OFFICIAL_GOOGLE_PASSWORD}
       NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD: ${NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD}
       KAFKA_BROKERS: ${KAFKA_BROKERS}
       KAFKA_DIAL_TIMEOUT: ${KAFKA_DIAL_TIMEOUT:-3s}
       KAFKA_TLS_ENABLED: ${KAFKA_TLS_ENABLED:-false}
+      KAFKA_TLS_CA_FILE: ${KAFKA_TLS_CA_FILE:-/run/secrets/kafka/ca.pem}
+      KAFKA_TLS_CERT_FILE: ${KAFKA_TLS_CERT_FILE:-}
+      KAFKA_TLS_KEY_FILE: ${KAFKA_TLS_KEY_FILE:-}
+      KAFKA_TLS_SERVER_NAME: ${KAFKA_TLS_SERVER_NAME:-}
       KAFKA_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM:-}
       KAFKA_SASL_USERNAME: ${KAFKA_SASL_USERNAME:-}
       KAFKA_SASL_PASSWORD: ${KAFKA_SASL_PASSWORD:-}
@@ -264,10 +413,13 @@ services:
       timeout: 5s
       retries: 6
       start_period: 10s
+    depends_on:
+      notezy-otel-collector:
+        condition: service_started
   notezy-yjs-worker:
     image: ${YJS_WORKER_IMAGE:-notezy-yjs-worker:latest}
     build:
-      context: .
+      context: ../..
       dockerfile: internal/yjsworker/Dockerfile
     environment:
       NODE_ENV: production
@@ -287,6 +439,9 @@ services:
       interval: 60s
       timeout: 5s
       retries: 6
+    depends_on:
+      notezy-otel-collector:
+        condition: service_started
 
   notezy-nginx:
     image: nginx:1.27-alpine
@@ -300,11 +455,19 @@ services:
       - "${NGINX_HTTP_PORT}:${DOCKER_NGINX_HTTP_PORT}"
       - "${NGINX_HTTPS_PORT}:${DOCKER_NGINX_HTTPS_PORT}"
     volumes:
-      - ./infra/nginx/default.prod.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./infra/nginx/ssl:/etc/nginx/ssl:ro
+      - ../../infra/nginx/default.prod.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../../infra/nginx/ssl:/etc/nginx/ssl:ro
 
 volumes:
   redis-data:
     name: notezy-backend-redis-data
   postgres-data:
     name: notezy-backend-postgres-data
+  loki-data:
+    name: notezy-backend-loki-data
+  tempo-data:
+    name: notezy-backend-tempo-data
+  mimir-data:
+    name: notezy-backend-mimir-data
+  grafana-data:
+    name: notezy-backend-grafana-data

@@ -24,9 +24,29 @@ jobs:
     env:
       IMAGE_TAG: ${{ inputs.image_tag }}
       COMPOSE_FILE: infra/docker/docker-compose.prod.yaml
-      COMPOSE_ENV_FILE: /etc/notezy/staging.env
+      STAGING_ENCRYPTED_ENV_FILE: /etc/notezy/secrets/envs/.env.staging.enc
+      STAGING_SOPS_CONFIG_FILE: /etc/notezy/sops/.sops.yaml
+      STAGING_AGE_KEY_FILE: /etc/notezy/sops/age/keys-staging.txt
     steps:
       - uses: actions/checkout@v4
+      - name: Decrypt staging environment
+        env:
+          SOPS_CONFIG_FILE: ${{ env.STAGING_SOPS_CONFIG_FILE }}
+          SOPS_AGE_KEY_FILE: ${{ env.STAGING_AGE_KEY_FILE }}
+          COMPOSE_ENCRYPTED_ENV_FILE: ${{ env.STAGING_ENCRYPTED_ENV_FILE }}
+        run: |
+          set -euo pipefail
+          command -v sops >/dev/null 2>&1
+          test -f "$SOPS_CONFIG_FILE"
+          test -f "$SOPS_AGE_KEY_FILE"
+          test -f "$COMPOSE_ENCRYPTED_ENV_FILE"
+          temporary_env_file="$RUNNER_TEMP/notezy-staging.env"
+          sops --config "$SOPS_CONFIG_FILE" decrypt \
+            --input-type dotenv \
+            --output-type dotenv \
+            "$COMPOSE_ENCRYPTED_ENV_FILE" > "$temporary_env_file"
+          chmod 600 "$temporary_env_file"
+          echo "COMPOSE_ENV_FILE=$temporary_env_file" >> "$GITHUB_ENV"
       - name: Normalize GHCR repository name
         run: |
           repository="$(printf '%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
@@ -41,11 +61,20 @@ jobs:
         run: make staging-smoke
       - name: Capture staging logs
         if: always()
-        run: docker compose --project-directory . --env-file "$COMPOSE_ENV_FILE" -f "$COMPOSE_FILE" logs --no-color > staging-compose.log
+        run: |
+          if [ -z "${COMPOSE_ENV_FILE:-}" ] || [ ! -f "$COMPOSE_ENV_FILE" ]; then
+            echo "No decrypted Compose environment is available; skipping log capture"
+            exit 0
+          fi
+          docker compose --project-directory . --env-file "$COMPOSE_ENV_FILE" -f "$COMPOSE_FILE" logs --no-color > staging-compose.log
       - name: Upload staging logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: staging-compose-logs-${{ github.run_id }}
           path: staging-compose.log
+          if-no-files-found: ignore
           retention-days: 14
+      - name: Remove decrypted staging environment
+        if: always()
+        run: rm -f "${RUNNER_TEMP}/notezy-staging.env"

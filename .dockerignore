@@ -1,4 +1,9 @@
 docs/**
+.env
+.env.*
+*.enc
+.sops.yaml
+secrets/**
 *.temp
 temp/
 backup-codes-thenotezy.*

@@ -316,6 +316,15 @@ func Start() func() {
 	}
 
 	data.NotezyDB = data.ConnectToDatabase(databaseConfig)
+	if !data.MigrateEnumsToDatabase(data.NotezyDB) ||
+		!data.MigrateTablesToDatabase(data.NotezyDB) ||
+		!data.MigrateTriggersToDatabase(data.NotezyDB) ||
+		!data.MigrateConstraintsToDatabase(data.NotezyDB) ||
+		!data.SeedDefaultDataToDatabase(data.NotezyDB) {
+		_ = data.DisconnectToDatabase(data.NotezyDB)
+		shutdownObservability()
+		panic(errors.New("failed to initialize Core database schema"))
+	}
 
 	userDataCacheStore, err := userdata.Register(context.Background(), redisClientSet)
 	if err != nil {
