@@ -190,7 +190,7 @@ services:
       context: .
       dockerfile: internal/core/Dockerfile
       target: dev
-    command: ["go", "run", "./commands"]
+    command: ["air", "-c", ".air.toml"]
     networks:
       notezy-backend-net:
         ipv4_address: 172.30.0.20
@@ -272,7 +272,7 @@ services:
       context: .
       dockerfile: internal/realtimegateway/Dockerfile
       target: dev
-    command: ["go", "run", "./commands"]
+    command: ["air", "-c", ".air.toml"]
     networks:
       notezy-backend-net:
         ipv4_address: 172.30.0.21
@@ -341,7 +341,7 @@ services:
       context: .
       dockerfile: internal/durablejob/Dockerfile
       target: dev
-    command: ["go", "run", "./commands"]
+    command: ["air", "-c", ".air.toml"]
     networks:
       notezy-backend-net:
         ipv4_address: 172.30.0.22
@@ -401,7 +401,7 @@ services:
       context: .
       dockerfile: internal/email/Dockerfile
       target: dev
-    command: ["go", "run", "./commands"]
+    command: ["air", "-c", ".air.toml"]
     networks:
       notezy-backend-net:
         ipv4_address: 172.30.0.19
@@ -454,7 +454,7 @@ services:
       context: .
       dockerfile: internal/notification/Dockerfile
       target: dev
-    command: ["go", "run", "./commands"]
+    command: ["air", "-c", ".air.toml"]
     networks:
       notezy-backend-net:
         ipv4_address: 172.30.0.25
@@ -518,6 +518,12 @@ services:
     build:
       context: .
       dockerfile: internal/yjsworker/Dockerfile
+      target: dev
+    command: ["pnpm", "dev"]
+    volumes:
+      - .:/app
+      - /app/internal/yjsworker/node_modules
+    working_dir: /app/internal/yjsworker
     environment:
       NODE_ENV: development
       YJS_WORKER_HOST: 0.0.0.0

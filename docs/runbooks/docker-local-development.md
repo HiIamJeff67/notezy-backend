@@ -28,6 +28,17 @@ docker compose ps
 docker compose logs -f notezy-gateway
 ```
 
+### Hot reload
+
+The Go runtimes use Air in development. Gateway, Core, DurableJob, Email,
+Notification, and RealtimeGateway each run `air -c .air.toml` from their own
+module directory. Source changes are rebuilt and restarted automatically;
+changes to dependencies, environment variables, Dockerfiles, or Compose
+configuration still require an image rebuild and container recreation.
+
+The Yjs Worker uses `pnpm dev` (`tsx watch`) instead of Air. Production images
+for every runtime use the compiled entrypoint only and do not run a watcher.
+
 Stop the development stack with:
 
 ```sh

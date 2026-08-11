@@ -3,8 +3,8 @@ testdata_dir = "testdata"
 tmp_dir = "tmp"
 
 [build]
-  bin = "./tmp/main"
-  cmd = "go build -o ./tmp/main ./commands"
+  bin = "./tmp/notification"
+  cmd = "go build -o ./tmp/notification ./commands"
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata", ".git", ".idea", "docs", "LICENSES"]
   exclude_file = []

@@ -22,11 +22,19 @@ COPY internal/yjsworker ./
 COPY contracts/yjs-worker/v1/package.json contracts/yjs-worker/v1/yjsworker_contract.ts /app/contracts/yjs-worker/v1/
 RUN pnpm build
 
-FROM node:22.23.1-slim AS runtime
+FROM build AS dev
 
 WORKDIR /app/internal/yjsworker
 
 ENV NODE_ENV=development
+
+CMD ["pnpm", "dev"]
+
+FROM node:22.23.1-slim AS runtime
+
+WORKDIR /app/internal/yjsworker
+
+ENV NODE_ENV=production
 ENV YJS_WORKER_HOST=0.0.0.0
 ENV YJS_WORKER_PORT=8787
 
