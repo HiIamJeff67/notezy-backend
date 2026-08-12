@@ -6,7 +6,7 @@ import {
   encodeAwarenessUpdate,
   removeAwarenessStates,
 } from "y-protocols/awareness";
-import type * as Y from "yjs";
+import * as Y from "yjs";
 
 import { YjsRoomIdleEvictionMilliseconds } from "../../configs/realtime_config.js";
 import type { Telemetry } from "../../telemetry.js";
@@ -27,16 +27,27 @@ export class RoomRegistry {
     this.telemetry = telemetry;
   }
 
-  getOrCreate(blockPackId: string): Room {
+  getOrCreate(
+    blockPackId: string,
+    documentQuotaPolicyVersion: number,
+    maximumBlockCount: number
+  ): Room {
     const existingRoom = this.rooms.get(blockPackId);
     if (existingRoom !== undefined) {
       existingRoom.lastActiveAt = new Date();
+      existingRoom.maximumBlockCount = Math.min(
+        existingRoom.maximumBlockCount,
+        maximumBlockCount
+      );
 
       return existingRoom;
     }
 
     const room: Room = {
       document: null,
+      validationDocument: null,
+      maximumBlockCount,
+      documentQuotaPolicyVersion,
       awareness: null,
       awarenessClientOwners: new Map(),
       pendingAwarenessUpdates: new Map(),
@@ -48,6 +59,7 @@ export class RoomRegistry {
       compactedUntilSequence: 0,
       projectedUntilSequence: -1,
       pendingYjsUpdates: [],
+      pendingYjsPayloadBytes: 0,
       pendingPersistenceUpdates: [],
       pendingPersistencePayloadBytes: 0,
       idleEvictionTimer: null,
@@ -73,9 +85,15 @@ export class RoomRegistry {
     blockPackId: string,
     webSocket: WebSocket,
     connectionId: string,
-    connectorChannelId: number
+    connectorChannelId: number,
+    documentQuotaPolicyVersion: number,
+    maximumBlockCount: number
   ): Room {
-    const room = this.getOrCreate(blockPackId);
+    const room = this.getOrCreate(
+      blockPackId,
+      documentQuotaPolicyVersion,
+      maximumBlockCount
+    );
     this.cancelEviction(room);
     const subscriberKey = this.getSubscriberKey(
       connectionId,
@@ -93,6 +111,7 @@ export class RoomRegistry {
       connectionId,
       connectorChannelId,
       isReady: false,
+      quotaRecoveryRequired: false,
       awarenessClientIds: new Set(),
     });
 
@@ -177,7 +196,10 @@ export class RoomRegistry {
 
   initializeAwareness(room: Room, document: Y.Doc): void {
     room.awareness?.destroy();
+    room.validationDocument?.destroy();
     room.document = document;
+    room.validationDocument = new Y.Doc();
+    Y.applyUpdate(room.validationDocument, Y.encodeStateAsUpdate(document));
     room.awareness = new Awareness(document);
     room.awareness.setLocalState(null);
 
@@ -503,7 +525,10 @@ export class RoomRegistry {
     this.clearAwareness(room);
     room.document?.destroy();
     room.document = null;
+    room.validationDocument?.destroy();
+    room.validationDocument = null;
     room.pendingYjsUpdates = [];
+    room.pendingYjsPayloadBytes = 0;
     room.pendingPersistenceUpdates = [];
     room.pendingPersistencePayloadBytes = 0;
     room.persistenceDebounceTimer = null;

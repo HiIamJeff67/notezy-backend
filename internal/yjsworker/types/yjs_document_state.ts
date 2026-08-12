@@ -1,3 +1,5 @@
+import { YjsDocumentMaximumLoadPayloadBytes } from "../../../contracts/yjs-worker/v1/yjsworker_contract.js";
+
 export type YjsDocumentUpdate = {
   updateSequence: number;
   payload: Buffer;
@@ -15,6 +17,9 @@ export type YjsDocumentState = {
 export function parseYjsDocumentState(
   payload: Buffer
 ): YjsDocumentState | null {
+  if (payload.length > YjsDocumentMaximumLoadPayloadBytes) {
+    return null;
+  }
   if (payload.length < 36) {
     return null;
   }

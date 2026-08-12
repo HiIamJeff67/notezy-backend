@@ -55,6 +55,7 @@ const serverDetachedChannelCodes = new Set([
   "resync_required",
   "channel_backpressure",
   "worker_unavailable",
+  "block_pack_quota_exceeded",
 ]);
 ```
 
@@ -95,6 +96,14 @@ start a new Yjs provider
 
 Do not reuse the consumed channel ticket. Do not start the provider or send
 Yjs/awareness binary frames before `subscribed` is received.
+
+`block_pack_quota_exceeded` is a distinct recovery path. Preserve the rejected
+local content as an editor draft, destroy the polluted local Y.Doc, request a
+fresh ticket, and rebuild from the authoritative initial state. Do not merge the
+authoritative state into the rejected local Y.Doc because the rejected CRDT
+operations would remain present and be sent again. The ticket response and
+`subscribed` frame expose `documentQuotaPolicyVersion` and `maximumBlockCount`
+for proactive UI feedback, but the Yjs Worker remains authoritative.
 
 The explicit `resyncBlockPackChannel` operation may create a replacement
 channel object, but it must preserve the existing retain count and must not
@@ -143,6 +152,7 @@ the lifecycle error.
 - A reconnect clears all connector IDs before resubscribing.
 - A fresh channel ticket is requested for every resubscribe.
 - The browser WebSocket trace contains `subscribed` before any binary frame.
+- A quota rejection does not enter an automatic resubscribe loop or resend the
+  rejected update.
 - `channel_not_found` is not converted into a persistent editor error when it
   was caused by cleanup of an already-detached channel.
-

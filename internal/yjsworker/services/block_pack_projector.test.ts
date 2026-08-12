@@ -5,9 +5,8 @@ import test from "node:test";
 import type { Block } from "@blocknote/core";
 import { blocksToYXmlFragment } from "@blocknote/core/yjs";
 import * as Y from "yjs";
-
-import { BlockPackProjector } from "./block_pack_projector.js";
 import { notezyBlockNoteEditor } from "../types/blocknote_schema.js";
+import { BlockPackProjector } from "./block_pack_projector.js";
 
 const blockPackProjector = new BlockPackProjector();
 
@@ -46,5 +45,11 @@ for (const fixtureName of [
       projectedBlocks
     );
     assert.equal(projectedBlocks.length, sourceBlocks.length);
+    if (fixtureName === "temp_wide_block_contents.json") {
+      assert.equal(
+        blockPackProjector.countYjsDocumentBlocks(document),
+        sourceBlocks.length
+      );
+    }
   });
 }

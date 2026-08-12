@@ -50,9 +50,11 @@ caller's effective RootShelf permission before issuing a ticket.
 `Read`, `Write`, `Admin`, and `Owner` may request `read`; only `Write`,
 `Admin`, and `Owner` may request `write`. The response contains the signed
 ticket, expiry, channel identity, effective permission, room/document schema
-metadata, and sequence checkpoints required by the protocol. The signed ticket,
-not the public response, carries the private room-admission policy snapshot
-(version, strategy, and maximum subscribers) that RealtimeGateway executes.
+metadata, `documentQuotaPolicyVersion`, `maximumBlockCount`, and the sequence
+checkpoints required by the protocol. The signed ticket carries the same BlockPack
+quota policy plus the private room-admission policy snapshot (version, strategy,
+and maximum subscribers). The public quota fields are client UX hints; the signed
+claims verified by RealtimeGateway and enforced by Yjs Worker are authoritative.
 
 ### Presence
 
@@ -68,8 +70,10 @@ was observed; it does not affect membership or permission state.
    that connection and channel claims belong to the same user, applies the
    ticket's signed room-admission policy, allocates a connection-local
    `connectorChannelId`, and attaches the channel to the Yjs worker.
-3. The worker cold-loads durable Yjs state and sends the complete document
-   state through the subscribed channel.
+3. The worker cold-loads durable Yjs state, registers the subscriber, and returns
+   an internal `attached` acknowledgement. RealtimeGateway emits public
+   `subscribed` only after that acknowledgement, followed by the complete document
+   state.
 4. On `unsubscribe`, connection close, permission revocation, resource
    unavailability, or resync, RealtimeGateway detaches the channel and releases
    all associated leases.
@@ -87,10 +91,13 @@ does not change the durable Yjs source of truth.
 
 ## Failure semantics
 
-`permission_revoked` and `resource_unavailable` both terminate the logical
-channel. `resync_required` stops live writes until the channel performs a
-normal ticket-and-subscribe recovery. The backend never reconstructs an active
-document from `BlockTable` rows.
+`permission_revoked`, `resource_unavailable`, and `block_pack_quota_exceeded`
+terminate the logical channel. `resync_required` stops live writes until the
+channel performs a normal ticket-and-subscribe recovery. A quota rejection does
+not mutate, persist, project, or broadcast the rejected update. The client must
+preserve the rejected draft separately, rebuild a clean Y.Doc from authoritative
+state, and let the user reduce the content before retrying. The backend never
+reconstructs an active document from `BlockTable` rows.
 
 ## Related design documents
 

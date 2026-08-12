@@ -253,12 +253,13 @@ inbound routes use `DelegationMiddleware` for component-only operations and
 `context.Context` is never serialized as an internal transport contract.
 
 The versioned Core `Response[D]` envelope carries only operation data. A
-short-lived signed BlockPack channel ticket carries the room-admission policy
-snapshot required by the WebSocket runtime: policy version, admission enforcement
-strategy, and maximum subscribers. RealtimeGateway verifies that ticket and uses
-the attested strategy and maximum-subscriber claim directly for atomic Redis lease
-admission; it does not persist a Core-owned room-policy cache or expose internal
-instructions through the public API.
+short-lived signed BlockPack channel ticket carries the room-admission and
+document-quota policy snapshot required by the realtime runtimes: policy versions,
+admission enforcement strategy, maximum subscribers, and maximum Block count.
+RealtimeGateway verifies that ticket, applies atomic Redis lease admission, and
+passes the attested Block quota to Yjs Worker. The worker acknowledges attach only
+after the room is ready and enforces each complete update against a validation
+Y.Doc before changing authoritative state.
 
 ## GraphQL
 
@@ -368,9 +369,9 @@ Auth/User service
 runtime's user
 connection and BlockPack subscriber lease lifecycle, active lease inspection,
 participant presence, and presence PubSub fanout. A Core-issued BlockPack
-channel ticket carries the signed policy version, reject-new-subscriber strategy,
-and maximum-subscriber policy snapshot; RealtimeGateway uses those verified claims
-directly during atomic admission.
+channel ticket carries signed admission and document-quota policy snapshots;
+RealtimeGateway uses the admission claims directly during atomic admission and
+forwards the Block quota claim to Yjs Worker during attach.
 Core authorizes channel admission when it issues a signed ticket, but it does
 not participate in RealtimeGateway subscribe or write boundaries and does not
 read RealtimeGateway Redis or the live subscriber count during ownership or

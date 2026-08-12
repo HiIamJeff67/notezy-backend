@@ -6,13 +6,11 @@ import {
   notezyBlockNoteEditor,
 } from "../types/blocknote_schema.js";
 
-export type YjsDocumentInitializationResult = {
-  snapshot: Buffer;
-  stateVector: Buffer;
-};
-
 export class YjsDocumentInitializationService {
-  initialize(blocks: NotezyBlock[]): YjsDocumentInitializationResult {
+  initialize(blocks: NotezyBlock[]): {
+    snapshot: Buffer;
+    stateVector: Buffer;
+  } {
     const document = new Y.Doc();
     try {
       blocksToYXmlFragment(

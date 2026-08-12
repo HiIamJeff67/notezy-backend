@@ -97,12 +97,14 @@ ticket claims 的最小集合：
   "roomAdmissionPolicyVersion": 1,
   "roomAdmissionEnforcementStrategy": "reject-new-subscriber",
   "maximumSubscribers": 0,
+  "documentQuotaPolicyVersion": 1,
+  "maximumBlockCount": 0,
   "iat": 0,
   "exp": 0
 }
 ```
 
-RealtimeGateway 負責驗證 connection/channel ticket，以及兩者的 user、channel type 與 BlockPack id 是否相符；Node worker 只信任已驗證後送出的 attach message。ticket 是短效 signed capability；RealtimeGateway 以 Redis `SET NX` 與到期 TTL 原子消費 `jti`，因此 ticket 在所有 RealtimeGateway instance 都只能使用一次。`roomAdmissionPolicyVersion`、`roomAdmissionEnforcementStrategy` 與 `maximumSubscribers` 是 Core 簽發的完整 room admission policy snapshot；RealtimeGateway 不建立 policy cache，而是以 verified claim 直接執行 active subscriber lease 的 atomic admission。Gateway 在 subscribe 與每個 document mutation 前重新驗證 BlockPack hierarchy 與 permission；失敗時送出 `permission_revoked` 或 `resource_unavailable`、移除該 channel，並向 worker 轉送 detach。跨 Gateway 的主動 lifecycle fanout 延後到 Kafka 架構。
+RealtimeGateway 負責驗證 connection/channel ticket，以及兩者的 user、channel type 與 BlockPack id 是否相符；Node worker 只信任已驗證後送出的 attach message。ticket 是短效 signed capability；RealtimeGateway 以 Redis `SET NX` 與到期 TTL 原子消費 `jti`，因此 ticket 在所有 RealtimeGateway instance 都只能使用一次。admission 與 document quota claims 是 Core 簽發的完整 policy snapshot；RealtimeGateway 以 verified admission claims 執行 atomic lease admission，並將 verified Block quota 交給 worker。worker 只有在 materialize authoritative Y.Doc 且註冊 subscriber 後才回傳 `attached`。每筆更新先套用 validation Y.Doc，超過 `maximumBlockCount` 時整筆拒絕，不進入 authoritative Y.Doc、persistence、projection 或 broadcast。Core 的權限與 resource lifecycle 變更透過 outbox、Kafka 與 RealtimeGateway fanout 主動撤銷已存在的 channel。
 
 ## Cross-Service Frames
 
@@ -112,7 +114,7 @@ frames always include `connectionId`, `connectorChannelId`, `channelType`, and
 `channelId`; raw Yjs updates are never Base64-encoded or rewritten as JSON
 block events.
 
-internal attach/detach 是 idempotent。worker reconnect 後，Gateway 為其所屬 active channels replay attach；worker 會先向 Go cold-load snapshot + tail，materialize `Y.Doc` 後才回傳 complete encoded state。worker 會先套用收到的 raw Yjs updates，再以同一個 BlockPack room 為單位暫存並使用 `Y.mergeUpdates()` 合併為一筆 persistence batch。batch 會以 Kafka command 非同步送往 Core；editor message path 只等待 Kafka producer 的 replicated broker ACK，不等待 Core transaction。broker ACK 後 worker 即可釋出 room 的下一個 batch 並廣播 merged raw Yjs update；Core 的 application reply 會在背景更新持久化 watermark，若 Core 最終拒絕或逾時則要求 room resync。
+internal attach/detach 是 idempotent。worker reconnect 後，RealtimeGateway 為其所屬 active channels replay 帶有 quota policy 的 attach；worker 會先向 Core cold-load snapshot + tail，materialize `Y.Doc` 並回傳 `attached`，RealtimeGateway 才向 client 回覆 `subscribed`。合法 raw Yjs updates 會以同一個 BlockPack room 為單位暫存並使用 `Y.mergeUpdates()` 合併為一筆 persistence batch。batch 會以 Kafka command 非同步送往 Core；editor message path 只等待 Kafka producer 的 replicated broker ACK，不等待 Core transaction。broker ACK 後 worker 即可釋出 room 的下一個 batch 並廣播 merged raw Yjs update；Core 的 application reply 會在背景更新持久化 watermark，若 Core 最終拒絕或逾時則要求 room resync。
 
 每個 persistence batch 有只供 Go/worker 使用的 UUID idempotency key。Go 以 `(block_pack_id, persistence_batch_id)` 保證 internal WebSocket retry 不會建立重複 update row；同一 batch 的多個來源 connection 不可任意挑選其中一個寫入 `OriginConnectionId`，必須保留為 `NULL`。broker ACK 只代表 command 已被 Kafka 接受，不代表 PostgreSQL 已提交；若 Core application reply 最終失敗，worker 對 room 所有 subscriber 發出 `resync_required`，並以 cold-load 的 authoritative watermark 修正本地 optimistic sequence。
 

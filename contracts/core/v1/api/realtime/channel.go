@@ -23,16 +23,18 @@ type CreateMyBlockPackChannelTicketRequestDto struct {
 }
 
 type CreateMyBlockPackChannelTicketResponseDto struct {
-	ChannelTicket           string    `json:"channelTicket"`
-	ExpiresAt               time.Time `json:"expiresAt"`
-	ChannelType             string    `json:"channelType"`
-	ChannelId               uuid.UUID `json:"channelId"`
-	Permission              string    `json:"permission"`
-	RoomName                string    `json:"roomName"`
-	FragmentName            string    `json:"fragmentName"`
-	SchemaId                string    `json:"schemaId"`
-	SchemaVersion           int       `json:"schemaVersion"`
-	RealtimeProtocolVersion int       `json:"realtimeProtocolVersion"`
-	LastUpdateSequence      int64     `json:"lastUpdateSequence"`
-	CompactedUntilSequence  int64     `json:"compactedUntilSequence"`
+	ChannelTicket              string    `json:"channelTicket"`
+	ExpiresAt                  time.Time `json:"expiresAt"`
+	ChannelType                string    `json:"channelType"`
+	ChannelId                  uuid.UUID `json:"channelId"`
+	Permission                 string    `json:"permission"`
+	RoomName                   string    `json:"roomName"`
+	FragmentName               string    `json:"fragmentName"`
+	SchemaId                   string    `json:"schemaId"`
+	SchemaVersion              int       `json:"schemaVersion"`
+	RealtimeProtocolVersion    int       `json:"realtimeProtocolVersion"`
+	DocumentQuotaPolicyVersion int       `json:"documentQuotaPolicyVersion"`
+	MaximumBlockCount          int32     `json:"maximumBlockCount"`
+	LastUpdateSequence         int64     `json:"lastUpdateSequence"`
+	CompactedUntilSequence     int64     `json:"compactedUntilSequence"`
 }

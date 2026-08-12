@@ -81,6 +81,22 @@ func (c *Connector) unsubscribe(connectorChannelId uint32) (realtimetypes.Channe
 	return channel, exists
 }
 
+func (c *Connector) markReady(connectorChannelId uint32) (realtimetypes.Channel, bool, bool) {
+	c.channelMutex.Lock()
+	defer c.channelMutex.Unlock()
+
+	channel, exists := c.channels[connectorChannelId]
+	if !exists {
+		return realtimetypes.Channel{}, false, false
+	}
+
+	alreadyReady := channel.Ready
+	channel.Ready = true
+	c.channels[connectorChannelId] = channel
+
+	return channel, alreadyReady, true
+}
+
 func (c *Connector) acknowledge(connectorChannelId uint32, sequence int64) (bool, bool) {
 	c.channelMutex.Lock()
 	defer c.channelMutex.Unlock()

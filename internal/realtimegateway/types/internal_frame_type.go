@@ -23,4 +23,6 @@ const (
 	InternalFrameType_ApplyCompactedYjsDocument    InternalFrameType = 18
 	InternalFrameType_YjsDocumentCompacted         InternalFrameType = 19
 	InternalFrameType_YjsDocumentCompactionFailed  InternalFrameType = 20
+	InternalFrameType_Attached                     InternalFrameType = 21
+	InternalFrameType_BlockPackQuotaExceeded       InternalFrameType = 22
 )

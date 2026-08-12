@@ -190,17 +190,25 @@ func (s *RealtimeService) CreateMyBlockPackChannelTicket(
 		).WithOrigin(result.Error)
 	}
 
-	var rootShelf schemas.RootShelf
+	var roomPolicy struct {
+		MaximumSubscribers int32
+		MaximumBlockCount  int32
+	}
 	result = db.
 		Model(&schemas.BlockPack{}).
-		Select(`"RootShelfTable".owner_id`).
+		Select(`
+			"PlanLimitationTable".max_realtime_room_subscriber_count AS maximum_subscribers,
+			"PlanLimitationTable".max_block_count_per_block_pack AS maximum_block_count
+		`).
 		Joins(`INNER JOIN "SubShelfTable" ON "SubShelfTable".id = "BlockPackTable".parent_sub_shelf_id`).
 		Joins(`INNER JOIN "RootShelfTable" ON "RootShelfTable".id = "SubShelfTable".root_shelf_id`).
+		Joins(`INNER JOIN "UserTable" ON "UserTable".id = "RootShelfTable".owner_id`).
+		Joins(`INNER JOIN "PlanLimitationTable" ON "PlanLimitationTable".key = "UserTable".plan`).
 		Where(`"BlockPackTable".id = ?`, blockPack.Id).
 		Where(`"BlockPackTable".deleted_at IS NULL`).
 		Where(`"SubShelfTable".deleted_at IS NULL`).
 		Where(`"RootShelfTable".deleted_at IS NULL`).
-		Scan(&rootShelf)
+		Scan(&roomPolicy)
 	if result.Error != nil {
 		return nil, exceptions.New(
 			"Unavailable",
@@ -210,7 +218,7 @@ func (s *RealtimeService) CreateMyBlockPackChannelTicket(
 			http.StatusServiceUnavailable,
 		).WithOrigin(result.Error)
 	}
-	if result.RowsAffected == 0 || rootShelf.OwnerId == uuid.Nil {
+	if result.RowsAffected == 0 || roomPolicy.MaximumSubscribers <= 0 || roomPolicy.MaximumBlockCount <= 0 {
 		return nil, exceptions.New(
 			"Unavailable",
 			"BlockPack",
@@ -218,32 +226,6 @@ func (s *RealtimeService) CreateMyBlockPackChannelTicket(
 			"Block pack realtime room admission is unavailable",
 			http.StatusServiceUnavailable,
 		).WithOrigin(gorm.ErrRecordNotFound)
-	}
-
-	var maximumSubscribers int32
-	result = db.
-		Model(&schemas.User{}).
-		Select(`"PlanLimitationTable".max_realtime_room_subscriber_count`).
-		Joins(`INNER JOIN "PlanLimitationTable" ON "PlanLimitationTable".key = "UserTable".plan`).
-		Where(`"UserTable".id = ?`, rootShelf.OwnerId).
-		Scan(&maximumSubscribers)
-	if result.Error != nil {
-		return nil, exceptions.New(
-			"Unavailable",
-			"BlockPack",
-			"CreateMyBlockPackChannelTicket",
-			"Block pack realtime room admission is unavailable",
-			http.StatusServiceUnavailable,
-		).WithOrigin(result.Error)
-	}
-	if result.RowsAffected == 0 || maximumSubscribers <= 0 {
-		return nil, exceptions.New(
-			"Unavailable",
-			"BlockPack",
-			"CreateMyBlockPackChannelTicket",
-			"Block pack realtime room admission is unavailable",
-			http.StatusServiceUnavailable,
-		).WithOrigin(fmt.Errorf("block pack owner has no realtime room subscriber capacity"))
 	}
 
 	userAgentHash := sha256.Sum256([]byte(requestDto.Header.UserAgent))
@@ -256,7 +238,9 @@ func (s *RealtimeService) CreateMyBlockPackChannelTicket(
 		SchemaVersion:                    yjsworkercontract.YjsBlockPackSchemaVersion,
 		RoomAdmissionPolicyVersion:       realtimegatewaycontract.BlockPackRoomAdmissionPolicyVersion,
 		RoomAdmissionEnforcementStrategy: string(realtimegatewaycontract.RoomAdmissionEnforcementStrategy_RejectNewSubscriber),
-		MaximumSubscribers:               maximumSubscribers,
+		MaximumSubscribers:               roomPolicy.MaximumSubscribers,
+		DocumentQuotaPolicyVersion:       yjsworkercontract.BlockPackDocumentQuotaPolicyVersion,
+		MaximumBlockCount:                roomPolicy.MaximumBlockCount,
 	}
 	channelClaims.Subject = userPublicId.String()
 	channelTicket, expiresAt, err := sharedtokens.GenerateRealtimeBlockPackTicket(channelClaims)
@@ -272,17 +256,19 @@ func (s *RealtimeService) CreateMyBlockPackChannelTicket(
 	}
 
 	return &apicontract.CreateMyBlockPackChannelTicketResponseDto{
-		ChannelTicket:           *channelTicket,
-		ExpiresAt:               expiresAt,
-		ChannelType:             "BlockPack",
-		ChannelId:               blockPack.Id,
-		Permission:              string(permission),
-		RoomName:                fmt.Sprintf("%s:%s", yjsworkercontract.YjsBlockPackRoomPrefix, blockPack.Id),
-		FragmentName:            yjsworkercontract.YjsBlockPackFragmentName,
-		SchemaId:                yjsworkercontract.YjsBlockPackSchemaId,
-		SchemaVersion:           yjsworkercontract.YjsBlockPackSchemaVersion,
-		RealtimeProtocolVersion: constants.RealtimeProtocolVersion,
-		LastUpdateSequence:      yjsDocument.LastUpdateSequence,
-		CompactedUntilSequence:  yjsDocument.CompactedUntilSequence,
+		ChannelTicket:              *channelTicket,
+		ExpiresAt:                  expiresAt,
+		ChannelType:                "BlockPack",
+		ChannelId:                  blockPack.Id,
+		Permission:                 string(permission),
+		RoomName:                   fmt.Sprintf("%s:%s", yjsworkercontract.YjsBlockPackRoomPrefix, blockPack.Id),
+		FragmentName:               yjsworkercontract.YjsBlockPackFragmentName,
+		SchemaId:                   yjsworkercontract.YjsBlockPackSchemaId,
+		SchemaVersion:              yjsworkercontract.YjsBlockPackSchemaVersion,
+		RealtimeProtocolVersion:    constants.RealtimeProtocolVersion,
+		DocumentQuotaPolicyVersion: yjsworkercontract.BlockPackDocumentQuotaPolicyVersion,
+		MaximumBlockCount:          roomPolicy.MaximumBlockCount,
+		LastUpdateSequence:         yjsDocument.LastUpdateSequence,
+		CompactedUntilSequence:     yjsDocument.CompactedUntilSequence,
 	}, nil
 }

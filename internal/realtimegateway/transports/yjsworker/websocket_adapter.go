@@ -19,6 +19,7 @@ import (
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1"
 
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
 	metrics "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/metrics"
@@ -845,6 +846,22 @@ func (g *WebSocketAdapter) handleBinaryFrame(ctx context.Context, connector *Con
 			Message:            "connectorChannelId is not subscribed on this connection",
 		})
 	}
+	if !channel.Ready {
+		metrics.NotezyMeter.Count(ctx, "realtime.frame.rejected.count", 1,
+			attribute.String("direction", "inbound"),
+			attribute.String("reason", "channel_not_ready"),
+			attribute.String("channelType", string(channel.Type)),
+		)
+		return connector.writeError(realtimetypes.ErrorFrame{
+			Version:            constants.RealtimeProtocolVersion,
+			Type:               realtimetypes.FrameType_Error,
+			ChannelType:        channel.Type,
+			ChannelId:          &channel.Id,
+			ConnectorChannelId: frame.ConnectorChannelId,
+			Code:               realtimetypes.ErrorCode_BinaryChannelNotReady,
+			Message:            "the yjs worker has not finished attaching this channel",
+		})
+	}
 	if frame.Type != realtimetypes.BinaryFrameType_YjsDocument &&
 		frame.Type != realtimetypes.BinaryFrameType_Awareness {
 		metrics.NotezyMeter.Count(ctx, "realtime.frame.rejected.count", 1,
@@ -908,15 +925,16 @@ func (g *WebSocketAdapter) handleBinaryFrame(ctx context.Context, connector *Con
 			attribute.String("reason", "worker_unavailable"),
 			attribute.String("channelType", string(channel.Type)),
 		)
-		return connector.writeError(realtimetypes.ErrorFrame{
-			Version:            constants.RealtimeProtocolVersion,
-			Type:               realtimetypes.FrameType_Error,
-			ChannelType:        channel.Type,
-			ChannelId:          &channel.Id,
-			ConnectorChannelId: frame.ConnectorChannelId,
-			Code:               realtimetypes.ErrorCode_WorkerUnavailable,
-			Message:            "the yjs worker is unavailable",
-		})
+		g.detachBlockPackChannel(
+			connector,
+			frame.ConnectorChannelId,
+			channel.Id,
+			realtimetypes.ErrorCode_WorkerUnavailable,
+			"the yjs worker is unavailable",
+			"worker_unavailable",
+		)
+
+		return true
 	}
 
 	return true
@@ -1087,9 +1105,12 @@ func (g *WebSocketAdapter) handleControlFrame(ctx context.Context, connector *Co
 		// create the channel here, so if handleControlFrame of subscribe does not fire first
 		// the channel just will not be found by g.connectors.get() methods, and error will be thrown
 		channel := realtimetypes.Channel{
-			Type:       subscribeFrame.ChannelType,
-			Id:         subscribeFrame.ChannelId,
-			Permission: realtimetypes.ChannelPermission(channelClaims.Permission),
+			Type:                       subscribeFrame.ChannelType,
+			Id:                         subscribeFrame.ChannelId,
+			Permission:                 realtimetypes.ChannelPermission(channelClaims.Permission),
+			SubscribeRequestId:         subscribeFrame.RequestId,
+			DocumentQuotaPolicyVersion: channelClaims.DocumentQuotaPolicyVersion,
+			MaximumBlockCount:          channelClaims.MaximumBlockCount,
 		}
 		connectorChannelId, existing := connector.subscribe(channel)
 		if connectorChannelId == 0 {
@@ -1110,6 +1131,20 @@ func (g *WebSocketAdapter) handleControlFrame(ctx context.Context, connector *Co
 		}
 
 		if existing {
+			existingChannel, exists := connector.get(connectorChannelId)
+			if !exists || !existingChannel.Ready {
+				return connector.writeError(realtimetypes.ErrorFrame{
+					Version:            constants.RealtimeProtocolVersion,
+					Type:               realtimetypes.FrameType_Error,
+					RequestId:          subscribeFrame.RequestId,
+					ChannelType:        channel.Type,
+					ChannelId:          &channel.Id,
+					ConnectorChannelId: connectorChannelId,
+					Code:               realtimetypes.ErrorCode_BinaryChannelNotReady,
+					Message:            "the yjs worker has not finished attaching this channel",
+				})
+			}
+
 			participants, err := g.leaseStore.GetBlockPackParticipants(channel.Id)
 			if err != nil {
 				return connector.writeError(realtimetypes.ErrorFrame{
@@ -1137,14 +1172,16 @@ func (g *WebSocketAdapter) handleControlFrame(ctx context.Context, connector *Co
 				attribute.String("outcome", "existing"),
 			)
 			return connector.writeJSON(realtimetypes.SubscribedFrame{
-				Version:            constants.RealtimeProtocolVersion,
-				Type:               realtimetypes.FrameType_Subscribed,
-				RequestId:          subscribeFrame.RequestId,
-				ChannelType:        subscribeFrame.ChannelType,
-				ChannelId:          subscribeFrame.ChannelId,
-				ConnectorChannelId: connectorChannelId,
-				Existing:           true,
-				Participants:       presenceParticipants,
+				Version:                    constants.RealtimeProtocolVersion,
+				Type:                       realtimetypes.FrameType_Subscribed,
+				RequestId:                  subscribeFrame.RequestId,
+				ChannelType:                subscribeFrame.ChannelType,
+				ChannelId:                  subscribeFrame.ChannelId,
+				ConnectorChannelId:         connectorChannelId,
+				Existing:                   true,
+				DocumentQuotaPolicyVersion: existingChannel.DocumentQuotaPolicyVersion,
+				MaximumBlockCount:          existingChannel.MaximumBlockCount,
+				Participants:               presenceParticipants,
 			}) == nil
 		}
 
@@ -1229,16 +1266,44 @@ func (g *WebSocketAdapter) handleControlFrame(ctx context.Context, connector *Co
 			})
 		}
 
-		if !g.workerManager.Attach(realtimetypes.InternalFrame{
+		if err := g.leaseStore.SetBlockPackParticipant(
+			channel.Id,
+			leaseMember,
+			connector.UserPublicId,
+			string(channel.Permission),
+		); err != nil {
+			if releaseErr := g.releaseBlockPackSubscriber(channel.Id, leaseMember); releaseErr != nil {
+				logs.NotezyLogger.Error(ctx, releaseErr, "Failed to release realtime BlockPack subscriber lease")
+			}
+			connector.unsubscribe(connectorChannelId)
+
+			return connector.writeError(realtimetypes.ErrorFrame{
+				Version:            constants.RealtimeProtocolVersion,
+				Type:               realtimetypes.FrameType_Error,
+				RequestId:          subscribeFrame.RequestId,
+				ChannelType:        channel.Type,
+				ChannelId:          &channel.Id,
+				ConnectorChannelId: connectorChannelId,
+				Code:               realtimetypes.ErrorCode_RoomAdmissionUnavailable,
+				Message:            "realtime participant presence is temporarily unavailable",
+			})
+		}
+
+		quotaPolicyPayload, err := json.Marshal(yjsworkercontract.BlockPackQuotaPolicy{
+			Version:           channel.DocumentQuotaPolicyVersion,
+			MaximumBlockCount: channel.MaximumBlockCount,
+		})
+		if err != nil || !g.workerManager.Attach(realtimetypes.InternalFrame{
 			Version:            byte(constants.RealtimeWorkerProtocolVersion),
 			Type:               realtimetypes.InternalFrameType_Attach,
 			ChannelType:        channel.Type,
 			ConnectionId:       connector.Id,
 			ConnectorChannelId: connectorChannelId,
 			ChannelId:          channel.Id,
+			Payload:            quotaPolicyPayload,
 		}) {
-			if err := g.releaseBlockPackSubscriber(channel.Id, leaseMember); err != nil {
-				logs.NotezyLogger.Error(ctx, err, "Failed to release realtime BlockPack subscriber lease")
+			if releaseErr := g.releaseBlockPackSubscriber(channel.Id, leaseMember); releaseErr != nil {
+				logs.NotezyLogger.Error(ctx, releaseErr, "Failed to release realtime BlockPack subscriber lease")
 			}
 
 			connector.unsubscribe(connectorChannelId)
@@ -1259,36 +1324,21 @@ func (g *WebSocketAdapter) handleControlFrame(ctx context.Context, connector *Co
 				Message:            "the yjs worker is unavailable",
 			})
 		}
-		if err := g.leaseStore.SetBlockPackParticipant(
-			channel.Id,
-			leaseMember,
-			connector.UserPublicId,
-			string(channel.Permission),
-		); err != nil {
-			if releaseErr := g.releaseBlockPackSubscriber(channel.Id, leaseMember); releaseErr != nil {
-				logs.NotezyLogger.Error(ctx, releaseErr, "Failed to release realtime BlockPack subscriber lease")
-			}
-			connector.unsubscribe(connectorChannelId)
-			g.workerManager.Detach(realtimetypes.InternalFrame{
-				Version:            byte(constants.RealtimeWorkerProtocolVersion),
-				Type:               realtimetypes.InternalFrameType_Detach,
-				ChannelType:        channel.Type,
-				ConnectionId:       connector.Id,
-				ConnectorChannelId: connectorChannelId,
-				ChannelId:          channel.Id,
-			})
 
-			return connector.writeError(realtimetypes.ErrorFrame{
-				Version:            constants.RealtimeProtocolVersion,
-				Type:               realtimetypes.FrameType_Error,
-				RequestId:          subscribeFrame.RequestId,
-				ChannelType:        channel.Type,
-				ChannelId:          &channel.Id,
-				ConnectorChannelId: connectorChannelId,
-				Code:               realtimetypes.ErrorCode_RoomAdmissionUnavailable,
-				Message:            "realtime participant presence is temporarily unavailable",
-			})
-		}
+		time.AfterFunc(constants.RealtimeWorkerAttachTimeout, func() {
+			pendingChannel, exists := connector.get(connectorChannelId)
+			if exists && !pendingChannel.Ready {
+				g.detachBlockPackChannel(
+					connector,
+					connectorChannelId,
+					pendingChannel.Id,
+					realtimetypes.ErrorCode_WorkerUnavailable,
+					"the yjs worker did not finish attaching this channel",
+					"worker_attach_timeout",
+				)
+			}
+		})
+
 		currentParticipants, err := g.leaseStore.GetBlockPackParticipants(channel.Id)
 		if err != nil {
 			if releaseErr := g.releaseBlockPackSubscriber(channel.Id, leaseMember); releaseErr != nil {
@@ -1325,26 +1375,6 @@ func (g *WebSocketAdapter) handleControlFrame(ctx context.Context, connector *Co
 			attribute.String("permission", string(channel.Permission)),
 		)
 
-		presenceParticipants := make([]realtimetypes.BlockPackPresenceParticipant, len(currentParticipants))
-		for index, participant := range currentParticipants {
-			presenceParticipants[index] = realtimetypes.BlockPackPresenceParticipant{
-				UserPublicId:      participant.UserPublicId,
-				ChannelPermission: participant.ChannelPermission,
-				ConnectionCount:   participant.ConnectionCount,
-			}
-		}
-		if err := connector.writeJSON(realtimetypes.SubscribedFrame{
-			Version:            constants.RealtimeProtocolVersion,
-			Type:               realtimetypes.FrameType_Subscribed,
-			RequestId:          subscribeFrame.RequestId,
-			ChannelType:        subscribeFrame.ChannelType,
-			ChannelId:          subscribeFrame.ChannelId,
-			ConnectorChannelId: connectorChannelId,
-			Existing:           existing,
-			Participants:       presenceParticipants,
-		}); err != nil {
-			return false
-		}
 		g.publishBlockPackPresenceEvent(
 			channel.Id,
 			connector.Id,
@@ -1504,9 +1534,58 @@ func (g *WebSocketAdapter) handleInternalFrame(frame realtimetypes.InternalFrame
 	if !exists || channel.Type != frame.ChannelType || channel.Id != frame.ChannelId {
 		return
 	}
+	if frame.Type == realtimetypes.InternalFrameType_Attached {
+		var alreadyReady bool
+		channel, alreadyReady, exists = connector.markReady(frame.ConnectorChannelId)
+		if !exists {
+			return
+		}
+		if alreadyReady {
+			return
+		}
+
+		participants, err := g.leaseStore.GetBlockPackParticipants(channel.Id)
+		if err != nil {
+			g.detachBlockPackChannel(
+				connector,
+				frame.ConnectorChannelId,
+				channel.Id,
+				realtimetypes.ErrorCode_RoomAdmissionUnavailable,
+				"realtime participant presence is temporarily unavailable",
+				"participant_presence_unavailable",
+			)
+
+			return
+		}
+
+		presenceParticipants := make([]realtimetypes.BlockPackPresenceParticipant, len(participants))
+		for index, participant := range participants {
+			presenceParticipants[index] = realtimetypes.BlockPackPresenceParticipant{
+				UserPublicId:      participant.UserPublicId,
+				ChannelPermission: participant.ChannelPermission,
+				ConnectionCount:   participant.ConnectionCount,
+			}
+		}
+		if err := connector.writeJSON(realtimetypes.SubscribedFrame{
+			Version:                    constants.RealtimeProtocolVersion,
+			Type:                       realtimetypes.FrameType_Subscribed,
+			RequestId:                  channel.SubscribeRequestId,
+			ChannelType:                channel.Type,
+			ChannelId:                  channel.Id,
+			ConnectorChannelId:         frame.ConnectorChannelId,
+			DocumentQuotaPolicyVersion: channel.DocumentQuotaPolicyVersion,
+			MaximumBlockCount:          channel.MaximumBlockCount,
+			Participants:               presenceParticipants,
+		}); err != nil {
+			g.handleChannelBackpressure(connector, channel)
+		}
+
+		return
+	}
 
 	if frame.Type == realtimetypes.InternalFrameType_ResyncRequired ||
-		frame.Type == realtimetypes.InternalFrameType_PermissionRevoked {
+		frame.Type == realtimetypes.InternalFrameType_PermissionRevoked ||
+		frame.Type == realtimetypes.InternalFrameType_BlockPackQuotaExceeded {
 		code := realtimetypes.ErrorCode_ResubscribeRequired
 		message := "the yjs worker requires this channel to resubscribe"
 		outcome := "resync_required"
@@ -1514,6 +1593,10 @@ func (g *WebSocketAdapter) handleInternalFrame(frame realtimetypes.InternalFrame
 			code = realtimetypes.ErrorCode_PermissionRevoked
 			message = "permission for this channel has been revoked"
 			outcome = "permission_revoked"
+		} else if frame.Type == realtimetypes.InternalFrameType_BlockPackQuotaExceeded {
+			code = realtimetypes.ErrorCode_BlockPackQuotaExceeded
+			message = "the block pack has reached the block limit for its plan"
+			outcome = "block_pack_quota_exceeded"
 		}
 		g.detachBlockPackChannel(
 			connector,

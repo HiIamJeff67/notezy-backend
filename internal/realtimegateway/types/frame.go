@@ -41,14 +41,16 @@ type SubscribeFrame struct {
 }
 
 type SubscribedFrame struct {
-	Version            int                            `json:"version"`
-	Type               FrameType                      `json:"type"`
-	RequestId          string                         `json:"requestId,omitempty"`
-	ChannelType        ChannelType                    `json:"channelType"`
-	ChannelId          uuid.UUID                      `json:"channelId"`
-	ConnectorChannelId uint32                         `json:"connectorChannelId"`
-	Existing           bool                           `json:"existing"`
-	Participants       []BlockPackPresenceParticipant `json:"participants,omitempty"`
+	Version                    int                            `json:"version"`
+	Type                       FrameType                      `json:"type"`
+	RequestId                  string                         `json:"requestId,omitempty"`
+	ChannelType                ChannelType                    `json:"channelType"`
+	ChannelId                  uuid.UUID                      `json:"channelId"`
+	ConnectorChannelId         uint32                         `json:"connectorChannelId"`
+	Existing                   bool                           `json:"existing"`
+	DocumentQuotaPolicyVersion int                            `json:"documentQuotaPolicyVersion"`
+	MaximumBlockCount          int32                          `json:"maximumBlockCount"`
+	Participants               []BlockPackPresenceParticipant `json:"participants,omitempty"`
 }
 
 type BlockPackPresenceParticipant struct {

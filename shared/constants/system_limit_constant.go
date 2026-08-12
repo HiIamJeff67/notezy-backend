@@ -20,6 +20,7 @@ const (
 	RealtimeLeaseTTL                    time.Duration = 3 * time.Minute
 	RealtimeControlWriteTimeout         time.Duration = 10 * time.Second
 	RealtimeWorkerReconnectDelay        time.Duration = 2 * time.Second
+	RealtimeWorkerAttachTimeout         time.Duration = 10 * time.Second
 	RealtimeWorkerQueueSize             int           = 1024
 	RealtimeMaxOutboundControlFrames    int           = 256
 	RealtimeMaxOutboundFramesPerChannel int           = 256

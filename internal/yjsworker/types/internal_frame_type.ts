@@ -19,4 +19,6 @@ export enum InternalFrameType {
   InternalFrameType_ApplyCompactedYjsDocument = 18,
   InternalFrameType_YjsDocumentCompacted = 19,
   InternalFrameType_YjsDocumentCompactionFailed = 20,
+  InternalFrameType_Attached = 21,
+  InternalFrameType_BlockPackQuotaExceeded = 22,
 }

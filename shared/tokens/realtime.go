@@ -22,6 +22,7 @@ const realtimeBlockPackTicketExpiresIn time.Duration = 5 * time.Minute
 const realtimeProtocolVersion int = 1
 const yjsBlockPackSchemaVersion int = 1
 const blockPackRoomAdmissionPolicyVersion int = 1
+const blockPackDocumentQuotaPolicyVersion int = 1
 const roomAdmissionEnforcementStrategyRejectNewSubscriber string = "reject-new-subscriber"
 
 type RealtimeConnectionTicketClaims struct {
@@ -40,6 +41,8 @@ type RealtimeBlockPackTicketClaims struct {
 	RoomAdmissionPolicyVersion       int    `json:"roomAdmissionPolicyVersion" validate:"required"`
 	RoomAdmissionEnforcementStrategy string `json:"roomAdmissionEnforcementStrategy" validate:"required"`
 	MaximumSubscribers               int32  `json:"maximumSubscribers" validate:"required,min=1"`
+	DocumentQuotaPolicyVersion       int    `json:"documentQuotaPolicyVersion" validate:"required"`
+	MaximumBlockCount                int32  `json:"maximumBlockCount" validate:"required,min=1"`
 	jwt.RegisteredClaims
 }
 
@@ -86,6 +89,8 @@ func GenerateRealtimeBlockPackTicket(claims RealtimeBlockPackTicketClaims) (*str
 		claims.RoomAdmissionPolicyVersion != blockPackRoomAdmissionPolicyVersion ||
 		claims.RoomAdmissionEnforcementStrategy != roomAdmissionEnforcementStrategyRejectNewSubscriber ||
 		claims.MaximumSubscribers <= 0 ||
+		claims.DocumentQuotaPolicyVersion != blockPackDocumentQuotaPolicyVersion ||
+		claims.MaximumBlockCount <= 0 ||
 		(claims.Permission != "read" && claims.Permission != "write") {
 		return nil, time.Time{}, errors.New("realtime block pack ticket claims are invalid")
 	}
@@ -116,7 +121,7 @@ func GenerateRealtimeBlockPackTicket(claims RealtimeBlockPackTicketClaims) (*str
 }
 
 func ParseRealtimeConnectionTicket(ticketString string, userAgent string) (*RealtimeConnectionTicketClaims, error) {
-	privateKey, err := parseRealtimeTicketPrivateKey(os.Getenv("REALTIME_TICKET_PRIVATE_KEY_BASE64"))
+	publicKey, err := parseRealtimeTicketPublicKey(os.Getenv("REALTIME_TICKET_PUBLIC_KEY_BASE64"))
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +135,7 @@ func ParseRealtimeConnectionTicket(ticketString string, userAgent string) (*Real
 				return nil, jwt.ErrSignatureInvalid
 			}
 
-			return privateKey.Public(), nil
+			return publicKey, nil
 		},
 		jwt.WithAudience(realtimeConnectionTicketAudience),
 		jwt.WithIssuer(realtimeTicketIssuer),
@@ -157,7 +162,7 @@ func ParseRealtimeConnectionTicket(ticketString string, userAgent string) (*Real
 }
 
 func ParseRealtimeBlockPackTicket(ticketString string, userAgent string) (*RealtimeBlockPackTicketClaims, error) {
-	privateKey, err := parseRealtimeTicketPrivateKey(os.Getenv("REALTIME_TICKET_PRIVATE_KEY_BASE64"))
+	publicKey, err := parseRealtimeTicketPublicKey(os.Getenv("REALTIME_TICKET_PUBLIC_KEY_BASE64"))
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +176,7 @@ func ParseRealtimeBlockPackTicket(ticketString string, userAgent string) (*Realt
 				return nil, jwt.ErrSignatureInvalid
 			}
 
-			return privateKey.Public(), nil
+			return publicKey, nil
 		},
 		jwt.WithAudience(realtimeBlockPackTicketAudience),
 		jwt.WithIssuer(realtimeTicketIssuer),
@@ -192,7 +197,9 @@ func ParseRealtimeBlockPackTicket(ticketString string, userAgent string) (*Realt
 		claims.SchemaVersion != yjsBlockPackSchemaVersion ||
 		claims.RoomAdmissionPolicyVersion != blockPackRoomAdmissionPolicyVersion ||
 		claims.RoomAdmissionEnforcementStrategy != roomAdmissionEnforcementStrategyRejectNewSubscriber ||
-		claims.MaximumSubscribers <= 0 {
+		claims.MaximumSubscribers <= 0 ||
+		claims.DocumentQuotaPolicyVersion != blockPackDocumentQuotaPolicyVersion ||
+		claims.MaximumBlockCount <= 0 {
 		return nil, fmt.Errorf("invalid realtime block pack ticket claims")
 	}
 	if _, err := uuid.Parse(claims.Subject); err != nil {
@@ -227,4 +234,25 @@ func parseRealtimeTicketPrivateKey(encodedPrivateKey string) (ed25519.PrivateKey
 	}
 
 	return privateKey, nil
+}
+
+func parseRealtimeTicketPublicKey(encodedPublicKey string) (ed25519.PublicKey, error) {
+	if encodedPublicKey == "" {
+		return nil, errors.New("realtime ticket public key is required")
+	}
+
+	publicKeyBytes, err := base64.StdEncoding.DecodeString(encodedPublicKey)
+	if err != nil {
+		return nil, fmt.Errorf("invalid realtime ticket public key: %w", err)
+	}
+	parsedPublicKey, err := x509.ParsePKIXPublicKey(publicKeyBytes)
+	if err != nil {
+		return nil, fmt.Errorf("invalid realtime ticket public key: %w", err)
+	}
+	publicKey, ok := parsedPublicKey.(ed25519.PublicKey)
+	if !ok {
+		return nil, errors.New("invalid realtime ticket public key")
+	}
+
+	return publicKey, nil
 }

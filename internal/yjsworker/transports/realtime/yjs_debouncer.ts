@@ -193,15 +193,6 @@ export class YjsDebouncer {
     this.scheduleFlush(room, pendingYjsUpdate.frame.blockPackId);
   }
 
-  queueDeferredUpdates(room: Room): void {
-    const pendingYjsUpdates = room.pendingYjsUpdates;
-    room.pendingYjsUpdates = [];
-
-    for (const pendingYjsUpdate of pendingYjsUpdates) {
-      this.queueUpdate(room, pendingYjsUpdate);
-    }
-  }
-
   retryInFlight(
     room: Room,
     blockPackId: string,

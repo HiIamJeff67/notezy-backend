@@ -12,12 +12,16 @@ export type RoomSubscriber = {
   connectionId: string;
   connectorChannelId: number;
   isReady: boolean;
+  quotaRecoveryRequired: boolean;
   awarenessClientIds: Set<number>;
 };
 
 // Room owns the active in-memory Y.Doc and all transient state for one BlockPack collaboration room.
 export type Room = {
   document: Doc | null;
+  validationDocument: Doc | null;
+  maximumBlockCount: number;
+  documentQuotaPolicyVersion: number;
   awareness: Awareness | null;
   awarenessClientOwners: Map<number, string>;
   pendingAwarenessUpdates: Map<string, Buffer[]>;
@@ -29,6 +33,7 @@ export type Room = {
   compactedUntilSequence: number;
   projectedUntilSequence: number;
   pendingYjsUpdates: PendingYjsUpdate[];
+  pendingYjsPayloadBytes: number;
   pendingPersistenceUpdates: PendingYjsUpdate[];
   pendingPersistencePayloadBytes: number;
   idleEvictionTimer: NodeJS.Timeout | null;

@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -34,16 +35,24 @@ import (
 )
 
 type fakeWorkerManager struct {
-	frameHandler func(realtimetypes.InternalFrame)
-	frames       []realtimetypes.InternalFrame
-	mutex        sync.Mutex
+	frameHandler           func(realtimetypes.InternalFrame)
+	frames                 []realtimetypes.InternalFrame
+	disableAcknowledgement bool
+	mutex                  sync.Mutex
 }
 
 func (m *fakeWorkerManager) Attach(frame realtimetypes.InternalFrame) bool {
 	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
 	m.frames = append(m.frames, frame)
+	frameHandler := m.frameHandler
+	disableAcknowledgement := m.disableAcknowledgement
+	m.mutex.Unlock()
+
+	if frameHandler != nil && !disableAcknowledgement {
+		frame.Type = realtimetypes.InternalFrameType_Attached
+		frame.Payload = nil
+		frameHandler(frame)
+	}
 
 	return true
 }
@@ -94,6 +103,8 @@ func generateRealtimeBlockPackTicketWithMaximumSubscribers(
 		RoomAdmissionPolicyVersion:       realtimegatewaycontract.BlockPackRoomAdmissionPolicyVersion,
 		RoomAdmissionEnforcementStrategy: string(realtimegatewaycontract.RoomAdmissionEnforcementStrategy_RejectNewSubscriber),
 		MaximumSubscribers:               maximumSubscribers,
+		DocumentQuotaPolicyVersion:       yjsworkercontract.BlockPackDocumentQuotaPolicyVersion,
+		MaximumBlockCount:                1000,
 	}
 	claims.Subject = userPublicId.String()
 
@@ -194,7 +205,7 @@ func TestGatewaySendsReadyAndPong(t *testing.T) {
 
 	userAgent := "notezy-realtime-test"
 	userPublicId := uuid.New()
-	configureRealtimeTicketPrivateKey(t)
+	configureRealtimeTicketKeys(t)
 	connectionTicket, _, exception := generateRealtimeConnectionTicket(userPublicId, userAgent)
 	if exception != nil {
 		t.Fatalf("failed to generate connection ticket: %v", exception)
@@ -256,7 +267,7 @@ func TestGatewayRejectsConnectionsOutsideRealtimeBetaAllowlist(t *testing.T) {
 
 	userAgent := "notezy-realtime-test"
 	userPublicId := uuid.New()
-	configureRealtimeTicketPrivateKey(t)
+	configureRealtimeTicketKeys(t)
 	connectionTicket, _, exception := generateRealtimeConnectionTicket(userPublicId, userAgent)
 	if exception != nil {
 		t.Fatalf("failed to generate connection ticket: %v", exception)
@@ -301,7 +312,7 @@ func TestGatewayRejectsConnectionsWhenGatewayCapacityIsReached(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	userAgent := "notezy-realtime-test"
-	configureRealtimeTicketPrivateKey(t)
+	configureRealtimeTicketKeys(t)
 
 	firstTicket, _, exception := generateRealtimeConnectionTicket(uuid.New(), userAgent)
 	if exception != nil {
@@ -343,7 +354,7 @@ func TestGatewayRejectsConnectionsWhenUserCapacityIsReached(t *testing.T) {
 
 	userAgent := "notezy-realtime-test"
 	userPublicId := uuid.New()
-	configureRealtimeTicketPrivateKey(t)
+	configureRealtimeTicketKeys(t)
 	connectionTicket, _, exception := generateRealtimeConnectionTicket(userPublicId, userAgent)
 	if exception != nil {
 		t.Fatalf("failed to generate connection ticket: %v", exception)
@@ -384,7 +395,7 @@ func TestGatewayRejectsReplayedConnectionTicket(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	userAgent := "notezy-realtime-test"
-	configureRealtimeTicketPrivateKey(t)
+	configureRealtimeTicketKeys(t)
 	connectionTicket, _, exception := generateRealtimeConnectionTicket(uuid.New(), userAgent)
 	if exception != nil {
 		t.Fatalf("failed to generate connection ticket: %v", exception)
@@ -420,7 +431,7 @@ func TestGatewayRejectsBlockPackSubscriptionWhenRoomCapacityIsReached(t *testing
 	firstUserPublicId := uuid.New()
 	secondUserPublicId := uuid.New()
 	blockPackId := uuid.New()
-	configureRealtimeTicketPrivateKey(t)
+	configureRealtimeTicketKeys(t)
 
 	firstConnectionTicket, _, exception := generateRealtimeConnectionTicket(firstUserPublicId, userAgent)
 	if exception != nil {
@@ -567,7 +578,7 @@ func TestGatewayMultiplexesAndRelaysBlockPackChannels(t *testing.T) {
 
 	userAgent := "notezy-realtime-test"
 	userPublicId := uuid.New()
-	configureRealtimeTicketPrivateKey(t)
+	configureRealtimeTicketKeys(t)
 	connectionTicket, _, exception := generateRealtimeConnectionTicket(userPublicId, userAgent)
 	if exception != nil {
 		t.Fatalf("failed to generate connection ticket: %v", exception)
@@ -677,8 +688,26 @@ func TestGatewayMultiplexesAndRelaysBlockPackChannels(t *testing.T) {
 		firstSubscribed.ChannelType != realtimetypes.ChannelType_BlockPack ||
 		secondSubscribed.ChannelType != realtimetypes.ChannelType_BlockPack ||
 		firstSubscribed.ChannelId != firstBlockPackId ||
-		secondSubscribed.ChannelId != secondBlockPackId {
+		secondSubscribed.ChannelId != secondBlockPackId ||
+		firstSubscribed.DocumentQuotaPolicyVersion != yjsworkercontract.BlockPackDocumentQuotaPolicyVersion ||
+		secondSubscribed.DocumentQuotaPolicyVersion != yjsworkercontract.BlockPackDocumentQuotaPolicyVersion ||
+		firstSubscribed.MaximumBlockCount != 1000 ||
+		secondSubscribed.MaximumBlockCount != 1000 {
 		t.Fatalf("unexpected subscribed frames: %#v %#v", firstSubscribed, secondSubscribed)
+	}
+	workerManager.mutex.Lock()
+	attachFrames := append([]realtimetypes.InternalFrame(nil), workerManager.frames...)
+	workerManager.mutex.Unlock()
+	if len(attachFrames) < 2 {
+		t.Fatalf("expected two worker attach frames, got %#v", attachFrames)
+	}
+	for _, attachFrame := range attachFrames[:2] {
+		var quotaPolicy yjsworkercontract.BlockPackQuotaPolicy
+		if err := json.Unmarshal(attachFrame.Payload, &quotaPolicy); err != nil ||
+			quotaPolicy.Version != yjsworkercontract.BlockPackDocumentQuotaPolicyVersion ||
+			quotaPolicy.MaximumBlockCount != 1000 {
+			t.Fatalf("unexpected worker attach quota policy: %#v", attachFrame)
+		}
 	}
 
 	if err := connection.WriteJSON(realtimetypes.SubscribeFrame{
@@ -757,7 +786,7 @@ func TestGatewayRejectsYjsDocumentUpdatesOnReadOnlyChannels(t *testing.T) {
 
 	userAgent := "notezy-realtime-test"
 	userPublicId := uuid.New()
-	configureRealtimeTicketPrivateKey(t)
+	configureRealtimeTicketKeys(t)
 	connectionTicket, _, exception := generateRealtimeConnectionTicket(userPublicId, userAgent)
 	if exception != nil {
 		t.Fatalf("failed to generate connection ticket: %v", exception)
@@ -897,10 +926,10 @@ func assertGatewayConnectionRejected(
 	}
 }
 
-func configureRealtimeTicketPrivateKey(t *testing.T) {
+func configureRealtimeTicketKeys(t *testing.T) {
 	t.Helper()
 
-	_, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		t.Fatalf("failed to generate realtime ticket private key: %v", err)
 	}
@@ -908,6 +937,11 @@ func configureRealtimeTicketPrivateKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to marshal realtime ticket private key: %v", err)
 	}
+	publicKeyBytes, err := x509.MarshalPKIXPublicKey(publicKey)
+	if err != nil {
+		t.Fatalf("failed to marshal realtime ticket public key: %v", err)
+	}
 
 	t.Setenv("REALTIME_TICKET_PRIVATE_KEY_BASE64", base64.StdEncoding.EncodeToString(privateKeyBytes))
+	t.Setenv("REALTIME_TICKET_PUBLIC_KEY_BASE64", base64.StdEncoding.EncodeToString(publicKeyBytes))
 }

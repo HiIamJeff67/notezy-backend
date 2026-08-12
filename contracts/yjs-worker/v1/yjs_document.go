@@ -79,6 +79,9 @@ func (s YjsDocumentState) MarshalBytes() ([]byte, error) {
 
 func (s *YjsDocumentState) UnmarshalBytes(payload []byte) error {
 	*s = YjsDocumentState{}
+	if len(payload) > YjsDocumentMaximumLoadPayloadBytes {
+		return errors.New("Yjs document state exceeds the maximum load payload size")
+	}
 	if len(payload) < 36 {
 		return errors.New("invalid yjs document state payload")
 	}

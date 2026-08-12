@@ -11,4 +11,18 @@ export class BlockPackProjector {
       document.getXmlFragment(YjsBlockPackFragmentName)
     );
   }
+
+  countYjsDocumentBlocks(document: Y.Doc): number {
+    const pendingBlocks = [...this.projectYjsDocument(document)];
+    let blockCount = 0;
+    while (pendingBlocks.length > 0) {
+      const block = pendingBlocks.pop();
+      if (block === undefined) continue;
+
+      blockCount += 1;
+      pendingBlocks.push(...block.children);
+    }
+
+    return blockCount;
+  }
 }

@@ -5,6 +5,7 @@ type ErrorCode string
 const (
 	ErrorCode_AuthenticationManagedByUpgrade ErrorCode = "authentication_managed_by_upgrade"
 	ErrorCode_BinaryChannelNotReady          ErrorCode = "binary_channel_not_ready"
+	ErrorCode_BlockPackQuotaExceeded         ErrorCode = "block_pack_quota_exceeded"
 	ErrorCode_ChannelLimitExceeded           ErrorCode = "channel_limit_exceeded"
 	ErrorCode_ChannelNotFound                ErrorCode = "channel_not_found"
 	ErrorCode_ChannelPermissionDenied        ErrorCode = "channel_permission_denied"
