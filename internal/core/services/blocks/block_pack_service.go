@@ -2,6 +2,8 @@ package blocks
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -16,6 +18,7 @@ import (
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
+	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
 
 	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
@@ -168,6 +171,7 @@ func (s *BlockPackService) GetMyBlockPackAndItsParentById(
 	}
 
 	resDto := apicontract.GetMyBlockPackAndItsParentByIdResponseDto{}
+	var parentSubShelfPath types.UUIDArray
 	err := db.Raw(blockpacksql.GetMyBlockPackAndItsParentByIdSQL,
 		requestDto.Param.BlockPackId, actorUserId, pg.Array(allowedPermissions), onlyDeleted,
 	).Row().
@@ -188,13 +192,29 @@ func (s *BlockPackService) GetMyBlockPackAndItsParentById(
 			&resDto.ParentSubShelfId,
 			&resDto.ParentSubShelfName,
 			&resDto.ParentSubShelfPrevSubShelfId,
-			&resDto.ParentSubShelfPath,
+			&parentSubShelfPath,
 			&resDto.ParentSubShelfDeletedAt,
 			&resDto.ParentSubShelfUpdatedAt,
 			&resDto.ParentSubShelfCreatedAt)
 	if err != nil {
-		return nil, apiexceptions.NewBlockPackException().NotFound().WithOrigin(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apiexceptions.NewBlockPackException().NotFound().WithOrigin(err)
+		}
+
+		if logs.NotezyLogger != nil {
+			logs.NotezyLogger.Error(ctx, err, "Failed to scan BlockPack and its parent response")
+		}
+
+		return nil, exceptions.New(
+			"FailedToRead",
+			"BlockPack",
+			"Repository",
+			"Failed to read BlockPack and its parent",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
 	}
+	resDto.ParentSubShelfPath = []uuid.UUID(parentSubShelfPath)
 
 	return &resDto, nil
 }

@@ -199,6 +199,7 @@ export class RealtimeGateway {
     room.pendingYjsUpdates = [];
     room.pendingPersistenceUpdates = [];
     room.pendingPersistencePayloadBytes = 0;
+    room.pendingAwarenessUpdates.clear();
     room.persistenceDebounceTimer = null;
     room.persistenceMaximumWaitTimer = null;
     room.persistenceRetryTimer = null;
@@ -693,6 +694,8 @@ export class RealtimeGateway {
 
             return;
           }
+
+          if (awarenessPayload.length === 0) return;
 
           RealtimeGateway.broadcastInternalFrame(
             room,

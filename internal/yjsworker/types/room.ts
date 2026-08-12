@@ -20,6 +20,7 @@ export type Room = {
   document: Doc | null;
   awareness: Awareness | null;
   awarenessClientOwners: Map<number, string>;
+  pendingAwarenessUpdates: Map<string, Buffer[]>;
   dirtyUpdateCount: number;
   lastActiveAt: Date;
   subscribers: Map<string, RoomSubscriber>;

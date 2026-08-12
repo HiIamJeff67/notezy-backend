@@ -462,8 +462,45 @@ func (s *AuthService) RegisterViaGoogle(
 		return nil, exception
 	}
 
+	tx := s.db.WithContext(ctx).Begin()
+	existingUser, lookupException := s.userRepository.GetOneByEmail(
+		userInfo.Email,
+		[]schemas.UserRelation{schemas.UserRelation_UserAccount},
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+	)
+	if lookupException == nil && existingUser != nil {
+		loginResponse, loginException := s.loginViaGoogleUser(
+			ctx,
+			tx,
+			existingUser,
+			userInfo,
+			reqDto.Header.UserAgent,
+		)
+		if loginException != nil {
+			return nil, loginException
+		}
+
+		return &apicontract.RegisterViaGoogleResponseDto{
+			PublicId:     loginResponse.PublicId,
+			Name:         loginResponse.Name,
+			DisplayName:  loginResponse.DisplayName,
+			Email:        loginResponse.Email,
+			AccessToken:  loginResponse.AccessToken,
+			RefreshToken: loginResponse.RefreshToken,
+			CSRFToken:    loginResponse.CSRFToken,
+			CreatedAt:    loginResponse.CreatedAt,
+		}, nil
+	}
+	if lookupException != nil &&
+		(lookupException.Reason != "NotFound" || lookupException.Domain != "User") {
+		tx.Rollback()
+		return nil, lookupException
+	}
+
 	fakePasswordBytes, err := bcrypt.GenerateFromPassword([]byte(uuid.New().String()), bcrypt.DefaultCost)
 	if err != nil {
+		tx.Rollback()
 		return nil, exceptions.New(
 			"FailedToGenerateHashValue",
 			"Auth",
@@ -477,10 +514,9 @@ func (s *AuthService) RegisterViaGoogle(
 
 	hashedPassword, exception := s.hashPassword(fakePassword)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
-
-	tx := s.db.WithContext(ctx).Begin()
 
 	reg, err := regexp.Compile("[^a-z0-9]+")
 	if err != nil {
@@ -910,23 +946,31 @@ func (s *AuthService) LoginViaGoogle(
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
-
-	// otherwise, the user should provide their account and password
-	var user *schemas.User = nil
-	if user, exception = s.userRepository.GetOneByEmail(
+	user, exception := s.userRepository.GetOneByEmail(
 		userInfo.Email,
 		[]schemas.UserRelation{schemas.UserRelation_UserAccount},
 		options.WithTransactionDB(tx),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-	); exception != nil {
+	)
+	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
-
 	if user == nil {
 		tx.Rollback()
 		return nil, apiexceptions.NewAuthException().InvalidDto()
 	}
+
+	return s.loginViaGoogleUser(ctx, tx, user, userInfo, reqDto.Header.UserAgent)
+}
+
+func (s *AuthService) loginViaGoogleUser(
+	ctx context.Context,
+	tx *gorm.DB,
+	user *schemas.User,
+	userInfo *googleUserInfo,
+	userAgent string,
+) (*apicontract.LoginViaGoogleResponseDto, *exceptions.Exception) {
 
 	if user.BlockLoginUntil.After(time.Now()) {
 		tx.Rollback()
@@ -967,7 +1011,7 @@ func (s *AuthService) LoginViaGoogle(
 		return nil, apiexceptions.NewAuthException().WrongPassword() // login via google procedure early ends here
 	}
 
-	if user.UserAgent != reqDto.Header.UserAgent {
+	if user.UserAgent != userAgent {
 		// send a security email to warn the user
 		if exception := s.emailClient.SendSecurityAlertEmail(ctx, emaildto.SendSecurityAlertEmailRequestDto{
 			To:               user.Email,
@@ -1092,7 +1136,7 @@ func (s *AuthService) LoginViaGoogle(
 			Values: inputs.UpdateUserInput{
 				Status:       &user.PrevStatus,
 				RefreshToken: newRefreshToken,
-				UserAgent:    &reqDto.Header.UserAgent,
+				UserAgent:    &userAgent,
 				LoginCount:   &zeroLoginCount,
 			},
 			SetNull: nil,

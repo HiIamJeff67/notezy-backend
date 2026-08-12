@@ -3,6 +3,8 @@ package auth
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -43,6 +45,19 @@ func (s *OAuthService) GetGoogleUserInfo(
 ) (*googleUserInfo, *exceptions.Exception) {
 	token, err := s.oauthGoogleConfig.Exchange(ctx, authenticationCode)
 	if err != nil {
+		var retrieveError *oauth2.RetrieveError
+		if errors.As(err, &retrieveError) && retrieveError.Response != nil &&
+			retrieveError.Response.StatusCode >= http.StatusBadRequest &&
+			retrieveError.Response.StatusCode < http.StatusInternalServerError {
+			return nil, exceptions.New(
+				"InvalidAuthenticationCode",
+				"OAuth",
+				"GetGoogleUserInfo",
+				"Authentication code is invalid or expired",
+				http.StatusBadRequest,
+			).WithOrigin(err)
+		}
+
 		return nil, exceptions.New(
 			"TokenExchangeFailed",
 			"OAuth",
@@ -65,6 +80,30 @@ func (s *OAuthService) GetGoogleUserInfo(
 		).WithOrigin(err)
 	}
 	defer response.Body.Close()
+	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
+		if response.StatusCode >= http.StatusBadRequest && response.StatusCode < http.StatusInternalServerError {
+			return nil, exceptions.New(
+				"InvalidAuthenticationCode",
+				"OAuth",
+				"GetGoogleUserInfo",
+				"Authentication code is invalid or expired",
+				http.StatusBadRequest,
+			).WithOrigin(
+				fmt.Errorf("Google userinfo returned HTTP status %d", response.StatusCode),
+			)
+		}
+
+		return nil, exceptions.New(
+			"OAuthProviderUnavailable",
+			"OAuth",
+			"GetGoogleUserInfo",
+			"The OAuth provider is unavailable",
+			http.StatusBadGateway,
+			true,
+		).WithOrigin(
+			fmt.Errorf("Google userinfo returned HTTP status %d", response.StatusCode),
+		)
+	}
 
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -88,6 +127,16 @@ func (s *OAuthService) GetGoogleUserInfo(
 			http.StatusInternalServerError,
 			true,
 		).WithOrigin(err)
+	}
+	if userInfo.Id == "" || userInfo.Email == "" {
+		return nil, exceptions.New(
+			"InvalidResponse",
+			"OAuth",
+			"GetGoogleUserInfo",
+			"OAuth provider response does not contain a user ID and email",
+			http.StatusBadGateway,
+			true,
+		)
 	}
 
 	return &userInfo, nil

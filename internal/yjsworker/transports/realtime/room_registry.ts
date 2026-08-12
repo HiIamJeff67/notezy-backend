@@ -39,6 +39,7 @@ export class RoomRegistry {
       document: null,
       awareness: null,
       awarenessClientOwners: new Map(),
+      pendingAwarenessUpdates: new Map(),
       dirtyUpdateCount: 0,
       lastActiveAt: new Date(),
       subscribers: new Map(),
@@ -179,6 +180,41 @@ export class RoomRegistry {
     room.document = document;
     room.awareness = new Awareness(document);
     room.awareness.setLocalState(null);
+
+    for (const [subscriberKey, updates] of room.pendingAwarenessUpdates) {
+      const subscriber = room.subscribers.get(subscriberKey);
+      if (subscriber === undefined) continue;
+
+      for (const payload of updates) {
+        const entries = this.parseAwarenessUpdateEntries(payload);
+        if (
+          entries === null ||
+          entries.some(entry => entry.clientId === room.awareness?.clientID) ||
+          !this.validateAwarenessUpdateEntries(
+            room,
+            subscriber.connectionId,
+            subscriber.connectorChannelId,
+            entries
+          )
+        ) {
+          continue;
+        }
+
+        try {
+          applyAwarenessUpdate(room.awareness, payload, this);
+        } catch {
+          continue;
+        }
+
+        this.registerAwarenessUpdateEntries(
+          room,
+          subscriber.connectionId,
+          subscriber.connectorChannelId,
+          entries
+        );
+      }
+    }
+    room.pendingAwarenessUpdates.clear();
   }
 
   getAwarenessSnapshot(room: Room): Buffer | null {
@@ -202,9 +238,25 @@ export class RoomRegistry {
   ): Buffer | null {
     const awareness = room.awareness;
     const entries = this.parseAwarenessUpdateEntries(payload);
+    if (entries === null) {
+      return null;
+    }
+
+    const subscriberKey = this.getSubscriberKey(
+      connectionId,
+      connectorChannelId
+    );
+    if (!room.subscribers.has(subscriberKey)) return null;
+
+    if (awareness === null) {
+      const updates = room.pendingAwarenessUpdates.get(subscriberKey) ?? [];
+      updates.push(payload);
+      room.pendingAwarenessUpdates.set(subscriberKey, updates);
+
+      return Buffer.alloc(0);
+    }
+
     if (
-      awareness === null ||
-      entries === null ||
       entries.some(entry => entry.clientId === awareness.clientID) ||
       !this.validateAwarenessUpdateEntries(
         room,
@@ -487,6 +539,7 @@ export class RoomRegistry {
         room.awarenessClientOwners.delete(clientId);
       }
     }
+    room.pendingAwarenessUpdates.delete(subscriberKey);
     room.subscribers.delete(subscriberKey);
 
     return awarenessClientIds;
