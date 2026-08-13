@@ -29,7 +29,7 @@ func (e BlockPackEndpoint) GetParticipants(ctx *gin.Context) {
 	if requestId == "" {
 		requestId = uuid.NewString()
 	}
-	blockPackId, err := uuid.Parse(ctx.Param("blockPackId"))
+	blockPackId, err := uuid.Parse(ctx.Param("block-pack-id"))
 	if err != nil || blockPackId == uuid.Nil {
 		exception := exceptions.New(
 			"InvalidRequest",

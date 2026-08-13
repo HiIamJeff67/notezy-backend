@@ -39,7 +39,7 @@ func configureDevelopmentRoutineTagRoutes(
 	}
 	{
 		routineTagRoutes.GET(
-			"/:routineTagId",
+			"/:routine-tag-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyRoutineTagById"),
@@ -83,7 +83,7 @@ func configureDevelopmentRoutineTagRoutes(
 			)...,
 		)
 		routineTagRoutes.PUT(
-			"/:routineTagId",
+			"/:routine-tag-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRoutineTagById"),
@@ -105,7 +105,7 @@ func configureDevelopmentRoutineTagRoutes(
 			)...,
 		)
 		routineTagRoutes.DELETE(
-			"/:routineTagId/permanently",
+			"/:routine-tag-id/permanently",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutineTagById"),

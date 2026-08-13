@@ -41,7 +41,7 @@ func configureDevelopmentRoutineTaskRoutes(
 	}
 	{
 		routineTaskRoutes.GET(
-			"/:routineTaskId",
+			"/:routine-task-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyRoutineTaskById"),
@@ -83,7 +83,7 @@ func configureDevelopmentRoutineTaskRoutes(
 			)...,
 		)
 		routineTaskRoutes.POST(
-			"/routine/:routineId",
+			"/routine/:routine-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createRoutineTaskByRoutineId"),
@@ -97,7 +97,7 @@ func configureDevelopmentRoutineTaskRoutes(
 			)...,
 		)
 		routineTaskRoutes.PUT(
-			"/:routineTaskId",
+			"/:routine-task-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRoutineTaskById"),
@@ -111,7 +111,7 @@ func configureDevelopmentRoutineTaskRoutes(
 			)...,
 		)
 		routineTaskRoutes.PUT(
-			"/:routineTaskId/suspension",
+			"/:routine-task-id/suspension",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("pauseMyRoutineTaskById"),
@@ -125,7 +125,7 @@ func configureDevelopmentRoutineTaskRoutes(
 			)...,
 		)
 		routineTaskRoutes.DELETE(
-			"/:routineTaskId/suspension",
+			"/:routine-task-id/suspension",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("resumeMyRoutineTaskById"),
@@ -139,7 +139,7 @@ func configureDevelopmentRoutineTaskRoutes(
 			)...,
 		)
 		routineTaskRoutes.DELETE(
-			"/:routineTaskId/permanently",
+			"/:routine-task-id/permanently",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutineTaskById"),

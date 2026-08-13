@@ -41,7 +41,7 @@ func configureDevelopmentRoutineRoutes(
 	}
 	{
 		routineRoutes.GET(
-			"/:routineId",
+			"/:routine-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyRoutineById"),
@@ -55,7 +55,7 @@ func configureDevelopmentRoutineRoutes(
 			)...,
 		)
 		routineRoutes.GET(
-			"/station/:stationId",
+			"/station/:station-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyRoutinesByStationId"),
@@ -83,7 +83,7 @@ func configureDevelopmentRoutineRoutes(
 			)...,
 		)
 		routineRoutes.POST(
-			"/station/:stationId",
+			"/station/:station-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createRoutineByStationId"),
@@ -111,7 +111,7 @@ func configureDevelopmentRoutineRoutes(
 			)...,
 		)
 		routineRoutes.PUT(
-			"/:routineId",
+			"/:routine-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRoutineById"),
@@ -139,7 +139,7 @@ func configureDevelopmentRoutineRoutes(
 			)...,
 		)
 		routineRoutes.POST(
-			"/:routineId/tags/:routineTagId",
+			"/:routine-id/tags/:routine-tag-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("linkRoutineTagById"),
@@ -167,7 +167,7 @@ func configureDevelopmentRoutineRoutes(
 			)...,
 		)
 		routineRoutes.POST(
-			"/:routineId/items/:itemId",
+			"/:routine-id/items/:item-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("linkRoutineItemById"),
@@ -195,7 +195,7 @@ func configureDevelopmentRoutineRoutes(
 			)...,
 		)
 		routineRoutes.PATCH(
-			"/:routineId/restore",
+			"/:routine-id/restore",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyRoutineById"),
@@ -223,7 +223,7 @@ func configureDevelopmentRoutineRoutes(
 			)...,
 		)
 		routineRoutes.DELETE(
-			"/:routineId",
+			"/:routine-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyRoutineById"),
@@ -251,7 +251,7 @@ func configureDevelopmentRoutineRoutes(
 			)...,
 		)
 		routineRoutes.DELETE(
-			"/:routineId/permanently",
+			"/:routine-id/permanently",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutineById"),

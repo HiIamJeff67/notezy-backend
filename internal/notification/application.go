@@ -20,6 +20,7 @@ import (
 	database "github.com/HiIamJeff67/notezy-backend/internal/notification/data/database"
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/notification/data/database/repositories"
 	services "github.com/HiIamJeff67/notezy-backend/internal/notification/services"
+	notificationtransports "github.com/HiIamJeff67/notezy-backend/internal/notification/transports"
 	consumers "github.com/HiIamJeff67/notezy-backend/internal/notification/transports/core/consumers"
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/notification/transports/gateway/endpoints"
 	routers "github.com/HiIamJeff67/notezy-backend/internal/notification/transports/gateway/routers"
@@ -77,7 +78,7 @@ func Start() func() {
 		service,
 		config.Kafka.ConsumerConfig(),
 	)
-	relay := workers.NewOutboxRelay(
+	relay := notificationtransports.NewOutboxRelay(
 		repository,
 		producer,
 		config.OutboxPollInterval,

@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
+	blocknote "github.com/HiIamJeff67/notezy-backend/contracts/types/blocknote"
 	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
@@ -70,5 +71,69 @@ func TestPurposeHandlerReturnsLocalErrorForInvalidPayload(t *testing.T) {
 		t.Fatalf("error type = %T, want *exceptions.Exception", err)
 	} else if durableJobError.Reason != "InvalidRoutineTaskPayload" || durableJobError.Domain != "RoutineTask" {
 		t.Fatalf("error = %#v, want InvalidRoutineTaskPayload/RoutineTask", durableJobError)
+	}
+}
+
+func TestPrepareAssignmentMatchesNestedTemplateBlockContent(t *testing.T) {
+	payload, err := json.Marshal(routinetasktypes.CreateBlockPackRoutineTaskPayload{
+		TargetSubShelfId: uuid.New(),
+		Template: routinetasktypes.CreateBlockPackRoutineTaskTemplate{
+			Name: "Daily note for {{date1}}",
+			Blocks: []routinetasktypes.CreateBlockPackRoutineTaskTemplateBlock{
+				{
+					ClientId: uuid.NewString(),
+					ArborizedEditableBlock: blocknote.ArborizedEditableBlock{
+						Id:   uuid.New(),
+						Type: enums.BlockType_Paragraph,
+						Props: &blocknote.BaseProps{
+							Template: true,
+						},
+						Content: blocknote.InlineContentList{
+							{InlineContentUnion: blocknote.NewStyledText("Daily note for {{date1}}", blocknote.Styles{})},
+						},
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("json.Marshal() error = %v", err)
+	}
+
+	prepared, err := prepareAssignment(nil, nil, routinetasktypes.RoutineTaskAssignment{
+		RoutineTaskId:       uuid.New(),
+		RoutineTaskRecordId: uuid.New(),
+		RoutineId:           uuid.New(),
+		ActorUserId:         uuid.New(),
+		Purpose:             enums.RoutineTaskPurpose_CreateBlockPack,
+		Payload:             payload,
+		PatternValues:       map[string]string{"date1": "2026-08-13"},
+	})
+	if err != nil {
+		t.Fatalf("prepareAssignment() error = %v", err)
+	}
+
+	var preparedPayload routinetasktypes.CreateBlockPackRoutineTaskPayload
+	if err := json.Unmarshal(prepared.Payload, &preparedPayload); err != nil {
+		t.Fatalf("json.Unmarshal() error = %v", err)
+	}
+	if preparedPayload.Template.Name != "Daily note for 2026-08-13" {
+		t.Fatalf("template name = %q, want rendered value", preparedPayload.Template.Name)
+	}
+	content, ok := preparedPayload.Template.Blocks[0].ArborizedEditableBlock.Content.(blocknote.InlineContentList)
+	if !ok || len(content) != 1 {
+		t.Fatalf("template block content = %#v, want one inline text item", preparedPayload.Template.Blocks[0].ArborizedEditableBlock.Content)
+	}
+	styledText, ok := content[0].InlineContentUnion.(*blocknote.StyledText)
+	if !ok || styledText.Text != "Daily note for 2026-08-13" {
+		var got string
+		if ok {
+			got = styledText.Text
+		}
+		t.Fatalf("template block content = %q, want rendered value", got)
+	}
+	props, ok := preparedPayload.Template.Blocks[0].ArborizedEditableBlock.Props.(*blocknote.BaseProps)
+	if !ok || props.Template {
+		t.Fatal("template marker should not be persisted in the prepared payload")
 	}
 }

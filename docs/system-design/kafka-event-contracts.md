@@ -155,9 +155,11 @@ manual offset commits, bounded `PollRecords`, and Kafka's
 `BlockRebalanceOnPoll`: an offset is committed only after its handler has
 completed successfully, or after the original record has been durably written
 to its dead-letter topic. The consumer always releases the rebalance gate when
-the batch ends. A process crash, handler panic, failed dead-letter publish, or
-failed offset commit therefore leaves the source record uncommitted for
-redelivery.
+the batch ends. Transient broker dial, DNS, and group-session poll failures also
+release the gate and retry with the configured bounded exponential backoff
+instead of terminating the runtime consumer. A process crash, handler panic,
+failed dead-letter publish, or failed offset commit therefore leaves the source
+record uncommitted for redelivery.
 
 ## Transport ownership
 

@@ -46,7 +46,7 @@ func (c *RealtimeController) CreateMyRealtimeConnectionTicket(
 		return
 	}
 
-	writeClientResponse(ctx, response.Data)
+	writeCreatedClientResponse(ctx, response.Data)
 }
 
 func (c *RealtimeController) CreateMyBlockPackChannelTicket(
@@ -68,5 +68,5 @@ func (c *RealtimeController) CreateMyBlockPackChannelTicket(
 		return
 	}
 
-	writeClientResponse(ctx, response.Data)
+	writeCreatedClientResponse(ctx, response.Data)
 }

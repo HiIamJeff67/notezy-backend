@@ -110,7 +110,7 @@ func (b *RoutineBinder) BindGetMyRoutineById(controllerFunc controllers.Func[*ap
 			return
 		}
 		requestDto.Param.IsDeleted = isDeleted
-		value, ok := parseRoutineUUID(ctx, "routineId")
+		value, ok := parseRoutineUUID(ctx, "routine-id")
 		if !ok {
 			return
 		}
@@ -129,7 +129,7 @@ func (b *RoutineBinder) BindGetMyRoutinesByStationId(controllerFunc controllers.
 			return
 		}
 		requestDto.Param.AreDeleted = areDeleted
-		value, ok := parseRoutineUUID(ctx, "stationId")
+		value, ok := parseRoutineUUID(ctx, "station-id")
 		if !ok {
 			return
 		}
@@ -178,7 +178,7 @@ func (b *RoutineBinder) BindCreateRoutineByStationId(controllerFunc controllers.
 	return func(ctx *gin.Context) {
 		requestDto := &apicontract.CreateRoutineByStationIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-		value, ok := parseRoutineUUID(ctx, "stationId")
+		value, ok := parseRoutineUUID(ctx, "station-id")
 		if !ok {
 			return
 		}
@@ -201,7 +201,7 @@ func (b *RoutineBinder) BindUpdateMyRoutineById(controllerFunc controllers.Func[
 	return func(ctx *gin.Context) {
 		requestDto := &apicontract.UpdateMyRoutineByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-		value, ok := parseRoutineUUID(ctx, "routineId")
+		value, ok := parseRoutineUUID(ctx, "routine-id")
 		if !ok {
 			return
 		}
@@ -224,12 +224,12 @@ func (b *RoutineBinder) BindLinkRoutineTagById(controllerFunc controllers.Func[*
 	return func(ctx *gin.Context) {
 		requestDto := &apicontract.LinkRoutineTagByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-		value, ok := parseRoutineUUID(ctx, "routineId")
+		value, ok := parseRoutineUUID(ctx, "routine-id")
 		if !ok {
 			return
 		}
 		requestDto.Body.RoutineId = value
-		value, ok = parseRoutineUUID(ctx, "routineTagId")
+		value, ok = parseRoutineUUID(ctx, "routine-tag-id")
 		if !ok {
 			return
 		}
@@ -253,12 +253,12 @@ func (b *RoutineBinder) BindLinkRoutineItemById(controllerFunc controllers.Func[
 	return func(ctx *gin.Context) {
 		requestDto := &apicontract.LinkRoutineItemByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-		value, ok := parseRoutineUUID(ctx, "routineId")
+		value, ok := parseRoutineUUID(ctx, "routine-id")
 		if !ok {
 			return
 		}
 		requestDto.Body.RoutineId = value
-		value, ok = parseRoutineUUID(ctx, "itemId")
+		value, ok = parseRoutineUUID(ctx, "item-id")
 		if !ok {
 			return
 		}
@@ -283,7 +283,7 @@ func (b *RoutineBinder) BindRestoreMyRoutineById(controllerFunc controllers.Func
 	return func(ctx *gin.Context) {
 		requestDto := &apicontract.RestoreMyRoutineByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-		value, ok := parseRoutineUUID(ctx, "routineId")
+		value, ok := parseRoutineUUID(ctx, "routine-id")
 		if !ok {
 			return
 		}
@@ -306,7 +306,7 @@ func (b *RoutineBinder) BindDeleteMyRoutineById(controllerFunc controllers.Func[
 	return func(ctx *gin.Context) {
 		requestDto := &apicontract.DeleteMyRoutineByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-		value, ok := parseRoutineUUID(ctx, "routineId")
+		value, ok := parseRoutineUUID(ctx, "routine-id")
 		if !ok {
 			return
 		}
@@ -329,7 +329,7 @@ func (b *RoutineBinder) BindHardDeleteMyRoutineById(controllerFunc controllers.F
 	return func(ctx *gin.Context) {
 		requestDto := &apicontract.HardDeleteMyRoutineByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-		value, ok := parseRoutineUUID(ctx, "routineId")
+		value, ok := parseRoutineUUID(ctx, "routine-id")
 		if !ok {
 			return
 		}

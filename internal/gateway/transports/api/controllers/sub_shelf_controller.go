@@ -130,7 +130,7 @@ func (c *SubShelfController) CreateSubShelfByRootShelfId(ctx *gin.Context, reque
 		return
 	}
 
-	writeClientResponse(ctx, response.Data)
+	writeCreatedClientResponse(ctx, response.Data)
 }
 
 func (c *SubShelfController) CreateSubShelvesByRootShelfIds(ctx *gin.Context, requestDto *apicontract.CreateSubShelvesByRootShelfIdsRequestDto) {
@@ -149,7 +149,7 @@ func (c *SubShelfController) CreateSubShelvesByRootShelfIds(ctx *gin.Context, re
 		return
 	}
 
-	writeClientResponse(ctx, response.Data)
+	writeCreatedClientResponse(ctx, response.Data)
 }
 
 func (c *SubShelfController) UpdateMySubShelfById(ctx *gin.Context, requestDto *apicontract.UpdateMySubShelfByIdRequestDto) {

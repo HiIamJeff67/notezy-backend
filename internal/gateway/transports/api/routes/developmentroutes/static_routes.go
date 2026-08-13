@@ -18,7 +18,7 @@ func configureStaticRoutes(router *gin.RouterGroup) {
 
 	staticGroup := router.Group("/static")
 	{
-		globalImagesGroup := staticGroup.Group("/globalImages")
+		globalImagesGroup := staticGroup.Group("/global-images")
 		globalImagesGroup.Use(
 			middlewares.UnauthorizedRateLimitMiddleware(),
 		)

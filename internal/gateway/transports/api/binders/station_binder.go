@@ -67,7 +67,7 @@ func (b *StationBinder) BindGetMyStationById(controllerFunc controllers.Func[*ap
 			request.Param.IsDeleted = &isDeleted
 		}
 
-		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		stationId, err := uuid.Parse(ctx.Param("station-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return
@@ -135,7 +135,7 @@ func (b *StationBinder) BindUpdateMyStationById(controllerFunc controllers.Func[
 			return
 		}
 
-		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		stationId, err := uuid.Parse(ctx.Param("station-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return
@@ -170,7 +170,7 @@ func (b *StationBinder) BindRestoreMyStationById(controllerFunc controllers.Func
 			return
 		}
 
-		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		stationId, err := uuid.Parse(ctx.Param("station-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return
@@ -205,7 +205,7 @@ func (b *StationBinder) BindDeleteMyStationById(controllerFunc controllers.Func[
 			return
 		}
 
-		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		stationId, err := uuid.Parse(ctx.Param("station-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return
@@ -240,7 +240,7 @@ func (b *StationBinder) BindHardDeleteMyStationById(controllerFunc controllers.F
 			return
 		}
 
-		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		stationId, err := uuid.Parse(ctx.Param("station-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return
@@ -289,14 +289,14 @@ func (b *StationBinder) BindGetMyStationPermission(controllerFunc controllers.Fu
 		request := &apicontract.GetMyStationPermissionRequestDto{}
 		request.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		stationId, err := uuid.Parse(ctx.Param("station-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return
 		}
 		request.Param.StationId = stationId
 
-		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		userPublicId, err := uuid.Parse(ctx.Param("user-public-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return
@@ -312,14 +312,14 @@ func (b *StationBinder) BindCreateMyStationPermission(controllerFunc controllers
 		request := &apicontract.CreateMyStationPermissionRequestDto{}
 		request.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		stationId, err := uuid.Parse(ctx.Param("station-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return
 		}
 		request.Param.StationId = stationId
 
-		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		userPublicId, err := uuid.Parse(ctx.Param("user-public-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return
@@ -340,14 +340,14 @@ func (b *StationBinder) BindUpsertMyStationPermission(controllerFunc controllers
 		request := &apicontract.UpsertMyStationPermissionRequestDto{}
 		request.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		stationId, err := uuid.Parse(ctx.Param("station-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return
 		}
 		request.Param.StationId = stationId
 
-		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		userPublicId, err := uuid.Parse(ctx.Param("user-public-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return
@@ -368,7 +368,7 @@ func (b *StationBinder) BindUpsertMyStationPermissions(controllerFunc controller
 		request := &apicontract.UpsertMyStationPermissionsRequestDto{}
 		request.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		stationId, err := uuid.Parse(ctx.Param("station-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return
@@ -389,14 +389,14 @@ func (b *StationBinder) BindUpdateMyStationPermission(controllerFunc controllers
 		request := &apicontract.UpdateMyStationPermissionRequestDto{}
 		request.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		stationId, err := uuid.Parse(ctx.Param("station-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return
 		}
 		request.Param.StationId = stationId
 
-		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		userPublicId, err := uuid.Parse(ctx.Param("user-public-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return
@@ -417,7 +417,7 @@ func (b *StationBinder) BindTransferMyStationOwnership(controllerFunc controller
 		request := &apicontract.TransferMyStationOwnershipRequestDto{}
 		request.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		stationId, err := uuid.Parse(ctx.Param("station-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return
@@ -438,14 +438,14 @@ func (b *StationBinder) BindDeleteMyStationPermission(controllerFunc controllers
 		request := &apicontract.DeleteMyStationPermissionRequestDto{}
 		request.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		stationId, err := uuid.Parse(ctx.Param("station-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return
 		}
 		request.Param.StationId = stationId
 
-		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		userPublicId, err := uuid.Parse(ctx.Param("user-public-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return
@@ -461,7 +461,7 @@ func (b *StationBinder) BindDeleteMyStationPermissions(controllerFunc controller
 		request := &apicontract.DeleteMyStationPermissionsRequestDto{}
 		request.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		stationId, err := uuid.Parse(ctx.Param("station-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return
@@ -482,7 +482,7 @@ func (b *StationBinder) BindLeaveMyStation(controllerFunc controllers.Func[*apic
 		request := &apicontract.LeaveMyStationRequestDto{}
 		request.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		stationId, err := uuid.Parse(ctx.Param("station-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Station").WithOrigin(err), ctx)
 			return

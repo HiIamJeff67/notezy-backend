@@ -348,15 +348,36 @@ func (c *Consumer) Run(ctx context.Context, handler ConsumerHandler) error {
 		return errors.New("Kafka consumer handler is required")
 	}
 
+	pollRetryBackoff := c.config.InitialRetryBackoff
 	for ctx.Err() == nil {
 		fetches := c.client.PollRecords(ctx, c.config.MaximumPollRecords)
 		if err := fetches.Err(); err != nil {
 			if ctx.Err() != nil {
 				return nil
 			}
-			return fmt.Errorf("poll Kafka consumer records: %w", err)
+
+			c.client.AllowRebalance()
+			c.recordFailure(
+				ctx,
+				"",
+				0,
+				0,
+				"Kafka consumer poll failed; retrying",
+				err,
+			)
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-time.After(pollRetryBackoff):
+			}
+			pollRetryBackoff *= 2
+			if pollRetryBackoff > c.config.MaximumRetryBackoff {
+				pollRetryBackoff = c.config.MaximumRetryBackoff
+			}
+			continue
 		}
 
+		pollRetryBackoff = c.config.InitialRetryBackoff
 		c.consumeFetches(ctx, fetches, handler)
 		c.client.AllowRebalance()
 	}

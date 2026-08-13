@@ -138,7 +138,7 @@ func (r BlockPackPatternResolver) ResolveMany(
 		checkInputs,
 		nil,
 		allowedPermissions,
-		options.WithDB(db.WithContext(ctx)),
+		options.WithTransactionDB(db.WithContext(ctx)),
 		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)

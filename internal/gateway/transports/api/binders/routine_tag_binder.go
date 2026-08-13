@@ -47,7 +47,7 @@ func (b *RoutineTagBinder) BindGetMyRoutineTagById(controllerFunc controllers.Fu
 			requestDto.Param.IsDeleted = &isDeleted
 		}
 
-		routineTagId, err := uuid.Parse(ctx.Param("routineTagId"))
+		routineTagId, err := uuid.Parse(ctx.Param("routine-tag-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("RoutineTag").WithOrigin(err), ctx)
 			return
@@ -115,7 +115,7 @@ func (b *RoutineTagBinder) BindUpdateMyRoutineTagById(controllerFunc controllers
 			return
 		}
 
-		routineTagId, err := uuid.Parse(ctx.Param("routineTagId"))
+		routineTagId, err := uuid.Parse(ctx.Param("routine-tag-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("RoutineTag").WithOrigin(err), ctx)
 			return
@@ -145,7 +145,7 @@ func (b *RoutineTagBinder) BindHardDeleteMyRoutineTagById(controllerFunc control
 		requestDto := &apicontract.HardDeleteMyRoutineTagByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		routineTagId, err := uuid.Parse(ctx.Param("routineTagId"))
+		routineTagId, err := uuid.Parse(ctx.Param("routine-tag-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("RoutineTag").WithOrigin(err), ctx)
 			return

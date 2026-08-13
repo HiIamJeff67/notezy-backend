@@ -82,7 +82,7 @@ func (c *RootShelfController) CreateRootShelf(ctx *gin.Context, request *apicont
 		return
 	}
 
-	writeClientResponse(ctx, response.Data)
+	writeCreatedClientResponse(ctx, response.Data)
 }
 
 func (c *RootShelfController) CreateRootShelves(ctx *gin.Context, request *apicontract.CreateRootShelvesRequestDto) {
@@ -101,7 +101,7 @@ func (c *RootShelfController) CreateRootShelves(ctx *gin.Context, request *apico
 		return
 	}
 
-	writeClientResponse(ctx, response.Data)
+	writeCreatedClientResponse(ctx, response.Data)
 }
 
 func (c *RootShelfController) UpdateMyRootShelfById(ctx *gin.Context, request *apicontract.UpdateMyRootShelfByIdRequestDto) {
@@ -235,7 +235,7 @@ func (c *RootShelfController) CreateMyRootShelfPermission(ctx *gin.Context, requ
 		return
 	}
 
-	writeClientResponse(ctx, response.Data)
+	writeCreatedClientResponse(ctx, response.Data)
 }
 
 func (c *RootShelfController) UpsertMyRootShelfPermission(

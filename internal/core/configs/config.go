@@ -7,12 +7,13 @@ import (
 )
 
 type Config struct {
-	ListenAddress  string
-	OAuthGoogle    OAuthGoogleConfig
-	OutboxRelay    OutboxRelayConfig
-	KafkaConsumer  KafkaConsumerConfig
-	UserDataCache  UserDataCacheConfig
-	StorageKeySalt string
+	ListenAddress             string
+	OAuthGoogle               OAuthGoogleConfig
+	OutboxRelay               OutboxRelayConfig
+	KafkaConsumer             KafkaConsumerConfig
+	UserDataCache             UserDataCacheConfig
+	YjsDocumentInitialization YjsDocumentInitializationConfig
+	StorageKeySalt            string
 }
 
 func LoadConfig() (Config, error) {
@@ -40,12 +41,17 @@ func LoadConfig() (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+	yjsDocumentInitialization, err := loadYjsDocumentInitializationConfig()
+	if err != nil {
+		return Config{}, err
+	}
 	return Config{
-		ListenAddress:  listenAddress,
-		OAuthGoogle:    oauthGoogle,
-		OutboxRelay:    outboxRelay,
-		KafkaConsumer:  kafkaConsumer,
-		UserDataCache:  userDataCache,
-		StorageKeySalt: storageKeySalt,
+		ListenAddress:             listenAddress,
+		OAuthGoogle:               oauthGoogle,
+		OutboxRelay:               outboxRelay,
+		KafkaConsumer:             kafkaConsumer,
+		UserDataCache:             userDataCache,
+		YjsDocumentInitialization: yjsDocumentInitialization,
+		StorageKeySalt:            storageKeySalt,
 	}, nil
 }

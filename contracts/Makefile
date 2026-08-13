@@ -1,4 +1,4 @@
-.PHONY: test test-race gql-generate gql-clean gql-regenerate
+.PHONY: test test-race gql-generate gql-clean gql-regenerate public-api-gen
 
 test:
 	go test ./...
@@ -13,3 +13,6 @@ gql-clean:
 	rm -rf core/v1/graphql/generated/* core/v1/graphql/models/*
 
 gql-regenerate: gql-clean gql-generate
+
+public-api-gen:
+	cd .. && go run ./contracts/scripts/publicapigen

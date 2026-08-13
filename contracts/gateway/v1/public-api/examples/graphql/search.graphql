@@ -1,0 +1,555 @@
+# Source: badge_fragment.graphql
+fragment FragmentedBasicPublicBadge on PublicBadge {
+  publicId
+  title
+  description
+  type
+  imageURL
+  createdAt
+}
+
+# Source: block_fragment.graphql
+fragment FragmentedBasicPrivateBlock on PrivateBlock {
+    id
+    blockPackId
+    parentBlockId
+    prevBlockId
+    nextBlockId
+    type
+    props
+    content
+    updatedAt
+    createdAt
+}
+
+fragment FragmentedPrivateBlock on PrivateBlock {
+    ...FragmentedBasicPrivateBlock
+}
+
+# Source: block_pack_fragment.graphql
+fragment FragmentedBasicPrivateBlockPack on PrivateBlockPack {
+  id
+  parentSubShelfId
+  name
+  icon
+  headerBackgroundURL
+  blockCount
+  deletedAt
+  updatedAt
+  createdAt
+  blockIds
+}
+
+fragment FragmentedPrivateBlockPack on PrivateBlockPack {
+  ...FragmentedBasicPrivateBlockPack
+}
+
+# Source: item_fragment.graphql
+fragment FragmentedBasicPrivateItem on PrivateItem {
+    id
+    parentSubShelfId
+    rootShelfId
+    type
+    deletedAt
+    updatedAt
+    createdAt
+    routineIds
+}
+
+fragment FragmentedPrivateItem on PrivateItem {
+    ...FragmentedBasicPrivateItem
+}
+
+# Source: material_fragment.graphql
+fragment FragmentedBasicPrivateMaterial on PrivateMaterial {
+  id
+  parentSubShelfId
+  name
+  size
+  contentType
+  parseMediaType
+  deletedAt
+  updatedAt
+  createdAt
+}
+
+fragment FragmentedPrivateMaterial on PrivateMaterial {
+  ...FragmentedBasicPrivateMaterial
+}
+
+# Source: root_shelf_fragment.graphql
+fragment FragmentedBasicPrivateRootShelf on PrivateRootShelf {
+  id
+  name
+  permission
+  subShelfCount
+  itemCount
+  lastAnalyzedAt
+  deletedAt
+  updatedAt
+  createdAt
+  owner {
+    ...FragmentedPublicUser
+  }
+  sharers {
+    ...FragmentedPublicUser
+  }
+  itemIds
+}
+
+fragment FragmentedPrivateRootShelf on PrivateRootShelf {
+  ...FragmentedBasicPrivateRootShelf
+}
+
+# Source: routine_fragment.graphql
+fragment FragmentedBasicPrivateRoutine on PrivateRoutine {
+  id
+  stationId
+  title
+  description
+  status
+  isPinned
+  scheduledStartAt
+  scheduledEndAt
+  period
+  timezone
+  deletedAt
+  updatedAt
+  createdAt
+  tagIds
+  taskIds
+  itemIds
+}
+
+fragment FragmentedPrivateRoutine on PrivateRoutine {
+  ...FragmentedBasicPrivateRoutine
+}
+
+fragment FragmentedBasicPrivateSearchableRoutine on PrivateSearchableRoutine {
+  id
+  stationId
+  title
+  status
+  isPinned
+  scheduledStartAt
+  scheduledEndAt
+  period
+  timezone
+  deletedAt
+  updatedAt
+  createdAt
+  tagIds
+  taskIds
+  itemIds
+}
+
+fragment FragmentedPrivateSearchableRoutine on PrivateSearchableRoutine {
+  ...FragmentedBasicPrivateSearchableRoutine
+}
+
+# Source: routine_tag_fragment.graphql
+fragment FragmentedBasicPrivateRoutineTag on PrivateRoutineTag {
+  id
+  name
+  color
+  icon
+  updatedAt
+  createdAt
+}
+
+fragment FragmentedPrivateRoutineTag on PrivateRoutineTag {
+  ...FragmentedBasicPrivateRoutineTag
+}
+
+# Source: routine_task_fragment.graphql
+fragment FragmentedBasicPrivateRoutineTask on PrivateRoutineTask {
+  id
+  routineId
+  title
+  purpose
+  costUnit
+  priority
+  status
+  attempts
+  maxAttempts
+  period
+  nextScheduledAt
+  scheduledAt
+  actualStartedAt
+  actualEndedAt
+  updatedAt
+  createdAt
+}
+
+fragment FragmentedPrivateRoutineTask on PrivateRoutineTask {
+  ...FragmentedBasicPrivateRoutineTask
+}
+
+# Source: routine_task_record_fragment.graphql
+fragment FragmentedPrivateRoutineTaskRecord on PrivateRoutineTaskRecord {
+  id
+  routineTaskId
+  purpose
+  status
+  errorCode
+  errorReason
+  costUnit
+  totalAttempts
+  scheduledAt
+  actualStartedAt
+  actualEndedAt
+  updatedAt
+  createdAt
+}
+
+# Source: station_fragment.graphql
+fragment FragmentedBasicPrivateStation on PrivateStation {
+  id
+  permission
+  name
+  description
+  icon
+  headerBackgroundURL
+  routineCount
+  deletedAt
+  updatedAt
+  createdAt
+}
+
+fragment FragmentedPrivateStation on PrivateStation {
+  ...FragmentedBasicPrivateStation
+}
+
+fragment FragmentedBasicPrivateSearchableStation on PrivateSearchableStation {
+  id
+  permission
+  name
+  icon
+  headerBackgroundURL
+  routineCount
+  deletedAt
+  updatedAt
+  createdAt
+}
+
+fragment FragmentedPrivateSearchableStation on PrivateSearchableStation {
+  ...FragmentedBasicPrivateSearchableStation
+}
+
+# Source: sub_shelf_fragment.graphql
+fragment FragmentedBasicPrivateSubShelf on PrivateSubShelf {
+  id
+  name
+  rootShelfId
+  prevSubShelfId
+  path
+  deletedAt
+  updatedAt
+  createdAt
+  nextSubShelfIds
+  itemIds
+}
+
+fragment FragmentedPrivateSubShelf on PrivateSubShelf {
+  ...FragmentedBasicPrivateSubShelf
+}
+
+# Source: theme_fragment.graphql
+fragment FragmentedBasicPublicTheme on PublicTheme {
+  publicId
+  name
+  isDark
+  authorId
+  version
+  isDefault
+  downloadURL
+  downloadCount
+  createdAt
+  updatedAt
+}
+
+fragment FragmentedPublicTheme on PublicTheme {
+  ...FragmentedBasicPublicTheme
+}
+
+# Source: user_fragment.graphql
+fragment FragmentedBasicPublicUser on PublicUser {
+  publicId
+  name
+  displayName
+  role
+  plan
+  status
+  createdAt
+  info {
+    ...FragmentedPublicUserInfo
+  }
+}
+
+fragment FragmentedPublicUser on PublicUser {
+  ...FragmentedBasicPublicUser
+}
+
+# Source: user_info_fragment.graphql
+fragment FragmentedBasicPublicUserInfo on PublicUserInfo {
+  avatarURL
+  coverBackgroundURL
+  header
+  introduction
+  gender
+  country
+  birthDate
+}
+
+fragment FragmentedPublicUserInfo on PublicUserInfo {
+  ...FragmentedBasicPublicUserInfo
+}
+
+
+# Source: search.graphql
+query SearchUsers($input: SearchUserInput!) {
+  searchUsers(input: $input) {
+    searchEdges {
+      encodedSearchCursor
+      node {
+        ...FragmentedPublicUser
+      }
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
+query SearchThemes($input: SearchThemeInput!) {
+  searchThemes(input: $input) {
+    searchEdges {
+      encodedSearchCursor
+      node {
+        ...FragmentedPublicTheme
+      }
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
+query SearchRootShelves($input: SearchRootShelfInput!) {
+  searchRootShelves(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateRootShelf
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
+query SearchSubShelves($input: SearchSubShelfInput!) {
+  searchSubShelves(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateSubShelf
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
+query SearchItems($input: SearchItemInput!) {
+  searchItems(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateItem
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
+query SearchMaterials($input: SearchMaterialInput!) {
+  searchMaterials(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateMaterial
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
+query SearchBlockPacks($input: SearchBlockPackInput!) {
+  searchBlockPacks(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateBlockPack
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
+query SearchBlocks($input: SearchBlockInput!) {
+  searchBlocks(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateBlock
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
+query SearchStations($input: SearchStationInput!) {
+  searchStations(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateSearchableStation
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
+query SearchRoutines($input: SearchRoutineInput!) {
+  searchRoutines(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateSearchableRoutine
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
+query SearchRoutineTags($input: SearchRoutineTagInput!) {
+  searchRoutineTags(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateRoutineTag
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
+query SearchRoutineTasks($input: SearchRoutineTaskInput!) {
+  searchRoutineTasks(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateRoutineTask
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
+query SearchRoutineTaskRecords($input: SearchRoutineTaskRecordInput!) {
+  searchRoutineTaskRecords(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateRoutineTaskRecord
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}

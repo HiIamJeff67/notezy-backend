@@ -27,8 +27,10 @@ import (
 	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/ratelimit"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/api/middlewares"
 	apiRouters "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/api/routers"
+	coreconsumers "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/core/consumers"
+	notificationconsumers "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/notification/consumers"
 	status "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/status"
-	yjsworker "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/yjsworker"
+	websockettransport "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/websocket"
 	workers "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/workers"
 )
 
@@ -123,8 +125,8 @@ func Start() func() {
 	})
 	apiRouters.ConfigureRoutes(routes, realtimeLeaseCacheClient, accessTokenCookieHandler, refreshTokenCookieHandler, authorizedRateLimiter)
 
-	websocketAdapter := yjsworker.NewWebSocketAdapter(config, realtimeLeaseCacheClient)
-	lifecycleConsumer := workers.NewLifecycleConsumer(
+	websocketAdapter := websockettransport.NewWebSocketAdapter(config, realtimeLeaseCacheClient)
+	lifecycleConsumer := coreconsumers.NewLifecycleConsumer(
 		realtimeLeaseCacheClient,
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
@@ -139,7 +141,7 @@ func Start() func() {
 		},
 	)
 	shutdownLifecycleConsumer := lifecycleConsumer.Start(context.Background())
-	notificationConsumer := workers.NewNotificationConsumer(
+	notificationConsumer := notificationconsumers.NewNotificationConsumer(
 		realtimeLeaseCacheClient,
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{

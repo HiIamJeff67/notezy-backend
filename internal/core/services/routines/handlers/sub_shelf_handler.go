@@ -135,7 +135,7 @@ func (s *SubShelfHandler) HandleCreateSubShelf(
 
 	bulkSuccesses, exception := s.subShelfRepository.BulkCreateMany(
 		bulkInputs,
-		options.WithDB(db.WithContext(ctx)),
+		options.WithTransactionDB(db.WithContext(ctx)),
 		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
@@ -225,7 +225,7 @@ func (s *SubShelfHandler) HandleUpdateSubShelf(
 	}
 	bulkSuccesses, exception := s.subShelfRepository.BulkUpdateMany(
 		bulkInputs,
-		options.WithDB(db.WithContext(ctx)),
+		options.WithTransactionDB(db.WithContext(ctx)),
 		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
@@ -346,7 +346,7 @@ func (s *SubShelfHandler) HandleResetSubShelf(
 		}
 		bulkSuccesses, exception := s.subShelfRepository.BulkDeleteMany(
 			bulkInputs,
-			options.WithDB(tx),
+			options.WithTransactionDB(tx),
 			options.WithAllowedPermissions(allowedPermissions),
 			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
@@ -375,7 +375,7 @@ func (s *SubShelfHandler) HandleResetSubShelf(
 		}
 		bulkSuccesses, exception := s.blockPackRepository.BulkDeleteMany(
 			bulkInputs,
-			options.WithDB(tx),
+			options.WithTransactionDB(tx),
 			options.WithAllowedPermissions(allowedPermissions),
 			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
@@ -404,7 +404,7 @@ func (s *SubShelfHandler) HandleResetSubShelf(
 		}
 		bulkSuccesses, exception := s.materialRepository.BulkDeleteMany(
 			bulkInputs,
-			options.WithDB(tx),
+			options.WithTransactionDB(tx),
 			options.WithAllowedPermissions(allowedPermissions),
 			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),

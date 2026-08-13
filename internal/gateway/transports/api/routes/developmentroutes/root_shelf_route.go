@@ -41,7 +41,7 @@ func configureDevelopmentRootShelfRoutes(
 	}
 	{
 		rootShelfRoutes.GET(
-			"/:rootShelfId",
+			"/:root-shelf-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyRootShelfById"),
@@ -83,7 +83,7 @@ func configureDevelopmentRootShelfRoutes(
 			)...,
 		)
 		rootShelfRoutes.PUT(
-			"/:rootShelfId",
+			"/:root-shelf-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRootShelfById"),
@@ -111,7 +111,7 @@ func configureDevelopmentRootShelfRoutes(
 			)...,
 		)
 		rootShelfRoutes.PATCH(
-			"/:rootShelfId/restore",
+			"/:root-shelf-id/restore",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyRootShelfById"),
@@ -139,7 +139,7 @@ func configureDevelopmentRootShelfRoutes(
 			)...,
 		)
 		rootShelfRoutes.DELETE(
-			"/:rootShelfId",
+			"/:root-shelf-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyRootShelfById"),
@@ -167,7 +167,7 @@ func configureDevelopmentRootShelfRoutes(
 			)...,
 		)
 		rootShelfRoutes.GET(
-			"/:rootShelfId/permissions/:userPublicId",
+			"/:root-shelf-id/permissions/:user-public-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyRootShelfPermission"),
@@ -181,7 +181,7 @@ func configureDevelopmentRootShelfRoutes(
 			)...,
 		)
 		rootShelfRoutes.POST(
-			"/:rootShelfId/permissions/:userPublicId",
+			"/:root-shelf-id/permissions/:user-public-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createMyRootShelfPermission"),
@@ -195,7 +195,7 @@ func configureDevelopmentRootShelfRoutes(
 			)...,
 		)
 		rootShelfRoutes.PUT(
-			"/:rootShelfId/permissions/:userPublicId",
+			"/:root-shelf-id/permissions/:user-public-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("upsertMyRootShelfPermission"),
@@ -209,7 +209,7 @@ func configureDevelopmentRootShelfRoutes(
 			)...,
 		)
 		rootShelfRoutes.PUT(
-			"/:rootShelfId/permissions",
+			"/:root-shelf-id/permissions",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("upsertMyRootShelfPermissions"),
@@ -223,7 +223,7 @@ func configureDevelopmentRootShelfRoutes(
 			)...,
 		)
 		rootShelfRoutes.PATCH(
-			"/:rootShelfId/permissions/:userPublicId",
+			"/:root-shelf-id/permissions/:user-public-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRootShelfPermission"),
@@ -237,7 +237,7 @@ func configureDevelopmentRootShelfRoutes(
 			)...,
 		)
 		rootShelfRoutes.POST(
-			"/:rootShelfId/ownership",
+			"/:root-shelf-id/ownership",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("transferMyRootShelfOwnership"),
@@ -251,7 +251,7 @@ func configureDevelopmentRootShelfRoutes(
 			)...,
 		)
 		rootShelfRoutes.DELETE(
-			"/:rootShelfId/permissions/:userPublicId",
+			"/:root-shelf-id/permissions/:user-public-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyRootShelfPermission"),
@@ -265,7 +265,7 @@ func configureDevelopmentRootShelfRoutes(
 			)...,
 		)
 		rootShelfRoutes.DELETE(
-			"/:rootShelfId/permissions",
+			"/:root-shelf-id/permissions",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyRootShelfPermissions"),
@@ -279,7 +279,7 @@ func configureDevelopmentRootShelfRoutes(
 			)...,
 		)
 		rootShelfRoutes.DELETE(
-			"/:rootShelfId/memberships/me",
+			"/:root-shelf-id/memberships/me",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("leaveMyRootShelf"),

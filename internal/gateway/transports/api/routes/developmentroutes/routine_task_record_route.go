@@ -41,7 +41,7 @@ func configureDevelopmentRoutineTaskRecordRoutes(
 	}
 	{
 		routineTaskRecordRouterGroup.GET(
-			"/routine-task/:routineTaskId",
+			"/routine-task/:routine-task-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getAllMyRoutineTaskRecordsByRoutineTaskId"),

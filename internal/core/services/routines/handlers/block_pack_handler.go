@@ -225,7 +225,7 @@ func (s *BlockPackHandler) HandleCreateBlockPack(
 
 	blockPackSuccesses, exception := s.blockPackRepository.BulkCreateMany(
 		blockPackInputs,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
@@ -269,7 +269,7 @@ func (s *BlockPackHandler) HandleCreateBlockPack(
 
 	blockSuccesses, exception := s.blockRepository.BulkCreateMany(
 		successfulBlockContentInputs,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
@@ -417,7 +417,7 @@ func (s *BlockPackHandler) HandleUpdateBlockPack(
 
 	bulkSuccesses, exception := s.blockRepository.BulkUpdateMany(
 		filteredInputs,
-		options.WithDB(db.WithContext(ctx)),
+		options.WithTransactionDB(db.WithContext(ctx)),
 		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
@@ -469,7 +469,7 @@ func (s *BlockPackHandler) HandleResetBlockPack(
 		checkInputs,
 		nil,
 		allowedPermissions,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),

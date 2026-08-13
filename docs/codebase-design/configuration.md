@@ -14,7 +14,7 @@ clients, workers, transports, and services.
 | Kafka connection and TLS | `shared/platform/kafka/config.go` | `KAFKA_BROKERS`, `KAFKA_DIAL_TIMEOUT`, `KAFKA_TLS_*`, `KAFKA_SASL_*` |
 | OpenTelemetry SDK | `shared/platform/observability/config.go` | `OTEL_SERVICE_*`, `OTEL_EXPORTER_OTLP_GRPC_ENDPOINT` |
 | Gateway | `internal/gateway/configs/` | `GATEWAY_LISTEN_ADDRESS`, `CORE_BASE_URL` |
-| Core | `internal/core/configs/` | `CORE_LISTEN_ADDRESS`, `OAUTH_GOOGLE_*`, `STORAGE_KEY_SALT`, `OUTBOX_RELAY_*`, user-data cache TTL |
+| Core | `internal/core/configs/` | `CORE_LISTEN_ADDRESS`, `OAUTH_GOOGLE_*`, `STORAGE_KEY_SALT`, `OUTBOX_RELAY_*`, user-data cache TTL, Yjs document initialization endpoint/timeout |
 | DurableJob | `internal/durablejob/configs/` | `DURABLEJOB_LISTEN_ADDRESS`, runtime Kafka and maintenance strategy settings |
 | Email | `internal/email/configs/` | `EMAIL_LISTEN_ADDRESS`, `SMTP_*`, `NOTEZY_OFFICIAL_*`, `KAFKA_*` consumer settings |
 | RealtimeGateway | `internal/realtimegateway/configs/` | `REALTIME_GATEWAY_LISTEN_ADDRESS`, `REALTIME_ENABLED`, `YJS_WORKER_URLS` |
@@ -43,6 +43,7 @@ such as `_SECONDS`, `_MILLISECONDS`, or `_HOURS`.
 KAFKA_DIAL_TIMEOUT=3s
 CORE_CLIENT_TIMEOUT=10s
 CORE_USER_DATA_CACHE_EXPIRES_IN=1h
+YJS_DOCUMENT_INITIALIZATION_WORKER_TIMEOUT=30s
 KAFKA_CONSUMER_INITIAL_RETRY_BACKOFF=250ms
 KAFKA_CONSUMER_MAXIMUM_RETRY_BACKOFF=5s
 OUTBOX_RELAY_POLL_INTERVAL=1s

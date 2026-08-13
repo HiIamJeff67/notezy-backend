@@ -130,7 +130,7 @@ func (c *BlockPackController) CreateBlockPack(ctx *gin.Context, requestDto *apic
 		return
 	}
 
-	writeClientResponse(ctx, response.Data)
+	writeCreatedClientResponse(ctx, response.Data)
 }
 
 func (c *BlockPackController) CreateBlockPacks(ctx *gin.Context, requestDto *apicontract.CreateBlockPacksRequestDto) {
@@ -149,7 +149,7 @@ func (c *BlockPackController) CreateBlockPacks(ctx *gin.Context, requestDto *api
 		return
 	}
 
-	writeClientResponse(ctx, response.Data)
+	writeCreatedClientResponse(ctx, response.Data)
 }
 
 func (c *BlockPackController) UpdateMyBlockPackById(ctx *gin.Context, requestDto *apicontract.UpdateMyBlockPackByIdRequestDto) {

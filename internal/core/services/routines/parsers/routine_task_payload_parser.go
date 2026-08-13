@@ -355,6 +355,19 @@ func (s *RoutineTaskPayloadParser) ValidateRoutineTaskPayload(
 						exception,
 					))
 			}
+			if len(updatedBlock.ArborizedEditableBlock.Children) > 0 {
+				return exceptions.New(
+					"InvalidRoutineTaskPayload",
+					"RoutineTask",
+					"Parse",
+					"Routine task payload is invalid",
+					http.StatusBadRequest,
+				).
+					WithOrigin(fmt.Errorf(
+						"invalid updatedBlocks[%d].arborizedEditableBlock: children are not allowed for update operations",
+						index,
+					))
+			}
 		}
 		return nil
 
@@ -468,17 +481,6 @@ func validateArborizedEditableBlock(
 			http.StatusBadRequest,
 		).
 			WithOrigin(fmt.Errorf("arborizedEditableBlock must contain at least one block"))
-	}
-
-	if len(arborizedEditableBlock.Children) > 0 {
-		return exceptions.New(
-			"InvalidRoutineTaskPayload",
-			"RoutineTask",
-			"Parse",
-			"Routine task payload is invalid",
-			http.StatusBadRequest,
-		).
-			WithOrigin(fmt.Errorf("arborizedEditableBlock must not contain children for update operations"))
 	}
 
 	return nil

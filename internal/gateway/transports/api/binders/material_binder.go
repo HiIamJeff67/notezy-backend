@@ -54,7 +54,7 @@ func (b *MaterialBinder) BindGetMyMaterialById(controllerFunc controllers.Func[*
 			requestDto.Param.IsDeleted = &value
 		}
 
-		value, err := uuid.Parse(ctx.Param("materialId"))
+		value, err := uuid.Parse(ctx.Param("material-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Material").WithOrigin(err), ctx)
 			return
@@ -81,7 +81,7 @@ func (b *MaterialBinder) BindGetMyMaterialAndItsParentById(controllerFunc contro
 			requestDto.Param.IsDeleted = &value
 		}
 
-		value, err := uuid.Parse(ctx.Param("materialId"))
+		value, err := uuid.Parse(ctx.Param("material-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Material").WithOrigin(err), ctx)
 			return
@@ -108,7 +108,7 @@ func (b *MaterialBinder) BindGetMyMaterialsByParentSubShelfId(controllerFunc con
 			requestDto.Param.AreDeleted = &value
 		}
 
-		value, err := uuid.Parse(ctx.Param("parentSubShelfId"))
+		value, err := uuid.Parse(ctx.Param("parent-sub-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Material").WithOrigin(err), ctx)
 			return
@@ -135,7 +135,7 @@ func (b *MaterialBinder) BindGetAllMyMaterialsByRootShelfId(controllerFunc contr
 			requestDto.Param.AreDeleted = &value
 		}
 
-		value, err := uuid.Parse(ctx.Param("rootShelfId"))
+		value, err := uuid.Parse(ctx.Param("root-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Material").WithOrigin(err), ctx)
 			return
@@ -157,7 +157,7 @@ func (b *MaterialBinder) BindCreateMyMaterial(controllerFunc controllers.Func[*a
 			return
 		}
 
-		value, err := uuid.Parse(ctx.Param("parentSubShelfId"))
+		value, err := uuid.Parse(ctx.Param("parent-sub-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Material").WithOrigin(err), ctx)
 			return
@@ -179,7 +179,7 @@ func (b *MaterialBinder) BindUpdateMyMaterialById(controllerFunc controllers.Fun
 			return
 		}
 
-		value, err := uuid.Parse(ctx.Param("materialId"))
+		value, err := uuid.Parse(ctx.Param("material-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Material").WithOrigin(err), ctx)
 			return
@@ -215,7 +215,7 @@ func (b *MaterialBinder) BindSaveMyMaterialById(controllerFunc controllers.Func[
 		}
 		requestDto.Body.ContentFile = contentFile
 
-		value, err := uuid.Parse(ctx.Param("materialId"))
+		value, err := uuid.Parse(ctx.Param("material-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Material").WithOrigin(err), ctx)
 			return
@@ -262,7 +262,7 @@ func (b *MaterialBinder) BindRestoreMyMaterialById(controllerFunc controllers.Fu
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		value, err := uuid.Parse(ctx.Param("materialId"))
+		value, err := uuid.Parse(ctx.Param("material-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Material").WithOrigin(err), ctx)
 			return
@@ -294,7 +294,7 @@ func (b *MaterialBinder) BindDeleteMyMaterialById(controllerFunc controllers.Fun
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		value, err := uuid.Parse(ctx.Param("materialId"))
+		value, err := uuid.Parse(ctx.Param("material-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Material").WithOrigin(err), ctx)
 			return

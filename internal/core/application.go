@@ -69,6 +69,7 @@ func NewCoreTransportRouter(
 	config coreconfig.Config,
 	kafkaProducer *platformkafka.Producer,
 	userDataCacheClient *userdata.UserDataCacheClient,
+	yjsDocumentInitializationClient *yjsworkertransport.DocumentInitializationClient,
 ) *gin.Engine {
 	validator := validation.New()
 
@@ -225,7 +226,7 @@ func NewCoreTransportRouter(
 	routineTaskExecutionService := routineservices.NewRoutineTaskExecutionService(
 		validator,
 		data.NotezyDB,
-		nil,
+		yjsDocumentInitializationClient,
 	)
 	routineTaskService := routineservices.NewRoutineTaskService(
 		validator,
@@ -348,6 +349,9 @@ func Start() func() {
 		panic(exception)
 	}
 	userDataCacheClient := userdata.NewUserDataCacheClient(config.UserDataCache, userDataCacheStore)
+	yjsDocumentInitializationClient := yjsworkertransport.NewDocumentInitializationClient(
+		config.YjsDocumentInitialization,
+	)
 	kafkaProducer, err := platformkafka.NewProducer(platformkafka.ClientConfig{
 		ConnectionConfig: kafkaConnectionConfig,
 		ClientId:         "notezy-core",
@@ -382,7 +386,7 @@ func Start() func() {
 	routineTaskExecutionService := routineservices.NewRoutineTaskExecutionService(
 		validation.New(),
 		data.NotezyDB,
-		nil,
+		yjsDocumentInitializationClient,
 	)
 	routineTaskClaimConsumer := durablejobconsumers.NewDurableJobRoutineTaskClaimConsumer(
 		routineservices.NewRoutineTaskService(
@@ -480,7 +484,12 @@ func Start() func() {
 	}
 	application.healthy.Store(true)
 	application.ready.Store(kafkaReady)
-	coreTransportRouter := NewCoreTransportRouter(config, kafkaProducer, userDataCacheClient)
+	coreTransportRouter := NewCoreTransportRouter(
+		config,
+		kafkaProducer,
+		userDataCacheClient,
+		yjsDocumentInitializationClient,
+	)
 	status.ConfigureStartedRouter(coreTransportRouter, application.IsHealthy)
 	status.ConfigureHealthRouter(coreTransportRouter, application.IsReady)
 	coreTransportServer := &http.Server{

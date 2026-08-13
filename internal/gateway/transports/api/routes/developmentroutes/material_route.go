@@ -41,7 +41,7 @@ func configureDevelopmentMaterialRoutes(
 	}
 	{
 		materialRoutes.GET(
-			"/:materialId",
+			"/:material-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyMaterialById"),
@@ -55,7 +55,7 @@ func configureDevelopmentMaterialRoutes(
 			)...,
 		)
 		materialRoutes.GET(
-			"/:materialId/parent",
+			"/:material-id/parent",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyMaterialAndItsParentById"),
@@ -69,7 +69,7 @@ func configureDevelopmentMaterialRoutes(
 			)...,
 		)
 		materialRoutes.GET(
-			"/sub-shelf/:parentSubShelfId",
+			"/sub-shelf/:parent-sub-shelf-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyMaterialsByParentSubShelfId"),
@@ -83,7 +83,7 @@ func configureDevelopmentMaterialRoutes(
 			)...,
 		)
 		materialRoutes.GET(
-			"/root-shelf/:rootShelfId",
+			"/root-shelf/:root-shelf-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getAllMyMaterialsByRootShelfId"),
@@ -97,7 +97,7 @@ func configureDevelopmentMaterialRoutes(
 			)...,
 		)
 		materialRoutes.POST(
-			"/sub-shelf/:parentSubShelfId",
+			"/sub-shelf/:parent-sub-shelf-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createMyMaterial"),
@@ -111,7 +111,7 @@ func configureDevelopmentMaterialRoutes(
 			)...,
 		)
 		materialRoutes.PUT(
-			"/:materialId",
+			"/:material-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyMaterialById"),
@@ -125,7 +125,7 @@ func configureDevelopmentMaterialRoutes(
 			)...,
 		)
 		materialRoutes.PUT(
-			"/:materialId/content",
+			"/:material-id/content",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("saveMyMaterialById"),
@@ -140,7 +140,7 @@ func configureDevelopmentMaterialRoutes(
 			)...,
 		)
 		materialRoutes.PUT(
-			"/:materialId/parent",
+			"/:material-id/parent",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("moveMyMaterialById"),
@@ -168,7 +168,7 @@ func configureDevelopmentMaterialRoutes(
 			)...,
 		)
 		materialRoutes.PATCH(
-			"/:materialId/restore",
+			"/:material-id/restore",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyMaterialById"),
@@ -196,7 +196,7 @@ func configureDevelopmentMaterialRoutes(
 			)...,
 		)
 		materialRoutes.DELETE(
-			"/:materialId",
+			"/:material-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyMaterialById"),

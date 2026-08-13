@@ -98,7 +98,7 @@ func (c *RoutineTaskController) CreateRoutineTaskByRoutineId(ctx *gin.Context, r
 		return
 	}
 
-	writeClientResponse(ctx, response.Data)
+	writeCreatedClientResponse(ctx, response.Data)
 }
 
 func (c *RoutineTaskController) UpdateMyRoutineTaskById(ctx *gin.Context, requestDto *apicontract.UpdateMyRoutineTaskByIdRequestDto) {

@@ -100,7 +100,7 @@ func (b *RoutineTaskBinder) BindGetMyRoutineTaskById(controllerFunc controllers.
 			return
 		}
 		requestDto.Param.IsDeleted = isDeleted
-		value, ok := parseRoutineTaskUUID(ctx, "routineTaskId")
+		value, ok := parseRoutineTaskUUID(ctx, "routine-task-id")
 		if !ok {
 			return
 		}
@@ -158,7 +158,7 @@ func (b *RoutineTaskBinder) BindCreateRoutineTaskByRoutineId(controllerFunc cont
 	return func(ctx *gin.Context) {
 		requestDto := &apicontract.CreateRoutineTaskByRoutineIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-		value, ok := parseRoutineTaskUUID(ctx, "routineId")
+		value, ok := parseRoutineTaskUUID(ctx, "routine-id")
 		if !ok {
 			return
 		}
@@ -172,7 +172,7 @@ func (b *RoutineTaskBinder) BindUpdateMyRoutineTaskById(controllerFunc controlle
 	return func(ctx *gin.Context) {
 		requestDto := &apicontract.UpdateMyRoutineTaskByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-		value, ok := parseRoutineTaskUUID(ctx, "routineTaskId")
+		value, ok := parseRoutineTaskUUID(ctx, "routine-task-id")
 		if !ok {
 			return
 		}
@@ -186,7 +186,7 @@ func (b *RoutineTaskBinder) BindPauseMyRoutineTaskById(controllerFunc controller
 	return func(ctx *gin.Context) {
 		requestDto := &apicontract.PauseMyRoutineTaskByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-		value, ok := parseRoutineTaskUUID(ctx, "routineTaskId")
+		value, ok := parseRoutineTaskUUID(ctx, "routine-task-id")
 		if !ok {
 			return
 		}
@@ -200,7 +200,7 @@ func (b *RoutineTaskBinder) BindResumeMyRoutineTaskById(controllerFunc controlle
 	return func(ctx *gin.Context) {
 		requestDto := &apicontract.ResumeMyRoutineTaskByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-		value, ok := parseRoutineTaskUUID(ctx, "routineTaskId")
+		value, ok := parseRoutineTaskUUID(ctx, "routine-task-id")
 		if !ok {
 			return
 		}
@@ -214,7 +214,7 @@ func (b *RoutineTaskBinder) BindHardDeleteMyRoutineTaskById(controllerFunc contr
 	return func(ctx *gin.Context) {
 		requestDto := &apicontract.HardDeleteMyRoutineTaskByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-		value, ok := parseRoutineTaskUUID(ctx, "routineTaskId")
+		value, ok := parseRoutineTaskUUID(ctx, "routine-task-id")
 		if !ok {
 			return
 		}

@@ -131,7 +131,7 @@ func (s *RootShelfHandler) HandleCreateRootShelf(
 	}
 	bulkSuccesses, exception := s.rootShelfRepository.BulkCreateMany(
 		bulkInputs,
-		options.WithDB(db.WithContext(ctx)),
+		options.WithTransactionDB(db.WithContext(ctx)),
 		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
@@ -222,7 +222,7 @@ func (s *RootShelfHandler) HandleUpdateRootShelf(
 
 	bulkSuccesses, exception := s.rootShelfRepository.BulkUpdateMany(
 		bulkInputs,
-		options.WithDB(db.WithContext(ctx)),
+		options.WithTransactionDB(db.WithContext(ctx)),
 		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
@@ -308,7 +308,7 @@ func (s *RootShelfHandler) HandleResetRootShelf(
 
 	bulkSuccesses, exception := s.subShelfRepository.BulkDeleteMany(
 		bulkInputs,
-		options.WithDB(db.WithContext(ctx)),
+		options.WithTransactionDB(db.WithContext(ctx)),
 		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),

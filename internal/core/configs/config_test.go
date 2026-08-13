@@ -22,6 +22,8 @@ func TestLoadConfig(t *testing.T) {
 	t.Setenv("KAFKA_CONSUMER_MAXIMUM_POLL_RECORDS", "100")
 	t.Setenv("STORAGE_KEY_SALT", "salt")
 	t.Setenv("CORE_USER_DATA_CACHE_EXPIRES_IN", "1h")
+	t.Setenv("YJS_DOCUMENT_INITIALIZATION_WORKER_URL", "http://notezy-yjs-worker:8787/core/yjs-document-initialization/v1")
+	t.Setenv("YJS_DOCUMENT_INITIALIZATION_WORKER_TIMEOUT", "30s")
 
 	config, err := LoadConfig()
 	if err != nil {

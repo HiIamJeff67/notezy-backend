@@ -128,7 +128,7 @@ func (c *MaterialController) CreateMyMaterial(ctx *gin.Context, requestDto *apic
 		return
 	}
 
-	writeClientResponse(ctx, response.Data)
+	writeCreatedClientResponse(ctx, response.Data)
 }
 
 func (c *MaterialController) UpdateMyMaterialById(ctx *gin.Context, requestDto *apicontract.UpdateMyMaterialByIdRequestDto) {

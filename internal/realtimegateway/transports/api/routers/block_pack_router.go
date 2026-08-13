@@ -23,7 +23,7 @@ func ConfigureBlockPackRoutes(
 	endpoint := endpoints.NewBlockPackEndpoint(realtimeLeaseCache)
 
 	router.GET(
-		"/block-pack/:blockPackId/participants",
+		"/block-pack/:block-pack-id/participants",
 		middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 		middlewares.AuthorizedRateLimitMiddleware(authorizedRateLimiter),
 		middlewares.TimeoutMiddleware(3*time.Second),

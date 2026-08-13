@@ -41,7 +41,7 @@ func configureDevelopmentStationRoutes(
 	}
 	{
 		stationRoutes.GET(
-			"/:stationId",
+			"/:station-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyStationById"),
@@ -97,7 +97,7 @@ func configureDevelopmentStationRoutes(
 			)...,
 		)
 		stationRoutes.PUT(
-			"/:stationId",
+			"/:station-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyStationById"),
@@ -125,7 +125,7 @@ func configureDevelopmentStationRoutes(
 			)...,
 		)
 		stationRoutes.PATCH(
-			"/:stationId/restore",
+			"/:station-id/restore",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyStationById"),
@@ -153,7 +153,7 @@ func configureDevelopmentStationRoutes(
 			)...,
 		)
 		stationRoutes.DELETE(
-			"/:stationId",
+			"/:station-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyStationById"),
@@ -181,7 +181,7 @@ func configureDevelopmentStationRoutes(
 			)...,
 		)
 		stationRoutes.DELETE(
-			"/:stationId/permanently",
+			"/:station-id/permanently",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("hardDeleteMyStationById"),
@@ -211,7 +211,7 @@ func configureDevelopmentStationRoutes(
 		/* ============================== Routes for Station Permissions ============================== */
 
 		stationRoutes.GET(
-			"/:stationId/permissions/:userPublicId",
+			"/:station-id/permissions/:user-public-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyStationPermission"),
@@ -225,7 +225,7 @@ func configureDevelopmentStationRoutes(
 			)...,
 		)
 		stationRoutes.POST(
-			"/:stationId/permissions/:userPublicId",
+			"/:station-id/permissions/:user-public-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createMyStationPermission"),
@@ -239,7 +239,7 @@ func configureDevelopmentStationRoutes(
 			)...,
 		)
 		stationRoutes.PUT(
-			"/:stationId/permissions/:userPublicId",
+			"/:station-id/permissions/:user-public-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("upsertMyStationPermission"),
@@ -253,7 +253,7 @@ func configureDevelopmentStationRoutes(
 			)...,
 		)
 		stationRoutes.PUT(
-			"/:stationId/permissions",
+			"/:station-id/permissions",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("upsertMyStationPermissions"),
@@ -267,7 +267,7 @@ func configureDevelopmentStationRoutes(
 			)...,
 		)
 		stationRoutes.PATCH(
-			"/:stationId/permissions/:userPublicId",
+			"/:station-id/permissions/:user-public-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyStationPermission"),
@@ -281,7 +281,7 @@ func configureDevelopmentStationRoutes(
 			)...,
 		)
 		stationRoutes.POST(
-			"/:stationId/ownership",
+			"/:station-id/ownership",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("transferMyStationOwnership"),
@@ -295,7 +295,7 @@ func configureDevelopmentStationRoutes(
 			)...,
 		)
 		stationRoutes.DELETE(
-			"/:stationId/permissions/:userPublicId",
+			"/:station-id/permissions/:user-public-id",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyStationPermission"),
@@ -309,7 +309,7 @@ func configureDevelopmentStationRoutes(
 			)...,
 		)
 		stationRoutes.DELETE(
-			"/:stationId/permissions",
+			"/:station-id/permissions",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyStationPermissions"),
@@ -323,7 +323,7 @@ func configureDevelopmentStationRoutes(
 			)...,
 		)
 		stationRoutes.DELETE(
-			"/:stationId/memberships/me",
+			"/:station-id/memberships/me",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("leaveMyStation"),

@@ -136,7 +136,7 @@ func (s *RoutineHandler) HandleCreateRoutine(
 	}
 	bulkSuccesses, exception := s.routineRepository.BulkCreateMany(
 		bulkInputs,
-		options.WithDB(db.WithContext(ctx)),
+		options.WithTransactionDB(db.WithContext(ctx)),
 		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
@@ -239,7 +239,7 @@ func (s *RoutineHandler) HandleUpdateRoutine(
 	}
 	bulkSuccesses, exception := s.routineRepository.BulkUpdateMany(
 		bulkInputs,
-		options.WithDB(db.WithContext(ctx)),
+		options.WithTransactionDB(db.WithContext(ctx)),
 		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),

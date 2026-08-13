@@ -40,7 +40,7 @@ func configureDevelopmentBlockRoutes(
 	}
 
 	blockRoutes.GET(
-		"/:blockId",
+		"/:block-id",
 		middlewares.RepositionMiddleware(
 			[]gin.HandlerFunc{
 				middlewares.ApplyTracerMiddleware("getMyBlockById"),
@@ -68,7 +68,7 @@ func configureDevelopmentBlockRoutes(
 		)...,
 	)
 	blockRoutes.GET(
-		"/block-pack/:blockPackId",
+		"/block-pack/:block-pack-id",
 		middlewares.RepositionMiddleware(
 			[]gin.HandlerFunc{
 				middlewares.ApplyTracerMiddleware("getMyBlocksByBlockPackId"),

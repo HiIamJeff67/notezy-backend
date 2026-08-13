@@ -55,7 +55,7 @@ func (b *BlockPackBinder) BindGetMyBlockPackById(controllerFunc controllers.Func
 			requestDto.Param.IsDeleted = &value
 		}
 
-		value, err := uuid.Parse(ctx.Param("blockPackId"))
+		value, err := uuid.Parse(ctx.Param("block-pack-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("BlockPack").WithOrigin(err), ctx)
 			return
@@ -82,7 +82,7 @@ func (b *BlockPackBinder) BindGetMyBlockPackAndItsParentById(controllerFunc cont
 			requestDto.Param.IsDeleted = &value
 		}
 
-		value, err := uuid.Parse(ctx.Param("blockPackId"))
+		value, err := uuid.Parse(ctx.Param("block-pack-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("BlockPack").WithOrigin(err), ctx)
 			return
@@ -109,7 +109,7 @@ func (b *BlockPackBinder) BindGetMyBlockPacksByParentSubShelfId(controllerFunc c
 			requestDto.Param.AreDeleted = &value
 		}
 
-		value, err := uuid.Parse(ctx.Param("parentSubShelfId"))
+		value, err := uuid.Parse(ctx.Param("parent-sub-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("BlockPack").WithOrigin(err), ctx)
 			return
@@ -136,7 +136,7 @@ func (b *BlockPackBinder) BindGetAllMyBlockPacksByRootShelfId(controllerFunc con
 			requestDto.Param.AreDeleted = &value
 		}
 
-		value, err := uuid.Parse(ctx.Param("rootShelfId"))
+		value, err := uuid.Parse(ctx.Param("root-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("BlockPack").WithOrigin(err), ctx)
 			return
@@ -159,7 +159,7 @@ func (b *BlockPackBinder) BindCreateBlockPack(controllerFunc controllers.Func[*a
 			return
 		}
 
-		value, err := uuid.Parse(ctx.Param("parentSubShelfId"))
+		value, err := uuid.Parse(ctx.Param("parent-sub-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("BlockPack").WithOrigin(err), ctx)
 			return
@@ -198,7 +198,7 @@ func (b *BlockPackBinder) BindUpdateMyBlockPackById(controllerFunc controllers.F
 			return
 		}
 
-		value, err := uuid.Parse(ctx.Param("blockPackId"))
+		value, err := uuid.Parse(ctx.Param("block-pack-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("BlockPack").WithOrigin(err), ctx)
 			return
@@ -237,7 +237,7 @@ func (b *BlockPackBinder) BindMoveMyBlockPackByParentSubShelfId(controllerFunc c
 			return
 		}
 
-		value, err := uuid.Parse(ctx.Param("blockPackId"))
+		value, err := uuid.Parse(ctx.Param("block-pack-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("BlockPack").WithOrigin(err), ctx)
 			return
@@ -286,7 +286,7 @@ func (b *BlockPackBinder) BindRestoreMyBlockPackById(controllerFunc controllers.
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		value, err := uuid.Parse(ctx.Param("blockPackId"))
+		value, err := uuid.Parse(ctx.Param("block-pack-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("BlockPack").WithOrigin(err), ctx)
 			return
@@ -319,7 +319,7 @@ func (b *BlockPackBinder) BindDeleteMyBlockPackById(controllerFunc controllers.F
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		value, err := uuid.Parse(ctx.Param("blockPackId"))
+		value, err := uuid.Parse(ctx.Param("block-pack-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("BlockPack").WithOrigin(err), ctx)
 			return

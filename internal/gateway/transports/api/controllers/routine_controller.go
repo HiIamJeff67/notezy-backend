@@ -105,7 +105,7 @@ func (c *RoutineController) CreateRoutineByStationId(ctx *gin.Context, requestDt
 		return
 	}
 
-	writeClientResponse(ctx, response.Data)
+	writeCreatedClientResponse(ctx, response.Data)
 }
 
 func (c *RoutineController) CreateRoutinesByStationIds(ctx *gin.Context, requestDto *apicontract.CreateRoutinesByStationIdsRequestDto) {
@@ -121,7 +121,7 @@ func (c *RoutineController) CreateRoutinesByStationIds(ctx *gin.Context, request
 		return
 	}
 
-	writeClientResponse(ctx, response.Data)
+	writeCreatedClientResponse(ctx, response.Data)
 }
 
 func (c *RoutineController) UpdateMyRoutineById(ctx *gin.Context, requestDto *apicontract.UpdateMyRoutineByIdRequestDto) {

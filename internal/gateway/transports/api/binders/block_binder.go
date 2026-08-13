@@ -30,7 +30,7 @@ func (b *BlockBinder) BindGetMyBlockById(controllerFunc controllers.Func[*apicon
 		requestDto := &apicontract.GetMyBlockByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		blockId, err := uuid.Parse(ctx.Param("blockId"))
+		blockId, err := uuid.Parse(ctx.Param("block-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Block").WithOrigin(err), ctx)
 			return
@@ -60,7 +60,7 @@ func (b *BlockBinder) BindGetMyBlocksByBlockPackId(controllerFunc controllers.Fu
 		requestDto := &apicontract.GetMyBlocksByBlockPackIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		blockPackId, err := uuid.Parse(ctx.Param("blockPackId"))
+		blockPackId, err := uuid.Parse(ctx.Param("block-pack-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Block").WithOrigin(err), ctx)
 			return

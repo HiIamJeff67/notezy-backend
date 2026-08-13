@@ -42,7 +42,7 @@ func configureDevelopmentAuthRoutes(
 			authBinder.BindRegister(authController.Register),
 		)
 		authRoutes.POST(
-			"/registerViaGoogle",
+			"/register-via-google",
 			middlewares.ApplyTracerMiddleware("registerViaGoogle"),
 			middlewares.ApplyMeterMiddleware("server.requests.auth.registerViaGoogle"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
@@ -58,7 +58,7 @@ func configureDevelopmentAuthRoutes(
 			authBinder.BindLogin(authController.Login),
 		)
 		authRoutes.POST(
-			"/loginViaGoogle",
+			"/login-via-google",
 			middlewares.ApplyTracerMiddleware("loginViaGoogle"),
 			middlewares.ApplyMeterMiddleware("server.requests.auth.loginViaGoogle"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
@@ -78,7 +78,7 @@ func configureDevelopmentAuthRoutes(
 			authBinder.BindLogout(authController.Logout),
 		)
 		authRoutes.POST(
-			"/sendAuthCode",
+			"/send-auth-code",
 			middlewares.ApplyTracerMiddleware("sendAuthCode"),
 			middlewares.ApplyMeterMiddleware("server.requests.auth.sendAuthCode"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
@@ -86,7 +86,7 @@ func configureDevelopmentAuthRoutes(
 			authBinder.BindSendAuthCode(authController.SendAuthCode),
 		)
 		authRoutes.PUT(
-			"/validateEmail",
+			"/validate-email",
 			middlewares.ApplyTracerMiddleware("validateEmail"),
 			middlewares.ApplyMeterMiddleware("server.requests.auth.validateEmail"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
@@ -99,7 +99,7 @@ func configureDevelopmentAuthRoutes(
 			authBinder.BindValidateEmail(authController.ValidateEmail),
 		)
 		authRoutes.PUT(
-			"/resetEmail",
+			"/reset-email",
 			middlewares.ApplyTracerMiddleware("resetEmail"),
 			middlewares.ApplyMeterMiddleware("server.requests.auth.resetEmail"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
@@ -112,7 +112,7 @@ func configureDevelopmentAuthRoutes(
 			authBinder.BindResetEmail(authController.ResetEmail),
 		)
 		authRoutes.PUT(
-			"/forgetPassword",
+			"/forget-password",
 			middlewares.ApplyTracerMiddleware("forgetPassword"),
 			middlewares.ApplyMeterMiddleware("server.requests.auth.forgetPassword"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
@@ -120,7 +120,7 @@ func configureDevelopmentAuthRoutes(
 			authBinder.BindForgetPassword(authController.ForgetPassword),
 		)
 		authRoutes.PUT(
-			"/resetMe",
+			"/reset-me",
 			middlewares.ApplyTracerMiddleware("resetMe"),
 			middlewares.ApplyMeterMiddleware("server.requests.auth.resetMe"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
@@ -133,7 +133,7 @@ func configureDevelopmentAuthRoutes(
 			authBinder.BindResetMe(authController.ResetMe),
 		)
 		authRoutes.DELETE(
-			"/deleteMe",
+			"/delete-me",
 			middlewares.ApplyTracerMiddleware("deleteMe"),
 			middlewares.ApplyMeterMiddleware("server.requests.auth.deleteMe"),
 			middlewares.UnauthorizedRateLimitMiddleware(),

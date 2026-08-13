@@ -14,3 +14,10 @@ func writeClientResponse[D any](ctx *gin.Context, data D) {
 		Data:    data,
 	})
 }
+
+func writeCreatedClientResponse[D any](ctx *gin.Context, data D) {
+	ctx.JSON(http.StatusCreated, gatewaycontract.ClientResponse[D]{
+		Success: true,
+		Data:    data,
+	})
+}

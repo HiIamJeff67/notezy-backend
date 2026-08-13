@@ -1,0 +1,1616 @@
+@gatewayBaseUrl = http://localhost/api/development/v1
+@userAgent = NotezyHttpFile/1.0
+@csrfToken = replace-after-login
+@id = 1
+@userPublicId = 00000000-0000-4000-8000-000000000001
+@stationId = 00000000-0000-4000-8000-000000000001
+@routineId = 00000000-0000-4000-8000-000000000001
+@routineTagId = 00000000-0000-4000-8000-000000000001
+@routineTaskId = 00000000-0000-4000-8000-000000000001
+@rootShelfId = 00000000-0000-4000-8000-000000000001
+@subShelfId = 00000000-0000-4000-8000-000000000001
+@prevSubShelfId = 00000000-0000-4000-8000-000000000001
+@parentSubShelfId = 00000000-0000-4000-8000-000000000001
+@materialId = 00000000-0000-4000-8000-000000000001
+@blockPackId = 00000000-0000-4000-8000-000000000001
+@blockId = 00000000-0000-4000-8000-000000000001
+@itemId = 00000000-0000-4000-8000-000000000001
+
+### DELETE Delete Me
+DELETE {{gatewayBaseUrl}}/auth/delete-me
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "authCode": "123456"
+}
+
+### PUT Forget Password
+PUT {{gatewayBaseUrl}}/auth/forget-password
+User-Agent: {{userAgent}}
+Content-Type: application/json
+
+{
+  "account": "example",
+  "authCode": "123456",
+  "newPassword": "Example-Password-123!"
+}
+
+### POST Login
+POST {{gatewayBaseUrl}}/auth/login
+User-Agent: {{userAgent}}
+Content-Type: application/json
+
+{
+  "account": "example",
+  "password": "Example-Password-123!"
+}
+
+### POST Login Via Google
+POST {{gatewayBaseUrl}}/auth/login-via-google
+User-Agent: {{userAgent}}
+Content-Type: application/json
+
+{
+  "authorizationCode": "example"
+}
+
+### POST Logout
+POST {{gatewayBaseUrl}}/auth/logout
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### POST Register
+POST {{gatewayBaseUrl}}/auth/register
+User-Agent: {{userAgent}}
+Content-Type: application/json
+
+{
+  "email": "developer@example.com",
+  "name": "example",
+  "password": "Example-Password-123!"
+}
+
+### POST Register Via Google
+POST {{gatewayBaseUrl}}/auth/register-via-google
+User-Agent: {{userAgent}}
+Content-Type: application/json
+
+{
+  "authorizationCode": "example"
+}
+
+### PUT Reset Email
+PUT {{gatewayBaseUrl}}/auth/reset-email
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "authCode": "123456",
+  "newEmail": "developer@example.com"
+}
+
+### PUT Reset Me
+PUT {{gatewayBaseUrl}}/auth/reset-me
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "authCode": "123456"
+}
+
+### POST Send Auth Code
+POST {{gatewayBaseUrl}}/auth/send-auth-code
+User-Agent: {{userAgent}}
+Content-Type: application/json
+
+{
+  "email": "developer@example.com"
+}
+
+### PUT Validate Email
+PUT {{gatewayBaseUrl}}/auth/validate-email
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "authCode": "123456"
+}
+
+### DELETE Delete My Block Packs By Ids
+DELETE {{gatewayBaseUrl}}/block-packs/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "blockPackIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### POST Create Block Packs
+POST {{gatewayBaseUrl}}/block-packs/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "createdBlockPacks": [
+    {
+      "headerBackgroundURL": "https://example.com",
+      "icon": "😀",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "name": "example",
+      "parentSubShelfId": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}
+
+### PUT Update My Block Packs By Ids
+PUT {{gatewayBaseUrl}}/block-packs/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "updatedBlockPacks": [
+    {
+      "blockPackId": "00000000-0000-4000-8000-000000000001",
+      "setNull": {},
+      "values": {
+        "headerBackgroundURL": "https://example.com",
+        "icon": "😀",
+        "name": "example"
+      }
+    }
+  ]
+}
+
+### PUT Move My Block Packs By Parent Sub Shelf Ids
+PUT {{gatewayBaseUrl}}/block-packs/batch/position
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "movedBlockPacks": [
+    {
+      "blockPackIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "destinationParentSubShelfId": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}
+
+### PATCH Restore My Block Packs By Ids
+PATCH {{gatewayBaseUrl}}/block-packs/batch/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "blockPackIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### PUT Move My Block Packs By Parent Sub Shelf Id
+PUT {{gatewayBaseUrl}}/block-packs/position
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "blockPackIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ],
+  "destinationParentSubShelfId": "00000000-0000-4000-8000-000000000001"
+}
+
+### GET Get All My Block Packs By Root Shelf Id
+GET {{gatewayBaseUrl}}/block-packs/root-shelf/{{rootShelfId}}?areDeleted=true
+User-Agent: {{userAgent}}
+
+### GET Get My Block Packs By Parent Sub Shelf Id
+GET {{gatewayBaseUrl}}/block-packs/sub-shelf/{{parentSubShelfId}}?areDeleted=true
+User-Agent: {{userAgent}}
+
+### POST Create Block Pack
+POST {{gatewayBaseUrl}}/block-packs/sub-shelf/{{parentSubShelfId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "headerBackgroundURL": "https://example.com",
+  "icon": "😀",
+  "id": "00000000-0000-4000-8000-000000000001",
+  "name": "example",
+  "parentSubShelfId": "00000000-0000-4000-8000-000000000001"
+}
+
+### DELETE Delete My Block Pack By Id
+DELETE {{gatewayBaseUrl}}/block-packs/{{blockPackId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### GET Get My Block Pack By Id
+GET {{gatewayBaseUrl}}/block-packs/{{blockPackId}}?isDeleted=true
+User-Agent: {{userAgent}}
+
+### PUT Update My Block Pack By Id
+PUT {{gatewayBaseUrl}}/block-packs/{{blockPackId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "setNull": {},
+  "values": {
+    "headerBackgroundURL": "https://example.com",
+    "icon": "😀",
+    "name": "example"
+  }
+}
+
+### GET Get My Block Pack And Its Parent By Id
+GET {{gatewayBaseUrl}}/block-packs/{{blockPackId}}/parent
+User-Agent: {{userAgent}}
+
+### PUT Move My Block Pack By Parent Sub Shelf Id
+PUT {{gatewayBaseUrl}}/block-packs/{{blockPackId}}/position
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "blockPackId": "00000000-0000-4000-8000-000000000001",
+  "destinationParentSubShelfId": "00000000-0000-4000-8000-000000000001"
+}
+
+### PATCH Restore My Block Pack By Id
+PATCH {{gatewayBaseUrl}}/block-packs/{{blockPackId}}/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### GET Get My Blocks By Ids
+GET {{gatewayBaseUrl}}/blocks/batch?blockIds=00000000-0000-4000-8000-000000000001
+User-Agent: {{userAgent}}
+
+### GET Get My Blocks By Block Pack Id
+GET {{gatewayBaseUrl}}/blocks/block-pack/{{blockPackId}}
+User-Agent: {{userAgent}}
+
+### GET Get My Block By Id
+GET {{gatewayBaseUrl}}/blocks/{{blockId}}
+User-Agent: {{userAgent}}
+
+### GET Graph QLGet
+GET {{gatewayBaseUrl}}/graphql
+User-Agent: {{userAgent}}
+
+### POST Graph QLPost
+POST {{gatewayBaseUrl}}/graphql
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "query": "query ContractCheck { __typename }",
+  "variables": {}
+}
+
+### DELETE Delete My Materials By Ids
+DELETE {{gatewayBaseUrl}}/materials/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "materialIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### PUT Move My Materials By Ids
+PUT {{gatewayBaseUrl}}/materials/batch/parent
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "destinationParentSubShelfId": "00000000-0000-4000-8000-000000000001",
+  "materialIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### PATCH Restore My Materials By Ids
+PATCH {{gatewayBaseUrl}}/materials/batch/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "materialIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### GET Get All My Materials By Root Shelf Id
+GET {{gatewayBaseUrl}}/materials/root-shelf/{{rootShelfId}}?areDeleted=true
+User-Agent: {{userAgent}}
+
+### GET Get My Materials By Parent Sub Shelf Id
+GET {{gatewayBaseUrl}}/materials/sub-shelf/{{parentSubShelfId}}?areDeleted=true
+User-Agent: {{userAgent}}
+
+### POST Create My Material
+POST {{gatewayBaseUrl}}/materials/sub-shelf/{{parentSubShelfId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "name": "example",
+  "parentSubShelfId": "00000000-0000-4000-8000-000000000001"
+}
+
+### DELETE Delete My Material By Id
+DELETE {{gatewayBaseUrl}}/materials/{{materialId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### GET Get My Material By Id
+GET {{gatewayBaseUrl}}/materials/{{materialId}}?isDeleted=true
+User-Agent: {{userAgent}}
+
+### PUT Update My Material By Id
+PUT {{gatewayBaseUrl}}/materials/{{materialId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "setNull": {},
+  "values": {
+    "name": "example"
+  }
+}
+
+### PUT Save My Material By Id
+PUT {{gatewayBaseUrl}}/materials/{{materialId}}/content
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "contentFile": [
+    1
+  ]
+}
+
+### GET Get My Material And Its Parent By Id
+GET {{gatewayBaseUrl}}/materials/{{materialId}}/parent
+User-Agent: {{userAgent}}
+
+### PUT Move My Material By Id
+PUT {{gatewayBaseUrl}}/materials/{{materialId}}/parent
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "destinationParentSubShelfId": "00000000-0000-4000-8000-000000000001",
+  "materialId": "00000000-0000-4000-8000-000000000001"
+}
+
+### PATCH Restore My Material By Id
+PATCH {{gatewayBaseUrl}}/materials/{{materialId}}/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### GET Get My Account
+GET {{gatewayBaseUrl}}/me/account
+User-Agent: {{userAgent}}
+
+### PUT Update My Account
+PUT {{gatewayBaseUrl}}/me/account
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "authCode": "123456",
+  "setNull": {},
+  "values": {
+    "backupEmail": "developer@example.com",
+    "countryCode": "example",
+    "phoneNumber": "example"
+  }
+}
+
+### DELETE Unbind Google Account
+DELETE {{gatewayBaseUrl}}/me/account/google
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "authCode": "123456"
+}
+
+### PUT Bind Google Account
+PUT {{gatewayBaseUrl}}/me/account/google
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "authorizationCode": "example"
+}
+
+### GET Get My Info
+GET {{gatewayBaseUrl}}/me/info
+User-Agent: {{userAgent}}
+
+### PUT Update My Info
+PUT {{gatewayBaseUrl}}/me/info
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "setNull": {},
+  "values": {
+    "avatarURL": "https://example.com",
+    "birthDate": "2026-01-01T00:00:00Z",
+    "country": "example",
+    "coverBackgroundURL": "https://example.com",
+    "gender": "example",
+    "header": "example",
+    "introduction": "example"
+  }
+}
+
+### GET Get My Setting
+GET {{gatewayBaseUrl}}/me/settings
+User-Agent: {{userAgent}}
+
+### PUT Update My Setting
+PUT {{gatewayBaseUrl}}/me/settings
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "setNull": {},
+  "values": {
+    "generalSettingCode": 1,
+    "language": "English",
+    "privacySettingCode": 1
+  }
+}
+
+### DELETE Delete
+DELETE {{gatewayBaseUrl}}/notifications
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### GET Search
+GET {{gatewayBaseUrl}}/notifications
+User-Agent: {{userAgent}}
+
+### PATCH Mark Read
+PATCH {{gatewayBaseUrl}}/notifications/read
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### GET Count Unread
+GET {{gatewayBaseUrl}}/notifications/unread-count
+User-Agent: {{userAgent}}
+
+### POST Create My Block Pack Channel Ticket
+POST {{gatewayBaseUrl}}/realtime/channel/block-pack/ticket
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "blockPackId": "00000000-0000-4000-8000-000000000001",
+  "permission": "read"
+}
+
+### POST Create My Realtime Connection Ticket
+POST {{gatewayBaseUrl}}/realtime/connection/ticket
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### POST Create Root Shelf
+POST {{gatewayBaseUrl}}/root-shelves
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "id": "00000000-0000-4000-8000-000000000001",
+  "name": "example"
+}
+
+### DELETE Delete My Root Shelves By Ids
+DELETE {{gatewayBaseUrl}}/root-shelves/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "rootShelfIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### POST Create Root Shelves
+POST {{gatewayBaseUrl}}/root-shelves/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "insertedRootShelves": [
+    {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "name": "example"
+    }
+  ]
+}
+
+### PUT Update My Root Shelves By Ids
+PUT {{gatewayBaseUrl}}/root-shelves/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "updatedRootShelves": [
+    {
+      "rootShelfId": "00000000-0000-4000-8000-000000000001",
+      "setNull": {},
+      "values": {
+        "name": "example"
+      }
+    }
+  ]
+}
+
+### PATCH Restore My Root Shelves By Ids
+PATCH {{gatewayBaseUrl}}/root-shelves/batch/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "rootShelfIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### DELETE Leave My Root Shelves
+DELETE {{gatewayBaseUrl}}/root-shelves/memberships/me
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "rootShelves": [
+    {
+      "rootShelfId": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}
+
+### DELETE Delete My Root Shelf By Id
+DELETE {{gatewayBaseUrl}}/root-shelves/{{rootShelfId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "rootShelfId": "00000000-0000-4000-8000-000000000001"
+}
+
+### GET Get My Root Shelf By Id
+GET {{gatewayBaseUrl}}/root-shelves/{{rootShelfId}}?isDeleted=true
+User-Agent: {{userAgent}}
+
+### PUT Update My Root Shelf By Id
+PUT {{gatewayBaseUrl}}/root-shelves/{{rootShelfId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "setNull": {},
+  "values": {
+    "name": "example"
+  }
+}
+
+### DELETE Leave My Root Shelf
+DELETE {{gatewayBaseUrl}}/root-shelves/{{rootShelfId}}/memberships/me
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### POST Transfer My Root Shelf Ownership
+POST {{gatewayBaseUrl}}/root-shelves/{{rootShelfId}}/ownership
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "targetUserPublicId": "00000000-0000-4000-8000-000000000001"
+}
+
+### DELETE Delete My Root Shelf Permissions
+DELETE {{gatewayBaseUrl}}/root-shelves/{{rootShelfId}}/permissions
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "userPublicIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### PUT Upsert My Root Shelf Permissions
+PUT {{gatewayBaseUrl}}/root-shelves/{{rootShelfId}}/permissions
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "permissions": [
+    {
+      "permission": "Read",
+      "userPublicId": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}
+
+### DELETE Delete My Root Shelf Permission
+DELETE {{gatewayBaseUrl}}/root-shelves/{{rootShelfId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### GET Get My Root Shelf Permission
+GET {{gatewayBaseUrl}}/root-shelves/{{rootShelfId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+
+### PATCH Update My Root Shelf Permission
+PATCH {{gatewayBaseUrl}}/root-shelves/{{rootShelfId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### POST Create My Root Shelf Permission
+POST {{gatewayBaseUrl}}/root-shelves/{{rootShelfId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "permission": "Read"
+}
+
+### PUT Upsert My Root Shelf Permission
+PUT {{gatewayBaseUrl}}/root-shelves/{{rootShelfId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### PATCH Restore My Root Shelf By Id
+PATCH {{gatewayBaseUrl}}/root-shelves/{{rootShelfId}}/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "rootShelfId": "00000000-0000-4000-8000-000000000001"
+}
+
+### GET Get All My Routine Tags
+GET {{gatewayBaseUrl}}/routine-tags?areDeleted=true
+User-Agent: {{userAgent}}
+
+### POST Create Routine Tag
+POST {{gatewayBaseUrl}}/routine-tags
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "color": "example",
+  "icon": "example",
+  "id": "00000000-0000-4000-8000-000000000001",
+  "name": "example"
+}
+
+### POST Create Routine Tags
+POST {{gatewayBaseUrl}}/routine-tags/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "createdRoutineTags": [
+    {
+      "color": "example",
+      "icon": "example",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "name": "example"
+    }
+  ]
+}
+
+### PUT Update My Routine Tags By Ids
+PUT {{gatewayBaseUrl}}/routine-tags/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "updatedRoutineTags": [
+    {
+      "routineTagId": "00000000-0000-4000-8000-000000000001",
+      "setNull": {},
+      "values": {
+        "color": "example",
+        "icon": "example",
+        "name": "example"
+      }
+    }
+  ]
+}
+
+### DELETE Hard Delete My Routine Tags By Ids
+DELETE {{gatewayBaseUrl}}/routine-tags/batch/permanently
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "routineTagIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### GET Get My Routine Tag By Id
+GET {{gatewayBaseUrl}}/routine-tags/{{routineTagId}}?isDeleted=true
+User-Agent: {{userAgent}}
+
+### PUT Update My Routine Tag By Id
+PUT {{gatewayBaseUrl}}/routine-tags/{{routineTagId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "setNull": {},
+  "values": {
+    "color": "example",
+    "icon": "example",
+    "name": "example"
+  }
+}
+
+### DELETE Hard Delete My Routine Tag By Id
+DELETE {{gatewayBaseUrl}}/routine-tags/{{routineTagId}}/permanently
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### GET Get All My Routine Task Records By Routine Task Id
+GET {{gatewayBaseUrl}}/routine-task-records/routine-task/{{routineTaskId}}?limit=1
+User-Agent: {{userAgent}}
+
+### GET Visualize My Routine Task Record Actual Ended At Count
+GET {{gatewayBaseUrl}}/routine-task-records/visualizations/actual-ended-at-count?permission=Read&queryRangeEndedAt=2026-01-01T00%3A00%3A00Z&queryRangeStartedAt=2026-01-01T00%3A00%3A00Z&routineTaskIds=00000000-0000-4000-8000-000000000001&timeHourUnit=1
+User-Agent: {{userAgent}}
+
+### GET Visualize My Routine Task Record Actual Started At Count
+GET {{gatewayBaseUrl}}/routine-task-records/visualizations/actual-started-at-count?permission=Read&queryRangeEndedAt=2026-01-01T00%3A00%3A00Z&queryRangeStartedAt=2026-01-01T00%3A00%3A00Z&routineTaskIds=00000000-0000-4000-8000-000000000001&timeHourUnit=1
+User-Agent: {{userAgent}}
+
+### GET Visualize My Routine Task Record Purpose Count
+GET {{gatewayBaseUrl}}/routine-task-records/visualizations/purpose-count?permission=Read&routineTaskIds=00000000-0000-4000-8000-000000000001
+User-Agent: {{userAgent}}
+
+### GET Visualize My Routine Task Record Scheduled At Count
+GET {{gatewayBaseUrl}}/routine-task-records/visualizations/scheduled-at-count?permission=Read&queryRangeEndedAt=2026-01-01T00%3A00%3A00Z&queryRangeStartedAt=2026-01-01T00%3A00%3A00Z&routineTaskIds=00000000-0000-4000-8000-000000000001&timeHourUnit=1
+User-Agent: {{userAgent}}
+
+### GET Visualize My Routine Task Record Status Count
+GET {{gatewayBaseUrl}}/routine-task-records/visualizations/status-count?permission=Read&routineTaskIds=00000000-0000-4000-8000-000000000001
+User-Agent: {{userAgent}}
+
+### GET Get All My Routine Tasks
+GET {{gatewayBaseUrl}}/routine-tasks?areDeleted=true
+User-Agent: {{userAgent}}
+
+### DELETE Hard Delete My Routine Tasks By Ids
+DELETE {{gatewayBaseUrl}}/routine-tasks/batch/permanently
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "routineTaskIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### POST Create Routine Task By Routine Id
+POST {{gatewayBaseUrl}}/routine-tasks/routine/{{routineId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "maxAttempts": 1,
+  "nextScheduledAt": "2026-01-01T00:00:00Z",
+  "payload": {},
+  "period": "Daily",
+  "priority": 1,
+  "purpose": "CreateRootShelf",
+  "routineId": "00000000-0000-4000-8000-000000000001",
+  "title": "example"
+}
+
+### GET Get All My Routine Tasks By Routine Ids
+GET {{gatewayBaseUrl}}/routine-tasks/routines?areDeleted=true&routineIds=00000000-0000-4000-8000-000000000001
+User-Agent: {{userAgent}}
+
+### GET Visualize My Routine Task Actual Ended At Count
+GET {{gatewayBaseUrl}}/routine-tasks/visualizations/actual-ended-at-count
+User-Agent: {{userAgent}}
+
+### GET Visualize My Routine Task Actual Started At Count
+GET {{gatewayBaseUrl}}/routine-tasks/visualizations/actual-started-at-count
+User-Agent: {{userAgent}}
+
+### GET Visualize My Routine Task Purpose Count
+GET {{gatewayBaseUrl}}/routine-tasks/visualizations/purpose-count
+User-Agent: {{userAgent}}
+
+### GET Visualize My Routine Task Scheduled At Count
+GET {{gatewayBaseUrl}}/routine-tasks/visualizations/scheduled-at-count?permission=Read&queryRangeEndedAt=2026-01-01T00%3A00%3A00Z&queryRangeStartedAt=2026-01-01T00%3A00%3A00Z&timeHourUnit=1
+User-Agent: {{userAgent}}
+
+### GET Visualize My Routine Task Status Count
+GET {{gatewayBaseUrl}}/routine-tasks/visualizations/status-count?permission=Read
+User-Agent: {{userAgent}}
+
+### GET Get My Routine Task By Id
+GET {{gatewayBaseUrl}}/routine-tasks/{{routineTaskId}}?isDeleted=true
+User-Agent: {{userAgent}}
+
+### PUT Update My Routine Task By Id
+PUT {{gatewayBaseUrl}}/routine-tasks/{{routineTaskId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "routineTaskId": "00000000-0000-4000-8000-000000000001",
+  "setNull": {},
+  "values": {
+    "maxAttempts": 1,
+    "nextScheduledAt": "2026-01-01T00:00:00Z",
+    "payload": {},
+    "period": "Daily",
+    "priority": 1,
+    "purpose": "CreateRootShelf",
+    "routineId": "00000000-0000-4000-8000-000000000001",
+    "title": "example"
+  }
+}
+
+### DELETE Hard Delete My Routine Task By Id
+DELETE {{gatewayBaseUrl}}/routine-tasks/{{routineTaskId}}/permanently
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "routineTaskId": "00000000-0000-4000-8000-000000000001"
+}
+
+### DELETE Resume My Routine Task By Id
+DELETE {{gatewayBaseUrl}}/routine-tasks/{{routineTaskId}}/suspension
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "routineTaskId": "00000000-0000-4000-8000-000000000001"
+}
+
+### PUT Pause My Routine Task By Id
+PUT {{gatewayBaseUrl}}/routine-tasks/{{routineTaskId}}/suspension
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "routineTaskId": "00000000-0000-4000-8000-000000000001"
+}
+
+### GET Get All My Routines By Time Range
+GET {{gatewayBaseUrl}}/routines?areDeleted=true&from=2026-01-01T00%3A00%3A00Z&stationIds=00000000-0000-4000-8000-000000000001&to=2026-01-01T00%3A00%3A00Z
+User-Agent: {{userAgent}}
+
+### DELETE Delete My Routines By Ids
+DELETE {{gatewayBaseUrl}}/routines/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "routineIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### POST Create Routines By Station Ids
+POST {{gatewayBaseUrl}}/routines/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "createdRoutines": [
+    {
+      "description": "example",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "isPinned": true,
+      "period": "Daily",
+      "scheduledEndAt": "2026-01-01T00:00:00Z",
+      "scheduledStartAt": "2026-01-01T00:00:00Z",
+      "stationId": "00000000-0000-4000-8000-000000000001",
+      "status": "Scheduled",
+      "timezone": "example",
+      "title": "example"
+    }
+  ]
+}
+
+### PUT Update My Routines By Ids
+PUT {{gatewayBaseUrl}}/routines/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "updatedRoutines": [
+    {
+      "routineId": "00000000-0000-4000-8000-000000000001",
+      "setNull": {},
+      "values": {
+        "description": "example",
+        "isPinned": true,
+        "period": "Daily",
+        "scheduledEndAt": "2026-01-01T00:00:00Z",
+        "scheduledStartAt": "2026-01-01T00:00:00Z",
+        "stationId": "00000000-0000-4000-8000-000000000001",
+        "status": "Scheduled",
+        "timezone": "example",
+        "title": "example"
+      }
+    }
+  ]
+}
+
+### DELETE Hard Delete My Routines By Ids
+DELETE {{gatewayBaseUrl}}/routines/batch/permanently
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### PATCH Restore My Routines By Ids
+PATCH {{gatewayBaseUrl}}/routines/batch/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "routineIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### POST Link Routine Items By Ids
+POST {{gatewayBaseUrl}}/routines/items
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "isUnlink": true,
+  "linkedRoutinesAndItems": [
+    {
+      "itemId": "00000000-0000-4000-8000-000000000001",
+      "itemType": "BlockPack",
+      "routineId": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}
+
+### GET Get My Routines By Station Id
+GET {{gatewayBaseUrl}}/routines/station/{{stationId}}?areDeleted=true
+User-Agent: {{userAgent}}
+
+### POST Create Routine By Station Id
+POST {{gatewayBaseUrl}}/routines/station/{{stationId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "description": "example",
+  "id": "00000000-0000-4000-8000-000000000001",
+  "isPinned": true,
+  "period": "Daily",
+  "scheduledEndAt": "2026-01-01T00:00:00Z",
+  "scheduledStartAt": "2026-01-01T00:00:00Z",
+  "stationId": "00000000-0000-4000-8000-000000000001",
+  "status": "Scheduled",
+  "timezone": "example",
+  "title": "example"
+}
+
+### POST Link Routine Tags By Ids
+POST {{gatewayBaseUrl}}/routines/tags
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "isUnlink": true,
+  "linkedRoutinesAndTags": [
+    {
+      "routineId": "00000000-0000-4000-8000-000000000001",
+      "routineTagId": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}
+
+### GET Visualize My Routine Period Count
+GET {{gatewayBaseUrl}}/routines/visualizations/period-count
+User-Agent: {{userAgent}}
+
+### GET Visualize My Routine Scheduled End At Count
+GET {{gatewayBaseUrl}}/routines/visualizations/scheduled-end-at-count
+User-Agent: {{userAgent}}
+
+### GET Visualize My Routine Scheduled Start At Count
+GET {{gatewayBaseUrl}}/routines/visualizations/scheduled-start-at-count?permission=Read&queryRangeEndedAt=2026-01-01T00%3A00%3A00Z&queryRangeStartedAt=2026-01-01T00%3A00%3A00Z&timeHourUnit=1
+User-Agent: {{userAgent}}
+
+### GET Visualize My Routine Status Count
+GET {{gatewayBaseUrl}}/routines/visualizations/status-count?permission=Read
+User-Agent: {{userAgent}}
+
+### DELETE Delete My Routine By Id
+DELETE {{gatewayBaseUrl}}/routines/{{routineId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "routineId": "00000000-0000-4000-8000-000000000001"
+}
+
+### GET Get My Routine By Id
+GET {{gatewayBaseUrl}}/routines/{{routineId}}?isDeleted=true
+User-Agent: {{userAgent}}
+
+### PUT Update My Routine By Id
+PUT {{gatewayBaseUrl}}/routines/{{routineId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "routineId": "00000000-0000-4000-8000-000000000001",
+  "setNull": {},
+  "values": {
+    "description": "example",
+    "isPinned": true,
+    "period": "Daily",
+    "scheduledEndAt": "2026-01-01T00:00:00Z",
+    "scheduledStartAt": "2026-01-01T00:00:00Z",
+    "stationId": "00000000-0000-4000-8000-000000000001",
+    "status": "Scheduled",
+    "timezone": "example",
+    "title": "example"
+  }
+}
+
+### POST Link Routine Item By Id
+POST {{gatewayBaseUrl}}/routines/{{routineId}}/items/{{itemId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "isUnlink": true,
+  "itemId": "00000000-0000-4000-8000-000000000001",
+  "itemType": "BlockPack",
+  "routineId": "00000000-0000-4000-8000-000000000001"
+}
+
+### DELETE Hard Delete My Routine By Id
+DELETE {{gatewayBaseUrl}}/routines/{{routineId}}/permanently
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### PATCH Restore My Routine By Id
+PATCH {{gatewayBaseUrl}}/routines/{{routineId}}/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "routineId": "00000000-0000-4000-8000-000000000001"
+}
+
+### POST Link Routine Tag By Id
+POST {{gatewayBaseUrl}}/routines/{{routineId}}/tags/{{routineTagId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "isUnlink": true,
+  "routineId": "00000000-0000-4000-8000-000000000001",
+  "routineTagId": "00000000-0000-4000-8000-000000000001"
+}
+
+### GET Get Global Avatar
+GET {{gatewayBaseUrl}}/static/global-images/avatars/{{id}}
+User-Agent: {{userAgent}}
+
+### GET Get All My Stations
+GET {{gatewayBaseUrl}}/stations?areDeleted=true
+User-Agent: {{userAgent}}
+
+### POST Create Station
+POST {{gatewayBaseUrl}}/stations
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "description": "example",
+  "headerBackgroundURL": "https://example.com",
+  "icon": "example",
+  "id": "00000000-0000-4000-8000-000000000001",
+  "name": "example"
+}
+
+### DELETE Delete My Stations By Ids
+DELETE {{gatewayBaseUrl}}/stations/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "stationIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### POST Create Stations
+POST {{gatewayBaseUrl}}/stations/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "createdStations": [
+    {
+      "description": "example",
+      "headerBackgroundURL": "https://example.com",
+      "icon": "example",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "name": "example"
+    }
+  ]
+}
+
+### PUT Update My Stations By Ids
+PUT {{gatewayBaseUrl}}/stations/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "updatedStations": [
+    {
+      "setNull": {},
+      "stationId": "00000000-0000-4000-8000-000000000001",
+      "values": {
+        "description": "example",
+        "headerBackgroundURL": "https://example.com",
+        "icon": "example",
+        "name": "example"
+      }
+    }
+  ]
+}
+
+### DELETE Hard Delete My Stations By Ids
+DELETE {{gatewayBaseUrl}}/stations/batch/permanently
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "stationIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### PATCH Restore My Stations By Ids
+PATCH {{gatewayBaseUrl}}/stations/batch/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "stationIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### DELETE Leave My Stations
+DELETE {{gatewayBaseUrl}}/stations/memberships/me
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "stations": [
+    {
+      "stationId": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}
+
+### GET Visualize My Total Count
+GET {{gatewayBaseUrl}}/stations/visualizations/total-count?permission=Read
+User-Agent: {{userAgent}}
+
+### DELETE Delete My Station By Id
+DELETE {{gatewayBaseUrl}}/stations/{{stationId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "stationId": "00000000-0000-4000-8000-000000000001"
+}
+
+### GET Get My Station By Id
+GET {{gatewayBaseUrl}}/stations/{{stationId}}?isDeleted=true
+User-Agent: {{userAgent}}
+
+### PUT Update My Station By Id
+PUT {{gatewayBaseUrl}}/stations/{{stationId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "setNull": {},
+  "values": {
+    "description": "example",
+    "headerBackgroundURL": "https://example.com",
+    "icon": "example",
+    "name": "example"
+  }
+}
+
+### DELETE Leave My Station
+DELETE {{gatewayBaseUrl}}/stations/{{stationId}}/memberships/me
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### POST Transfer My Station Ownership
+POST {{gatewayBaseUrl}}/stations/{{stationId}}/ownership
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "targetUserPublicId": "00000000-0000-4000-8000-000000000001"
+}
+
+### DELETE Hard Delete My Station By Id
+DELETE {{gatewayBaseUrl}}/stations/{{stationId}}/permanently
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "stationId": "00000000-0000-4000-8000-000000000001"
+}
+
+### DELETE Delete My Station Permissions
+DELETE {{gatewayBaseUrl}}/stations/{{stationId}}/permissions
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "userPublicIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### PUT Upsert My Station Permissions
+PUT {{gatewayBaseUrl}}/stations/{{stationId}}/permissions
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "permissions": [
+    {
+      "permission": "Read",
+      "userPublicId": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}
+
+### DELETE Delete My Station Permission
+DELETE {{gatewayBaseUrl}}/stations/{{stationId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### GET Get My Station Permission
+GET {{gatewayBaseUrl}}/stations/{{stationId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+
+### PATCH Update My Station Permission
+PATCH {{gatewayBaseUrl}}/stations/{{stationId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### POST Create My Station Permission
+POST {{gatewayBaseUrl}}/stations/{{stationId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "permission": "Read"
+}
+
+### PUT Upsert My Station Permission
+PUT {{gatewayBaseUrl}}/stations/{{stationId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### PATCH Restore My Station By Id
+PATCH {{gatewayBaseUrl}}/stations/{{stationId}}/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "stationId": "00000000-0000-4000-8000-000000000001"
+}
+
+### DELETE Delete My Sub Shelves By Ids
+DELETE {{gatewayBaseUrl}}/sub-shelves/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "subShelfIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### POST Create Sub Shelves By Root Shelf Ids
+POST {{gatewayBaseUrl}}/sub-shelves/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "createdSubShelves": [
+    {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "name": "example",
+      "prevSubShelfId": "00000000-0000-4000-8000-000000000001",
+      "rootShelfId": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}
+
+### PUT Update My Sub Shelves By Ids
+PUT {{gatewayBaseUrl}}/sub-shelves/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "updatedSubShelves": [
+    {
+      "setNull": {},
+      "subShelfId": "00000000-0000-4000-8000-000000000001",
+      "values": {
+        "name": "example"
+      }
+    }
+  ]
+}
+
+### PUT Move My Sub Shelves By Root Shelf Ids
+PUT {{gatewayBaseUrl}}/sub-shelves/batch/position
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "movedSubShelves": [
+    {
+      "destinationRootShelfId": "00000000-0000-4000-8000-000000000001",
+      "destinationSubShelfId": "00000000-0000-4000-8000-000000000001",
+      "sourceRootShelfId": "00000000-0000-4000-8000-000000000001",
+      "sourceSubShelfIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ]
+    }
+  ]
+}
+
+### PATCH Restore My Sub Shelves By Ids
+PATCH {{gatewayBaseUrl}}/sub-shelves/batch/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "subShelfIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### PUT Move My Sub Shelves By Root Shelf Id
+PUT {{gatewayBaseUrl}}/sub-shelves/position
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "destinationRootShelfId": "00000000-0000-4000-8000-000000000001",
+  "destinationSubShelfId": "00000000-0000-4000-8000-000000000001",
+  "sourceRootShelfId": "00000000-0000-4000-8000-000000000001",
+  "sourceSubShelfIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### GET Get My Sub Shelves By Prev Sub Shelf Id
+GET {{gatewayBaseUrl}}/sub-shelves/prev-sub-shelf/{{prevSubShelfId}}?areDeleted=true
+User-Agent: {{userAgent}}
+
+### GET Get My Sub Shelves And Items By Prev Sub Shelf Id
+GET {{gatewayBaseUrl}}/sub-shelves/prev-sub-shelf/{{prevSubShelfId}}/items?areDeleted=true
+User-Agent: {{userAgent}}
+
+### GET Get All My Sub Shelves By Root Shelf Id
+GET {{gatewayBaseUrl}}/sub-shelves/root-shelf/{{rootShelfId}}?areDeleted=true
+User-Agent: {{userAgent}}
+
+### POST Create Sub Shelf By Root Shelf Id
+POST {{gatewayBaseUrl}}/sub-shelves/root-shelf/{{rootShelfId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "id": "00000000-0000-4000-8000-000000000001",
+  "name": "example",
+  "prevSubShelfId": "00000000-0000-4000-8000-000000000001",
+  "rootShelfId": "00000000-0000-4000-8000-000000000001"
+}
+
+### DELETE Delete My Sub Shelf By Id
+DELETE {{gatewayBaseUrl}}/sub-shelves/{{subShelfId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### GET Get My Sub Shelf By Id
+GET {{gatewayBaseUrl}}/sub-shelves/{{subShelfId}}?isDeleted=true
+User-Agent: {{userAgent}}
+
+### PUT Update My Sub Shelf By Id
+PUT {{gatewayBaseUrl}}/sub-shelves/{{subShelfId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "setNull": {},
+  "values": {
+    "name": "example"
+  }
+}
+
+### PUT Move My Sub Shelf By Root Shelf Id
+PUT {{gatewayBaseUrl}}/sub-shelves/{{subShelfId}}/position
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "destinationRootShelfId": "00000000-0000-4000-8000-000000000001",
+  "destinationSubShelfId": "00000000-0000-4000-8000-000000000001",
+  "sourceRootShelfId": "00000000-0000-4000-8000-000000000001",
+  "sourceSubShelfId": "00000000-0000-4000-8000-000000000001"
+}
+
+### PATCH Restore My Sub Shelf By Id
+PATCH {{gatewayBaseUrl}}/sub-shelves/{{subShelfId}}/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+### GET Get User Data
+GET {{gatewayBaseUrl}}/users/data
+User-Agent: {{userAgent}}
+
+### GET Get Me
+GET {{gatewayBaseUrl}}/users/me
+User-Agent: {{userAgent}}
+
+### PUT Update Me
+PUT {{gatewayBaseUrl}}/users/me
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-CSRF-Token: {{csrfToken}}
+
+{
+  "setNull": {},
+  "values": {
+    "displayName": "example",
+    "status": "example"
+  }
+}

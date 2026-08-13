@@ -386,6 +386,17 @@ participant snapshot directly from RealtimeGateway; API Gateway does not proxy
 the request and Core never reads RealtimeGateway-owned lease/cache state. Core's
 lifecycle path is outbox → Kafka → RealtimeGateway.
 
+RealtimeGateway Kafka consumers are transport components, grouped by the runtime
+they receive events from: Core consumers live under
+`internal/realtimegateway/transports/core/consumers/`, and Notification consumers
+live under `internal/realtimegateway/transports/notification/consumers/`. The
+long-lived WebSocket protocol implementation is shared by all client-facing
+events under `internal/realtimegateway/transports/websocket/`; it is not owned
+by the Yjs worker transport. Yjs worker coordination remains an injected
+dependency of that WebSocket adapter, while notifications, lifecycle events,
+presence, and future user-facing events use the same connector and outbound
+queue.
+
 `internal/core/data/storage/` owns Core's storage implementation;
 Gateway does not access it directly.
 

@@ -143,11 +143,22 @@ func matchPayloadValue(value any, values map[string]string, allowStrings bool) a
 		return matched
 	case map[string]any:
 		isTemplateBlock := false
+		isNestedTemplateBlock := false
 		if props, ok := typed["props"].(map[string]any); ok {
 			if template, ok := props["template"].(bool); ok {
 				isTemplateBlock = template
 				if template {
 					delete(props, "template")
+				}
+			}
+		}
+		if arborizedEditableBlock, ok := typed["arborizedEditableBlock"].(map[string]any); ok {
+			if props, ok := arborizedEditableBlock["props"].(map[string]any); ok {
+				if template, ok := props["template"].(bool); ok {
+					isNestedTemplateBlock = template
+					if template {
+						delete(props, "template")
+					}
 				}
 			}
 		}
@@ -158,7 +169,9 @@ func matchPayloadValue(value any, values map[string]string, allowStrings bool) a
 				continue
 			}
 			childAllowsStrings := allowStrings
-			if key == "arborizedEditableBlock" || key == "children" {
+			if key == "arborizedEditableBlock" {
+				childAllowsStrings = isNestedTemplateBlock
+			} else if key == "children" {
 				childAllowsStrings = isTemplateBlock
 			}
 			matched[key] = matchPayloadValue(item, values, childAllowsStrings)

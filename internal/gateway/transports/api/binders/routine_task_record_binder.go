@@ -97,7 +97,7 @@ func (b *RoutineTaskRecordBinder) BindGetAllMyRoutineTaskRecordsByRoutineTaskId(
 		requestDto := &apicontract.GetAllMyRoutineTaskRecordsByRoutineTaskIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		routineTaskId, err := uuid.Parse(ctx.Param("routineTaskId"))
+		routineTaskId, err := uuid.Parse(ctx.Param("routine-task-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("RoutineTask").WithOrigin(err), ctx)
 			return

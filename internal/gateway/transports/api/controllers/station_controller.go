@@ -106,7 +106,7 @@ func (c *StationController) CreateStation(ctx *gin.Context, request *apicontract
 		return
 	}
 
-	writeClientResponse(ctx, response.Data)
+	writeCreatedClientResponse(ctx, response.Data)
 }
 
 func (c *StationController) CreateStations(ctx *gin.Context, request *apicontract.CreateStationsRequestDto) {
@@ -125,7 +125,7 @@ func (c *StationController) CreateStations(ctx *gin.Context, request *apicontrac
 		return
 	}
 
-	writeClientResponse(ctx, response.Data)
+	writeCreatedClientResponse(ctx, response.Data)
 }
 
 func (c *StationController) UpdateMyStationById(ctx *gin.Context, request *apicontract.UpdateMyStationByIdRequestDto) {
@@ -338,7 +338,7 @@ func (c *StationController) CreateMyStationPermission(ctx *gin.Context, request 
 		return
 	}
 
-	writeClientResponse(ctx, response.Data)
+	writeCreatedClientResponse(ctx, response.Data)
 }
 
 func (c *StationController) UpsertMyStationPermission(

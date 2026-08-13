@@ -58,7 +58,7 @@ func (b *RootShelfBinder) BindGetMyRootShelfById(controllerFunc controllers.Func
 			request.Param.IsDeleted = &isDeleted
 		}
 
-		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		rootShelfId, err := uuid.Parse(ctx.Param("root-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Shelf").WithOrigin(err), ctx)
 			return
@@ -107,7 +107,7 @@ func (b *RootShelfBinder) BindUpdateMyRootShelfById(controllerFunc controllers.F
 			return
 		}
 
-		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		rootShelfId, err := uuid.Parse(ctx.Param("root-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Shelf").WithOrigin(err), ctx)
 			return
@@ -146,7 +146,7 @@ func (b *RootShelfBinder) BindRestoreMyRootShelfById(controllerFunc controllers.
 			return
 		}
 
-		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		rootShelfId, err := uuid.Parse(ctx.Param("root-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Shelf").WithOrigin(err), ctx)
 			return
@@ -185,7 +185,7 @@ func (b *RootShelfBinder) BindDeleteMyRootShelfById(controllerFunc controllers.F
 			return
 		}
 
-		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		rootShelfId, err := uuid.Parse(ctx.Param("root-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Shelf").WithOrigin(err), ctx)
 			return
@@ -217,14 +217,14 @@ func (b *RootShelfBinder) BindGetMyRootShelfPermission(controllerFunc controller
 		requestDto := &apicontract.GetMyRootShelfPermissionRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		rootShelfId, err := uuid.Parse(ctx.Param("root-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Shelf").WithOrigin(err), ctx)
 			return
 		}
 		requestDto.Param.RootShelfId = rootShelfId
 
-		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		userPublicId, err := uuid.Parse(ctx.Param("user-public-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Shelf").WithOrigin(err), ctx)
 			return
@@ -240,14 +240,14 @@ func (b *RootShelfBinder) BindCreateMyRootShelfPermission(controllerFunc control
 		requestDto := &apicontract.CreateMyRootShelfPermissionRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		rootShelfId, err := uuid.Parse(ctx.Param("root-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Shelf").WithOrigin(err), ctx)
 			return
 		}
 		requestDto.Param.RootShelfId = rootShelfId
 
-		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		userPublicId, err := uuid.Parse(ctx.Param("user-public-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Shelf").WithOrigin(err), ctx)
 			return
@@ -268,14 +268,14 @@ func (b *RootShelfBinder) BindUpsertMyRootShelfPermission(controllerFunc control
 		requestDto := &apicontract.UpsertMyRootShelfPermissionRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		rootShelfId, err := uuid.Parse(ctx.Param("root-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Shelf").WithOrigin(err), ctx)
 			return
 		}
 		requestDto.Param.RootShelfId = rootShelfId
 
-		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		userPublicId, err := uuid.Parse(ctx.Param("user-public-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Shelf").WithOrigin(err), ctx)
 			return
@@ -296,7 +296,7 @@ func (b *RootShelfBinder) BindUpsertMyRootShelfPermissions(controllerFunc contro
 		requestDto := &apicontract.UpsertMyRootShelfPermissionsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		rootShelfId, err := uuid.Parse(ctx.Param("root-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Shelf").WithOrigin(err), ctx)
 			return
@@ -317,14 +317,14 @@ func (b *RootShelfBinder) BindUpdateMyRootShelfPermission(controllerFunc control
 		requestDto := &apicontract.UpdateMyRootShelfPermissionRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		rootShelfId, err := uuid.Parse(ctx.Param("root-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Shelf").WithOrigin(err), ctx)
 			return
 		}
 		requestDto.Param.RootShelfId = rootShelfId
 
-		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		userPublicId, err := uuid.Parse(ctx.Param("user-public-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Shelf").WithOrigin(err), ctx)
 			return
@@ -345,7 +345,7 @@ func (b *RootShelfBinder) BindTransferMyRootShelfOwnership(controllerFunc contro
 		requestDto := &apicontract.TransferMyRootShelfOwnershipRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		rootShelfId, err := uuid.Parse(ctx.Param("root-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Shelf").WithOrigin(err), ctx)
 			return
@@ -366,14 +366,14 @@ func (b *RootShelfBinder) BindDeleteMyRootShelfPermission(controllerFunc control
 		requestDto := &apicontract.DeleteMyRootShelfPermissionRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		rootShelfId, err := uuid.Parse(ctx.Param("root-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Shelf").WithOrigin(err), ctx)
 			return
 		}
 		requestDto.Param.RootShelfId = rootShelfId
 
-		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		userPublicId, err := uuid.Parse(ctx.Param("user-public-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Shelf").WithOrigin(err), ctx)
 			return
@@ -389,7 +389,7 @@ func (b *RootShelfBinder) BindDeleteMyRootShelfPermissions(controllerFunc contro
 		requestDto := &apicontract.DeleteMyRootShelfPermissionsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		rootShelfId, err := uuid.Parse(ctx.Param("root-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Shelf").WithOrigin(err), ctx)
 			return
@@ -410,7 +410,7 @@ func (b *RootShelfBinder) BindLeaveMyRootShelf(controllerFunc controllers.Func[*
 		requestDto := &apicontract.LeaveMyRootShelfRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		rootShelfId, err := uuid.Parse(ctx.Param("root-shelf-id"))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Shelf").WithOrigin(err), ctx)
 			return

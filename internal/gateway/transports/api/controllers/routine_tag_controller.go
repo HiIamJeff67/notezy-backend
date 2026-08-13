@@ -85,7 +85,7 @@ func (c *RoutineTagController) CreateRoutineTag(ctx *gin.Context, requestDto *ap
 		return
 	}
 
-	writeClientResponse(ctx, response.Data)
+	writeCreatedClientResponse(ctx, response.Data)
 }
 
 func (c *RoutineTagController) CreateRoutineTags(ctx *gin.Context, requestDto *apicontract.CreateRoutineTagsRequestDto) {
@@ -104,7 +104,7 @@ func (c *RoutineTagController) CreateRoutineTags(ctx *gin.Context, requestDto *a
 		return
 	}
 
-	writeClientResponse(ctx, response.Data)
+	writeCreatedClientResponse(ctx, response.Data)
 }
 
 func (c *RoutineTagController) UpdateMyRoutineTagById(ctx *gin.Context, requestDto *apicontract.UpdateMyRoutineTagByIdRequestDto) {
