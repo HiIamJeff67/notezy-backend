@@ -31,7 +31,6 @@ import (
 	notificationconsumers "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/notification/consumers"
 	status "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/status"
 	websockettransport "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/websocket"
-	workers "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/workers"
 )
 
 type Application struct {
