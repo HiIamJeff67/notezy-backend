@@ -8,6 +8,7 @@ func All() []TopicSpec {
 		CoreDurableJobYjsMaintenanceHintTopicSpec(),
 		CoreNotificationTopicSpec(),
 		CoreDurableJobRoutineTaskTopicSpec(),
+		DurableJobRealtimeGatewayRoutineTaskLifecycleTopicSpec(),
 		DurableJobCoreYjsMaintenanceRequestTopicSpec(),
 		DurableJobCoreYjsMaintenanceResultTopicSpec(),
 		CoreEmailRequestTopicSpec(),

@@ -78,6 +78,18 @@ type NotificationEvent struct {
 	ExpiresAt             *time.Time      `json:"expiresAt,omitempty"`
 }
 
+type RoutineTaskLifecycleEvent struct {
+	EventId             uuid.UUID `json:"eventId"`
+	RoutineTaskId       uuid.UUID `json:"routineTaskId"`
+	RoutineTaskRecordId uuid.UUID `json:"routineTaskRecordId"`
+	RoutineId           uuid.UUID `json:"routineId"`
+	ActorUserPublicId   uuid.UUID `json:"actorUserPublicId"`
+	Purpose             string    `json:"purpose"`
+	Status              string    `json:"status"`
+	Attempt             int32     `json:"attempt"`
+	OccurredAt          time.Time `json:"occurredAt"`
+}
+
 type RealtimeLeaseCacheClient struct {
 	cacheStore *RealtimeLeaseCacheStore
 }
@@ -191,6 +203,10 @@ func (s *RealtimeLeaseCacheClient) userSessionRevocationKey() string {
 
 func (s *RealtimeLeaseCacheClient) userNotificationKey() string {
 	return "Realtime:user:notifications"
+}
+
+func (s *RealtimeLeaseCacheClient) routineTaskLifecycleKey() string {
+	return "Realtime:routine-task:lifecycle-events"
 }
 
 /* ============================== Lifecycle Methods ============================== */
@@ -348,6 +364,59 @@ func (s *RealtimeLeaseCacheClient) SubscribeNotifications(
 			if err := json.Unmarshal([]byte(message.Payload), &event); err != nil {
 				continue
 			}
+			handler(event)
+		}
+	}()
+
+	return func() {
+		_ = pubsub.Close()
+	}, nil
+}
+
+func (s *RealtimeLeaseCacheClient) PublishRoutineTaskLifecycleEvent(
+	event RoutineTaskLifecycleEvent,
+) error {
+	if event.EventId == uuid.Nil || event.RoutineTaskId == uuid.Nil ||
+		event.RoutineTaskRecordId == uuid.Nil || event.RoutineId == uuid.Nil ||
+		event.ActorUserPublicId == uuid.Nil || event.Purpose == "" || event.Status == "" ||
+		event.Attempt <= 0 || event.OccurredAt.IsZero() {
+		return errors.New("realtime routine task lifecycle event is incomplete")
+	}
+
+	redisClient, err := s.getRedisClient(event.RoutineTaskId.String())
+	if err != nil {
+		return err
+	}
+
+	payload, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	return redisClient.Publish(s.routineTaskLifecycleKey(), payload).Err()
+}
+
+func (s *RealtimeLeaseCacheClient) SubscribeRoutineTaskLifecycleEvents(
+	handler func(RoutineTaskLifecycleEvent),
+) (func(), error) {
+	redisClient, err := s.getRedisClient(s.routineTaskLifecycleKey())
+	if err != nil {
+		return nil, err
+	}
+
+	pubsub := redisClient.Subscribe(s.routineTaskLifecycleKey())
+	if _, err := pubsub.Receive(); err != nil {
+		_ = pubsub.Close()
+		return nil, err
+	}
+
+	go func() {
+		for message := range pubsub.Channel() {
+			var event RoutineTaskLifecycleEvent
+			if err := json.Unmarshal([]byte(message.Payload), &event); err != nil {
+				continue
+			}
+
 			handler(event)
 		}
 	}()

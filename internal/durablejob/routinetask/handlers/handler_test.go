@@ -28,6 +28,7 @@ func TestPurposeHandlerPreparesAssignmentWithoutDatabaseAccess(t *testing.T) {
 		RoutineTaskRecordId: uuid.New(),
 		RoutineId:           uuid.New(),
 		ActorUserId:         uuid.New(),
+		ActorUserPublicId:   uuid.New(),
 		Purpose:             enums.RoutineTaskPurpose_CreateRootShelf,
 		Payload:             payload,
 		Attempt:             1,
@@ -59,6 +60,7 @@ func TestPurposeHandlerReturnsLocalErrorForInvalidPayload(t *testing.T) {
 		RoutineTaskRecordId: uuid.New(),
 		RoutineId:           uuid.New(),
 		ActorUserId:         uuid.New(),
+		ActorUserPublicId:   uuid.New(),
 		Purpose:             enums.RoutineTaskPurpose_CreateRootShelf,
 		Payload:             []byte("{"),
 	}
@@ -105,6 +107,7 @@ func TestPrepareAssignmentMatchesNestedTemplateBlockContent(t *testing.T) {
 		RoutineTaskRecordId: uuid.New(),
 		RoutineId:           uuid.New(),
 		ActorUserId:         uuid.New(),
+		ActorUserPublicId:   uuid.New(),
 		Purpose:             enums.RoutineTaskPurpose_CreateBlockPack,
 		Payload:             payload,
 		PatternValues:       map[string]string{"date1": "2026-08-13"},

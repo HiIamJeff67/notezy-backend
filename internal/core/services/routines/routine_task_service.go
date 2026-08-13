@@ -1248,6 +1248,7 @@ func (s *RoutineTaskService) ClaimRoutineTasks(
 	result = tx.
 		Model(&schemas.RoutineTask{}).
 		Where("id IN ?", claimedRoutineTaskIds).
+		Preload("ActorUser").
 		Find(&claimedRoutineTasks)
 	if result.Error != nil {
 		tx.Rollback()
@@ -1344,6 +1345,7 @@ func (s *RoutineTaskService) ClaimRoutineTasks(
 			RoutineTaskRecordId: recordIdByRoutineTaskId[routineTask.Id],
 			RoutineId:           routineTask.RoutineId,
 			ActorUserId:         routineTask.ActorUserId,
+			ActorUserPublicId:   routineTask.ActorUser.PublicId,
 			Title:               routineTask.Title,
 			Purpose:             *routineTask.Purpose.ToContractable(),
 			Payload:             json.RawMessage(routineTask.Payload),

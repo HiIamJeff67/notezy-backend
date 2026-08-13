@@ -35,6 +35,7 @@ topic. The hint contains only Core's current maintenance metadata; it never
 contains a snapshot, state vector, or Yjs update payload.
 
 Core publishes `RoutineTaskCompletedData` on the lifecycle topic after a
-prepared DurableJob result has been applied. It contains only task identity,
+prepared DurableJob result has been applied. It contains task, record, and
+routine identity, the actor's public UUID for RealtimeGateway routing, purpose,
 attempt, worker, and completion metadata; it never contains Core schemas or
 database payloads.

@@ -33,6 +33,9 @@ func (b *RoutineTaskCompletionEventBuilder) Build(
 		Data: coreeventscontract.RoutineTaskCompletedData{
 			RoutineTaskId:       completedTask.RoutineTaskId,
 			RoutineTaskRecordId: completedTask.RoutineTaskRecordId,
+			RoutineId:           completedTask.PreparedTask.RoutineId,
+			ActorUserPublicId:   completedTask.PreparedTask.ActorUserPublicId,
+			Purpose:             completedTask.PreparedTask.Purpose,
 			WorkerId:            workerId,
 			Attempt:             completedTask.PreparedTask.Attempt,
 			CompletedAt:         completedTask.CompletedAt,

@@ -660,6 +660,68 @@
             },
             {
               "properties": {
+                "attempt": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "eventId": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "occurredAt": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "purpose": {
+                  "type": "string"
+                },
+                "requestId": {
+                  "type": "string"
+                },
+                "routineId": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "routineTaskId": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "routineTaskRecordId": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "status": {
+                  "enum": [
+                    "running",
+                    "completed"
+                  ],
+                  "type": "string"
+                },
+                "type": {
+                  "const": "routine-task-lifecycle",
+                  "type": "string"
+                },
+                "version": {
+                  "const": 1,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "version",
+                "type",
+                "eventId",
+                "routineTaskId",
+                "routineTaskRecordId",
+                "routineId",
+                "purpose",
+                "status",
+                "attempt",
+                "occurredAt"
+              ],
+              "type": "object"
+            },
+            {
+              "properties": {
                 "channelId": {
                   "format": "uuid",
                   "type": "string"

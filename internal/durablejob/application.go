@@ -17,6 +17,7 @@ import (
 	coreconsumers "github.com/HiIamJeff67/notezy-backend/internal/durablejob/transports/core/consumers"
 	coreproducers "github.com/HiIamJeff67/notezy-backend/internal/durablejob/transports/core/producers"
 	corestrategies "github.com/HiIamJeff67/notezy-backend/internal/durablejob/transports/core/strategies"
+	realtimegatewayproducers "github.com/HiIamJeff67/notezy-backend/internal/durablejob/transports/realtimegateway/producers"
 	status "github.com/HiIamJeff67/notezy-backend/internal/durablejob/transports/status"
 )
 
@@ -66,7 +67,11 @@ func Start() func() {
 	application := &Application{routineTaskEngine: routineTaskEngine}
 	routineTaskClaimProducer := coreproducers.NewRoutineTaskClaimProducer(kafkaProducer)
 	routineTaskResultProducer := coreproducers.NewRoutineTaskResultProducer(kafkaProducer)
+	routineTaskLifecycleProducer := realtimegatewayproducers.NewRoutineTaskLifecycleProducer(kafkaProducer)
 	routineTaskEngine.SetResultPublisher(routineTaskResultProducer.Produce)
+	routineTaskEngine.SetRoutineTaskRunningPublisher(
+		routineTaskLifecycleProducer.ProduceRoutineTaskRunning,
+	)
 	routineTaskAssignmentConsumer := coreconsumers.NewRoutineTaskAssignmentConsumer(
 		routineTaskEngine,
 		platformkafka.ConsumerConfig{

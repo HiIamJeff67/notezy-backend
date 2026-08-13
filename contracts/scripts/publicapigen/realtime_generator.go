@@ -118,6 +118,7 @@ func serverControlSchemas(participant map[string]any) []any {
 		frameSchema("presence-updated", presence, []string{"channelType", "channelId", "participant"}),
 		frameSchema("resource-event", map[string]any{"eventId": uuid(), "eventType": map[string]any{"type": "string"}, "resourceId": uuid(), "targetUserPublicId": uuid(), "change": map[string]any{"type": "string"}, "permission": map[string]any{"type": "string"}}, []string{"eventId", "eventType", "resourceId", "change"}),
 		frameSchema("notification", map[string]any{"eventId": uuid(), "notificationId": uuid(), "notificationType": map[string]any{"type": "string"}, "priority": map[string]any{"type": "string"}, "templateKey": map[string]any{"type": "string"}, "templateVersion": map[string]any{"type": "integer"}, "payload": map[string]any{}, "createdAt": map[string]any{"type": "string", "format": "date-time"}, "expiresAt": map[string]any{"type": []string{"string", "null"}, "format": "date-time"}}, []string{"eventId", "notificationId", "notificationType", "priority", "templateKey", "templateVersion", "payload", "createdAt"}),
+		frameSchema("routine-task-lifecycle", map[string]any{"eventId": uuid(), "routineTaskId": uuid(), "routineTaskRecordId": uuid(), "routineId": uuid(), "purpose": map[string]any{"type": "string"}, "status": map[string]any{"type": "string", "enum": []string{"running", "completed"}}, "attempt": map[string]any{"type": "integer", "minimum": 1}, "occurredAt": map[string]any{"type": "string", "format": "date-time"}}, []string{"eventId", "routineTaskId", "routineTaskRecordId", "routineId", "purpose", "status", "attempt", "occurredAt"}),
 		frameSchema("error", errorFields, []string{"code", "message"}),
 	}
 }
@@ -162,6 +163,7 @@ func realtimeControlExamples() string {
     {"version":1,"type":"presence-left","channelType":"BlockPack","channelId":"00000000-0000-4000-8000-000000000001","participant":{"userPublicId":"00000000-0000-4000-8000-000000000003","channelPermission":"read","connectionCount":0}},
     {"version":1,"type":"resource-event","eventId":"00000000-0000-4000-8000-000000000004","eventType":"RootShelfPermissionChanged","resourceId":"00000000-0000-4000-8000-000000000005","targetUserPublicId":"00000000-0000-4000-8000-000000000003","change":"permission_updated","permission":"write"},
     {"version":1,"type":"notification","eventId":"00000000-0000-4000-8000-000000000006","notificationId":"00000000-0000-4000-8000-000000000007","notificationType":"security-alert","priority":"important","templateKey":"security.alert","templateVersion":1,"payload":{},"createdAt":"2026-01-01T00:00:00Z"},
+	{"version":1,"type":"routine-task-lifecycle","eventId":"00000000-0000-4000-8000-000000000008","routineTaskId":"00000000-0000-4000-8000-000000000009","routineTaskRecordId":"00000000-0000-4000-8000-000000000010","routineId":"00000000-0000-4000-8000-000000000011","purpose":"CreateBlockPack","status":"running","attempt":1,"occurredAt":"2026-01-01T00:00:00Z"},
     {"version":1,"type":"unsubscribed","requestId":"unsub-1","channelType":"BlockPack","channelId":"00000000-0000-4000-8000-000000000001","connectorChannelId":1},
     {"version":1,"type":"error","requestId":"sub-1","connectorChannelId":1,"code":"invalid_channel_ticket","message":"channel ticket is invalid"}
   ],
@@ -251,7 +253,9 @@ Each participant contains only public user ID, read/write channel permission, an
 
 After subscription, the socket may emit `+"`presence-joined`"+`, `+"`presence-left`"+`, and `+"`presence-updated`"+`. Apply these deltas idempotently. A left participant has connectionCount zero.
 
-`+"`resource-event`"+` is an invalidation hint, not a resource snapshot. Deduplicate with eventId and refetch canonical REST/GraphQL state. Historical events are not replayed after reconnect. User notifications may also arrive on the root connection and must be treated as transient delivery.`)
+`+"`resource-event`"+` is an invalidation hint, not a resource snapshot. Deduplicate with eventId and refetch canonical REST/GraphQL state. Historical events are not replayed after reconnect. User notifications may also arrive on the root connection and must be treated as transient delivery.
+
+`+"`routine-task-lifecycle`"+` is a user-targeted transient execution hint. It reports `+"`running`"+` when DurableJob begins a RoutineTask handler and `+"`completed`"+` only after Core commits the corresponding result. Deduplicate with eventId; after reconnect or when durable state matters, refetch the canonical RoutineTask and RoutineTaskRecord through the normal API.`)
 	writeText(filepath.Join(base, "rules", "limits-and-errors.md"), `# Limits and errors
 
 - Maximum public message: 1 MiB.
@@ -275,7 +279,7 @@ On quota rejection, preserve the local draft separately and rebuild from authori
 ## Current contract baseline
 
 - HTTP surface: BlockPack participant presence lookup.
-- WebSocket surface: multiplexed BlockPack subscriptions, JSON control frames, binary Yjs and awareness frames, presence, resource events, and notifications.
+- WebSocket surface: multiplexed BlockPack subscriptions, JSON control frames, binary Yjs and awareness frames, presence, resource events, notifications, and RoutineTask lifecycle hints.
 - Contract formats: OpenAPI 3.1 for HTTP and AsyncAPI 3.0 for WebSocket.
 - Admission: single-use Gateway-issued connection and channel tickets.
 - Stability: Beta namespace with protocol version 1.

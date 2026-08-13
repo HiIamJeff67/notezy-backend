@@ -99,6 +99,34 @@ func (c *LifecycleConsumer) process(
 	envelope eventcontract.EventEnvelope[json.RawMessage],
 ) error {
 	switch envelope.EventType {
+	case coreeventscontract.EventType_RoutineTaskCompleted:
+		var data coreeventscontract.RoutineTaskCompletedData
+		if err := json.Unmarshal(envelope.Data, &data); err != nil {
+			return &platformkafka.ConsumerError{
+				Classification: platformkafka.ErrorClassification_SchemaIncompatible,
+				Origin:         err,
+			}
+		}
+		if data.RoutineTaskId == uuid.Nil || data.RoutineTaskRecordId == uuid.Nil ||
+			data.RoutineId == uuid.Nil || data.ActorUserPublicId == uuid.Nil ||
+			data.Purpose == "" || data.Attempt <= 0 || data.CompletedAt.IsZero() {
+			return &platformkafka.ConsumerError{
+				Classification: platformkafka.ErrorClassification_SchemaIncompatible,
+				Origin:         errors.New("Kafka RoutineTask completed lifecycle event is incomplete"),
+			}
+		}
+
+		return c.leaseStore.PublishRoutineTaskLifecycleEvent(realtimelease.RoutineTaskLifecycleEvent{
+			EventId:             envelope.EventId,
+			RoutineTaskId:       data.RoutineTaskId,
+			RoutineTaskRecordId: data.RoutineTaskRecordId,
+			RoutineId:           data.RoutineId,
+			ActorUserPublicId:   data.ActorUserPublicId,
+			Purpose:             string(data.Purpose),
+			Status:              "completed",
+			Attempt:             data.Attempt,
+			OccurredAt:          data.CompletedAt,
+		})
 	case coreeventscontract.EventType_BlockPackAccessRevoked:
 		var data coreeventscontract.BlockPackAccessRevokedData
 		if err := json.Unmarshal(envelope.Data, &data); err != nil {

@@ -7,8 +7,5 @@ These documents are intentionally separate from the permanent architecture
 and system-design documentation. They may be revised, replaced, or removed
 after the corresponding frontend integration is complete.
 
-Current documents:
-
-- [Notification integration](notification-integration.md): temporary frontend
-  contract for Notification HTTP search, read/delete operations, and
-  RealtimeGateway delivery.
+- [RoutineTask realtime lifecycle](routine-task-lifecycle-realtime.md):
+  temporary WebSocket integration contract for running and completed task hints.

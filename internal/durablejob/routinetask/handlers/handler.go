@@ -42,7 +42,7 @@ func prepareAssignment(
 	assignment routinetasktypes.RoutineTaskAssignment,
 ) (*routinetasktypes.PreparedRoutineTask, error) {
 	if assignment.RoutineTaskId == uuid.Nil || assignment.RoutineTaskRecordId == uuid.Nil ||
-		assignment.RoutineId == uuid.Nil || assignment.ActorUserId == uuid.Nil ||
+		assignment.RoutineId == uuid.Nil || assignment.ActorUserId == uuid.Nil || assignment.ActorUserPublicId == uuid.Nil ||
 		assignment.Purpose == "" || len(assignment.Payload) == 0 {
 		return nil, durablejobexceptions.NewRoutineTaskException("RoutineTask").InvalidPayload(
 			fmt.Errorf("routine task assignment is incomplete"),
@@ -113,6 +113,7 @@ func prepareAssignment(
 		RoutineTaskRecordId: assignment.RoutineTaskRecordId,
 		RoutineId:           assignment.RoutineId,
 		ActorUserId:         assignment.ActorUserId,
+		ActorUserPublicId:   assignment.ActorUserPublicId,
 		Attempt:             assignment.Attempt,
 		Purpose:             assignment.Purpose,
 		Payload:             preparedPayload,

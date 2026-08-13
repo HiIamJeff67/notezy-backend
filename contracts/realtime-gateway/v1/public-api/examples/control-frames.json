@@ -17,6 +17,7 @@
     {"version":1,"type":"presence-left","channelType":"BlockPack","channelId":"00000000-0000-4000-8000-000000000001","participant":{"userPublicId":"00000000-0000-4000-8000-000000000003","channelPermission":"read","connectionCount":0}},
     {"version":1,"type":"resource-event","eventId":"00000000-0000-4000-8000-000000000004","eventType":"RootShelfPermissionChanged","resourceId":"00000000-0000-4000-8000-000000000005","targetUserPublicId":"00000000-0000-4000-8000-000000000003","change":"permission_updated","permission":"write"},
     {"version":1,"type":"notification","eventId":"00000000-0000-4000-8000-000000000006","notificationId":"00000000-0000-4000-8000-000000000007","notificationType":"security-alert","priority":"important","templateKey":"security.alert","templateVersion":1,"payload":{},"createdAt":"2026-01-01T00:00:00Z"},
+	{"version":1,"type":"routine-task-lifecycle","eventId":"00000000-0000-4000-8000-000000000008","routineTaskId":"00000000-0000-4000-8000-000000000009","routineTaskRecordId":"00000000-0000-4000-8000-000000000010","routineId":"00000000-0000-4000-8000-000000000011","purpose":"CreateBlockPack","status":"running","attempt":1,"occurredAt":"2026-01-01T00:00:00Z"},
     {"version":1,"type":"unsubscribed","requestId":"unsub-1","channelType":"BlockPack","channelId":"00000000-0000-4000-8000-000000000001","connectorChannelId":1},
     {"version":1,"type":"error","requestId":"sub-1","connectorChannelId":1,"code":"invalid_channel_ticket","message":"channel ticket is invalid"}
   ],

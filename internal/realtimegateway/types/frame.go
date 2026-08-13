@@ -130,3 +130,16 @@ type NotificationFrame struct {
 	CreatedAt        time.Time       `json:"createdAt"`
 	ExpiresAt        *time.Time      `json:"expiresAt,omitempty"`
 }
+
+type RoutineTaskLifecycleFrame struct {
+	Version             int       `json:"version"`
+	Type                FrameType `json:"type"`
+	EventId             uuid.UUID `json:"eventId"`
+	RoutineTaskId       uuid.UUID `json:"routineTaskId"`
+	RoutineTaskRecordId uuid.UUID `json:"routineTaskRecordId"`
+	RoutineId           uuid.UUID `json:"routineId"`
+	Purpose             string    `json:"purpose"`
+	Status              string    `json:"status"`
+	Attempt             int32     `json:"attempt"`
+	OccurredAt          time.Time `json:"occurredAt"`
+}

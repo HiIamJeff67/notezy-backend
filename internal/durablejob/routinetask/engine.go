@@ -52,6 +52,12 @@ func (e *Engine) SetResultPublisher(publisher ResultPublisher) {
 	e.handlerManager.SetResultPublisher(publisher)
 }
 
+func (e *Engine) SetRoutineTaskRunningPublisher(
+	publisher RoutineTaskRunningPublisher,
+) {
+	e.handlerManager.SetRoutineTaskRunningPublisher(publisher)
+}
+
 func (e *Engine) NewClaimRoutineTasksRequest() (durablejobcontract.ClaimRoutineTasksRequestDto, bool) {
 	if e.isManagingWork.Load() {
 		return durablejobcontract.ClaimRoutineTasksRequestDto{}, false

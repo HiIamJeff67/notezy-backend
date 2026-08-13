@@ -32,21 +32,22 @@ import (
 )
 
 type WebSocketAdapter struct {
-	upgrader                     websocket.Upgrader
-	workerManager                workers.WorkerManagerInterface
-	leaseStore                   *realtimeleasecache.RealtimeLeaseCacheClient
-	realtimeDisabled             bool
-	realtimeBetaUserPublicIdSet  map[uuid.UUID]bool
-	connectorMutex               sync.RWMutex
-	connectors                   map[uuid.UUID]*Connector
-	pendingConnectorCount        int
-	maximumConnectors            int
-	maximumConnectionsPerUser    int
-	shutdownRevocationListener   func()
-	shutdownSessionListener      func()
-	shutdownPresenceListener     func()
-	shutdownResourceListener     func()
-	shutdownNotificationListener func()
+	upgrader                             websocket.Upgrader
+	workerManager                        workers.WorkerManagerInterface
+	leaseStore                           *realtimeleasecache.RealtimeLeaseCacheClient
+	realtimeDisabled                     bool
+	realtimeBetaUserPublicIdSet          map[uuid.UUID]bool
+	connectorMutex                       sync.RWMutex
+	connectors                           map[uuid.UUID]*Connector
+	pendingConnectorCount                int
+	maximumConnectors                    int
+	maximumConnectionsPerUser            int
+	shutdownRevocationListener           func()
+	shutdownSessionListener              func()
+	shutdownPresenceListener             func()
+	shutdownResourceListener             func()
+	shutdownNotificationListener         func()
+	shutdownRoutineTaskLifecycleListener func()
 }
 
 func NewWebSocketAdapter(
@@ -85,6 +86,7 @@ func NewWebSocketAdapter(
 	application.subscribeBlockPackPresenceEvents()
 	application.subscribeResourceEvents()
 	application.subscribeNotifications()
+	application.subscribeRoutineTaskLifecycleEvents()
 
 	return application
 }
@@ -139,6 +141,22 @@ func (g *WebSocketAdapter) subscribeNotifications() {
 	g.shutdownNotificationListener = shutdown
 }
 
+func (g *WebSocketAdapter) subscribeRoutineTaskLifecycleEvents() {
+	shutdown, err := g.leaseStore.SubscribeRoutineTaskLifecycleEvents(
+		g.broadcastRoutineTaskLifecycleEvent,
+	)
+	if err != nil {
+		logs.NotezyLogger.Error(
+			context.Background(),
+			err,
+			"Failed to subscribe to realtime RoutineTask lifecycle events",
+		)
+		return
+	}
+
+	g.shutdownRoutineTaskLifecycleListener = shutdown
+}
+
 func (g *WebSocketAdapter) broadcastNotification(event realtimeleasecache.NotificationEvent) {
 	g.connectorMutex.RLock()
 	connectors := make([]*Connector, 0)
@@ -164,6 +182,40 @@ func (g *WebSocketAdapter) broadcastNotification(event realtimeleasecache.Notifi
 			ExpiresAt:        event.ExpiresAt,
 		}); err != nil {
 			logs.NotezyLogger.Error(context.Background(), err, "Failed to enqueue realtime notification")
+		}
+	}
+}
+
+func (g *WebSocketAdapter) broadcastRoutineTaskLifecycleEvent(
+	event realtimeleasecache.RoutineTaskLifecycleEvent,
+) {
+	g.connectorMutex.RLock()
+	connectors := make([]*Connector, 0)
+	for _, connector := range g.connectors {
+		if connector.UserPublicId == event.ActorUserPublicId {
+			connectors = append(connectors, connector)
+		}
+	}
+	g.connectorMutex.RUnlock()
+
+	for _, connector := range connectors {
+		if err := connector.writeJSON(realtimetypes.RoutineTaskLifecycleFrame{
+			Version:             constants.RealtimeProtocolVersion,
+			Type:                realtimetypes.FrameType_RoutineTaskLifecycle,
+			EventId:             event.EventId,
+			RoutineTaskId:       event.RoutineTaskId,
+			RoutineTaskRecordId: event.RoutineTaskRecordId,
+			RoutineId:           event.RoutineId,
+			Purpose:             event.Purpose,
+			Status:              event.Status,
+			Attempt:             event.Attempt,
+			OccurredAt:          event.OccurredAt,
+		}); err != nil {
+			logs.NotezyLogger.Error(
+				context.Background(),
+				err,
+				"Failed to enqueue realtime RoutineTask lifecycle event",
+			)
 		}
 	}
 }
@@ -225,6 +277,9 @@ func (g *WebSocketAdapter) Shutdown() {
 	}
 	if g.shutdownNotificationListener != nil {
 		g.shutdownNotificationListener()
+	}
+	if g.shutdownRoutineTaskLifecycleListener != nil {
+		g.shutdownRoutineTaskLifecycleListener()
 	}
 
 	g.connectorMutex.RLock()

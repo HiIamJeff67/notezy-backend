@@ -14,6 +14,7 @@ type RoutineTaskAssignment struct {
 	RoutineTaskRecordId uuid.UUID                `json:"routineTaskRecordId"`
 	RoutineId           uuid.UUID                `json:"routineId"`
 	ActorUserId         uuid.UUID                `json:"actorUserId"`
+	ActorUserPublicId   uuid.UUID                `json:"actorUserPublicId"`
 	Title               string                   `json:"title"`
 	Purpose             enums.RoutineTaskPurpose `json:"purpose"`
 	Payload             json.RawMessage          `json:"payload"`

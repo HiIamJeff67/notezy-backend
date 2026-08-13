@@ -17,6 +17,7 @@ type PreparedRoutineTask struct {
 	RoutineTaskRecordId uuid.UUID                `json:"routineTaskRecordId" validate:"required"`
 	RoutineId           uuid.UUID                `json:"routineId" validate:"required"`
 	ActorUserId         uuid.UUID                `json:"actorUserId" validate:"required"`
+	ActorUserPublicId   uuid.UUID                `json:"actorUserPublicId" validate:"required"`
 	Attempt             int32                    `json:"attempt" validate:"gte=1"`
 	Purpose             enums.RoutineTaskPurpose `json:"purpose" validate:"required"`
 	Payload             json.RawMessage          `json:"payload" validate:"required"`

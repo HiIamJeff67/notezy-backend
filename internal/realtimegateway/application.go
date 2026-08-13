@@ -28,6 +28,7 @@ import (
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/api/middlewares"
 	apiRouters "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/api/routers"
 	coreconsumers "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/core/consumers"
+	durablejobconsumers "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/durablejob/consumers"
 	notificationconsumers "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/notification/consumers"
 	status "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/status"
 	websockettransport "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/websocket"
@@ -140,6 +141,21 @@ func Start() func() {
 		},
 	)
 	shutdownLifecycleConsumer := lifecycleConsumer.Start(context.Background())
+	routineTaskLifecycleConsumer := durablejobconsumers.NewRoutineTaskLifecycleConsumer(
+		realtimeLeaseCacheClient,
+		platformkafka.ConsumerConfig{
+			ClientConfig: platformkafka.ClientConfig{
+				ConnectionConfig: kafkaConnectionConfig,
+				ClientId:         "notezy-realtime-gateway-durable-job-routine-task-lifecycle",
+			},
+			ConsumerGroup:       "notezy-realtime-gateway-durable-job-routine-task-lifecycle-v1",
+			MaximumAttempts:     config.KafkaConsumer.MaximumAttempts,
+			InitialRetryBackoff: config.KafkaConsumer.InitialRetryBackoff,
+			MaximumRetryBackoff: config.KafkaConsumer.MaximumRetryBackoff,
+			MaximumPollRecords:  config.KafkaConsumer.MaximumPollRecords,
+		},
+	)
+	shutdownRoutineTaskLifecycleConsumer := routineTaskLifecycleConsumer.Start(context.Background())
 	notificationConsumer := notificationconsumers.NewNotificationConsumer(
 		realtimeLeaseCacheClient,
 		platformkafka.ConsumerConfig{
@@ -181,6 +197,7 @@ func Start() func() {
 		application.ready.Store(false)
 		application.healthy.Store(false)
 		shutdownLifecycleConsumer()
+		shutdownRoutineTaskLifecycleConsumer()
 		shutdownNotificationConsumer()
 		websocketAdapter.Shutdown()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

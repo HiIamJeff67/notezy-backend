@@ -14,22 +14,25 @@ import (
 	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
+	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+
 	handlers "github.com/HiIamJeff67/notezy-backend/internal/durablejob/routinetask/handlers"
 	validation "github.com/HiIamJeff67/notezy-backend/internal/durablejob/validations"
 )
 
 type HandlerManager struct {
-	maxWorkers      int
-	activeWorkers   atomic.Int32
-	workerPool      sync.WaitGroup
-	sem             chan struct{}
-	workerId        uuid.UUID
-	failed          []failedRoutineTask
-	failedMutex     sync.Mutex
-	success         []preparedRoutineTask
-	successMutex    sync.Mutex
-	registries      map[enums.RoutineTaskPurpose]handlers.PurposeHandler
-	resultPublisher ResultPublisher
+	maxWorkers       int
+	activeWorkers    atomic.Int32
+	workerPool       sync.WaitGroup
+	sem              chan struct{}
+	workerId         uuid.UUID
+	failed           []failedRoutineTask
+	failedMutex      sync.Mutex
+	success          []preparedRoutineTask
+	successMutex     sync.Mutex
+	registries       map[enums.RoutineTaskPurpose]handlers.PurposeHandler
+	resultPublisher  ResultPublisher
+	runningPublisher RoutineTaskRunningPublisher
 }
 
 type RoutineTaskResultKind string
@@ -47,6 +50,11 @@ type RoutineTaskResult struct {
 }
 
 type ResultPublisher func(context.Context, RoutineTaskResult) error
+
+type RoutineTaskRunningPublisher func(
+	context.Context,
+	durablejobroutinetasktypes.RoutineTaskAssignment,
+) error
 
 type preparedRoutineTask struct {
 	preparedTask durablejobroutinetasktypes.PreparedRoutineTask
@@ -108,6 +116,12 @@ func (hm *HandlerManager) SetResultPublisher(publisher ResultPublisher) {
 	hm.resultPublisher = publisher
 }
 
+func (hm *HandlerManager) SetRoutineTaskRunningPublisher(
+	publisher RoutineTaskRunningPublisher,
+) {
+	hm.runningPublisher = publisher
+}
+
 func (hm *HandlerManager) Manage(
 	ctx context.Context,
 	assignments []durablejobroutinetasktypes.RoutineTaskAssignment,
@@ -139,6 +153,16 @@ func (hm *HandlerManager) Manage(
 				hm.activeWorkers.Add(-1)
 				hm.workerPool.Done()
 			}()
+
+			if hm.runningPublisher != nil {
+				if err := hm.runningPublisher(ctx, assignment); err != nil && logs.NotezyLogger != nil {
+					logs.NotezyLogger.Error(
+						ctx,
+						err,
+						"Failed to publish RoutineTask running lifecycle event",
+					)
+				}
+			}
 
 			preparedTask, err := registry.HandlerFunc(ctx, assignment)
 			if err != nil || preparedTask == nil {
