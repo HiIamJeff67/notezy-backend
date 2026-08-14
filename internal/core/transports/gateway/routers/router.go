@@ -5,6 +5,7 @@ import (
 
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
+	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
 	userdata "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/userdata"
 	authservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/auth"
 	blockservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/blocks"
@@ -20,6 +21,7 @@ import (
 
 func NewRouter(
 	authMiddleware gin.HandlerFunc,
+	apiKeyMiddleware gin.HandlerFunc,
 	authService authservices.AuthServiceInterface,
 	rootShelfService shelfservices.RootShelfServiceInterface,
 	stationService routineservices.StationServiceInterface,
@@ -47,12 +49,18 @@ func NewRouter(
 	coreRouterGroup := router.Group("/core/" + gatewaycontract.Version)
 	anonymousCoreRouterGroup := coreRouterGroup.Group("")
 	secureCoreRouterGroup := coreRouterGroup.Group("")
+	clientAuthMiddleware := authMiddleware
+	apiCompatibleAuthMiddleware := middlewares.EitherMiddleware(
+		[]gin.HandlerFunc{authMiddleware},
+		[]gin.HandlerFunc{apiKeyMiddleware},
+		func(ctx *gin.Context) bool { return contexts.IsClientGateway(ctx.Request.Context()) },
+	)[0]
 
 	authEndpoint := endpoints.NewAuthEndpoint(authService)
 	configureAnonymousAuthRoutes(anonymousCoreRouterGroup, authEndpoint)
 	configureAuthenticatedAuthRoutes(
 		secureCoreRouterGroup,
-		authMiddleware,
+		clientAuthMiddleware,
 		authEndpoint,
 		userDataCacheClient,
 	)
@@ -60,91 +68,91 @@ func NewRouter(
 	rootShelfEndpoint := endpoints.NewRootShelfEndpoint(rootShelfService)
 	configureRootShelfRoutes(
 		secureCoreRouterGroup,
-		authMiddleware,
+		apiCompatibleAuthMiddleware,
 		rootShelfEndpoint,
 	)
 	stationEndpoint := endpoints.NewStationEndpoint(stationService)
 	configureStationRoutes(
 		secureCoreRouterGroup,
-		authMiddleware,
+		apiCompatibleAuthMiddleware,
 		stationEndpoint,
 	)
 	userSettingEndpoint := endpoints.NewUserSettingEndpoint(userSettingService)
 	configureUserSettingRoutes(
 		secureCoreRouterGroup,
-		authMiddleware,
+		clientAuthMiddleware,
 		userSettingEndpoint,
 	)
 	userInfoEndpoint := endpoints.NewUserInfoEndpoint(userInfoService)
 	configureUserInfoRoutes(
 		secureCoreRouterGroup,
-		authMiddleware,
+		clientAuthMiddleware,
 		userInfoEndpoint,
 	)
 	userAccountEndpoint := endpoints.NewUserAccountEndpoint(userAccountService)
 	configureUserAccountRoutes(
 		secureCoreRouterGroup,
-		authMiddleware,
+		clientAuthMiddleware,
 		userAccountEndpoint,
 	)
 	userEndpoint := endpoints.NewUserEndpoint(userService)
 	configureUserRoutes(
 		secureCoreRouterGroup,
-		authMiddleware,
+		clientAuthMiddleware,
 		userEndpoint,
 	)
 	blockEndpoint := endpoints.NewBlockEndpoint(blockService)
 	configureBlockRoutes(
 		secureCoreRouterGroup,
-		authMiddleware,
+		apiCompatibleAuthMiddleware,
 		blockEndpoint,
 	)
 	realtimeEndpoint := endpoints.NewRealtimeEndpoint(realtimeService)
 	configureRealtimeRoutes(
 		secureCoreRouterGroup,
-		authMiddleware,
+		clientAuthMiddleware,
 		realtimeEndpoint,
 	)
 	routineTagEndpoint := endpoints.NewRoutineTagEndpoint(routineTagService)
 	configureRoutineTagRoutes(
 		secureCoreRouterGroup,
-		authMiddleware,
+		apiCompatibleAuthMiddleware,
 		routineTagEndpoint,
 	)
 	routineTaskRecordEndpoint := endpoints.NewRoutineTaskRecordEndpoint(routineTaskRecordService)
 	configureRoutineTaskRecordRoutes(
 		secureCoreRouterGroup,
-		authMiddleware,
+		clientAuthMiddleware,
 		routineTaskRecordEndpoint,
 	)
 	subShelfEndpoint := endpoints.NewSubShelfEndpoint(subShelfService)
 	configureSubShelfRoutes(
 		secureCoreRouterGroup,
-		authMiddleware,
+		apiCompatibleAuthMiddleware,
 		subShelfEndpoint,
 	)
 	blockPackEndpoint := endpoints.NewBlockPackEndpoint(blockPackService)
 	configureBlockPackRoutes(
 		secureCoreRouterGroup,
-		authMiddleware,
+		apiCompatibleAuthMiddleware,
 		blockPackEndpoint,
 	)
 	materialEndpoint := endpoints.NewMaterialEndpoint(materialService)
 	configureMaterialRoutes(
 		secureCoreRouterGroup,
-		authMiddleware,
+		apiCompatibleAuthMiddleware,
 		materialEndpoint,
 	)
 	routineEndpoint := endpoints.NewRoutineEndpoint(routineService)
 	configureRoutineRoutes(
 		secureCoreRouterGroup,
-		authMiddleware,
+		apiCompatibleAuthMiddleware,
 		routineEndpoint,
 	)
 	routineTaskEndpoint := endpoints.NewRoutineTaskEndpoint(routineTaskService)
 	configureRoutineTaskRoutes(
 		secureCoreRouterGroup,
-		authMiddleware,
+		apiCompatibleAuthMiddleware,
 		routineTaskEndpoint,
 	)
 	themeEndpoint := endpoints.NewThemeEndpoint(themeService)
@@ -152,13 +160,13 @@ func NewRouter(
 	itemEndpoint := endpoints.NewItemEndpoint(itemService)
 	configureItemRoutes(
 		secureCoreRouterGroup,
-		authMiddleware,
+		clientAuthMiddleware,
 		itemEndpoint,
 	)
 	badgeEndpoint := endpoints.NewBadgeEndpoint(badgeService)
 	configureBadgeRoutes(
 		secureCoreRouterGroup,
-		authMiddleware,
+		clientAuthMiddleware,
 		badgeEndpoint,
 	)
 

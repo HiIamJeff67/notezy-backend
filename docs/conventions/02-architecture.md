@@ -31,7 +31,7 @@ GraphQL: Gateway executor -> resolver/dataloader -> Gateway Core adapter -> Core
 | Repository/scope | Assemble persistence, permission, preload, soft-delete, and locking query | Import transport request/response or return HTTP status |
 
 Gateway binders own public transport parsing and validation. They live in
-`internal/gateway/transports/api/binders/`, alongside controllers. Controllers
+`internal/clientgateway/transports/api/binders/`, alongside controllers. Controllers
 receive validated request DTOs, invoke a Gateway adapter, and turn the result
 into the client response. They do not contain public HTTP parsing, domain rules,
 or data-access code.
@@ -52,15 +52,15 @@ explicit `AllowedPermissions...` middleware before `CallSecurly`; Core services
 that require resource authorization read the strict permission context and fail
 closed when that route policy is missing.
 
-The client-facing Gateway transport lives in
-`internal/gateway/transports/api/`. It owns routes, binders, controllers, and
+The client-facing ClientGateway transport lives in
+`internal/clientgateway/transports/api/`. It owns routes, binders, controllers, and
 client-only middlewares/interceptors. Reusable Gin cookie handlers live in
 `shared/cookies/`.
 `controller_func.go` defines the shared controller function type; binder packages
 must import it explicitly as `apitransport`.
 
 Gateway-to-microservice internal HTTP is separate at
-`internal/gateway/transports/core/`: its `adapters/` package is the
+`internal/clientgateway/transports/core/`: its `adapters/` package is the
 outbound client boundary. If a Core service concern later needs middleware or
 interceptors, it belongs under this transport, never under `api/`. Core's
 inbound Gateway transport is
@@ -73,6 +73,10 @@ internal/core/transports/
     endpoints/              # endpoint interfaces, handlers, and adjacent tests
     routers/                # HTTP route registration and adjacent router tests
 ```
+
+APIGateway is a separate runtime in `internal/apigateway/`. It owns its
+API-key entry point, Core adapter, Redis cache, rate limits, configuration,
+transports, and tests; it does not import ClientGateway source.
 
 An endpoint owns parsing the delegated envelope, invoking a Core service, and
 serializing the internal response. A router only constructs groups and binds

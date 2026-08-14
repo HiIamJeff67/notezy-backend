@@ -50,8 +50,10 @@ jobs:
             artifact: internal-cli
           - module: internal/core
             artifact: internal-core
-          - module: internal/gateway
-            artifact: internal-gateway
+          - module: internal/clientgateway
+            artifact: internal-clientgateway
+          - module: internal/apigateway
+            artifact: internal-apigateway
           - module: internal/durablejob
             artifact: internal-durablejob
           - module: internal/email
@@ -95,7 +97,8 @@ jobs:
           - module: contracts
           - module: shared
           - module: internal/core
-          - module: internal/gateway
+          - module: internal/clientgateway
+          - module: internal/apigateway
           - module: internal/durablejob
           - module: internal/email
           - module: internal/realtimegateway
@@ -130,8 +133,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runtime: gateway
-            dockerfile: internal/gateway/Dockerfile
+          - runtime: clientgateway
+            dockerfile: internal/clientgateway/Dockerfile
+            target: production
+          - runtime: apigateway
+            dockerfile: internal/apigateway/Dockerfile
             target: production
           - runtime: core
             dockerfile: internal/core/Dockerfile
@@ -173,8 +179,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - runtime: gateway
-            dockerfile: internal/gateway/Dockerfile
+          - runtime: clientgateway
+            dockerfile: internal/clientgateway/Dockerfile
+            target: production
+          - runtime: apigateway
+            dockerfile: internal/apigateway/Dockerfile
             target: production
           - runtime: core
             dockerfile: internal/core/Dockerfile

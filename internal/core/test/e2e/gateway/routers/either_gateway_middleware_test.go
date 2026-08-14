@@ -1,0 +1,95 @@
+package routers_test
+
+import (
+	"bytes"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/gin-gonic/gin"
+
+	rootshelvescontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/root-shelves"
+	userscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
+	corerouters "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/routers"
+	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
+)
+
+func TestEitherMiddlewareAllowsAPIOnlyForPublishedResourceDomains(t *testing.T) {
+	configureDelegationTestEnvironment(t)
+	apiToken := issueAPIDelegationToken(t, rootshelvescontract.GetMyRootShelfByIdOperation)
+	requestBody := requestBodyForOperation(rootshelvescontract.GetMyRootShelfByIdOperation)
+
+	router := newRouterForAuthSelection()
+	request := httptest.NewRequest(http.MethodPost, "/core/v1/root-shelves/get-by-id", bytes.NewReader(requestBody))
+	request.Header.Set("Authorization", "Bearer "+apiToken)
+	request.Header.Set("Content-Type", "application/json")
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, request)
+	if response.Code != http.StatusTeapot {
+		t.Fatalf("published resource selected the wrong middleware branch: got %d, want %d", response.Code, http.StatusTeapot)
+	}
+
+	apiToken = issueAPIDelegationToken(t, userscontract.GetMeOperation)
+	requestBody = requestBodyForOperation(userscontract.GetMeOperation)
+	request = httptest.NewRequest(http.MethodPost, "/core/v1/users/me", bytes.NewReader(requestBody))
+	request.Header.Set("Authorization", "Bearer "+apiToken)
+	request.Header.Set("Content-Type", "application/json")
+	response = httptest.NewRecorder()
+	router.ServeHTTP(response, request)
+	if response.Code != http.StatusUpgradeRequired {
+		t.Fatalf("client-only resource selected API middleware: got %d, want %d", response.Code, http.StatusUpgradeRequired)
+	}
+}
+
+func configureDelegationTestEnvironment(t *testing.T) {
+	t.Helper()
+	t.Setenv("CORE_DELEGATION_AUDIENCE", "notezy-api-test")
+	t.Setenv("CORE_DELEGATION_ISSUER", "notezy-gateway-test")
+	t.Setenv("CORE_DELEGATION_SECRET", "test-delegation-secret")
+}
+
+func issueAPIDelegationToken(t *testing.T, operation string) string {
+	t.Helper()
+	token, err := sharedtokens.GenerateDelegationToken(sharedtokens.DelegationTokenClaims{
+		Actor:         "gateway",
+		GatewaySource: sharedtokens.GatewaySourceAPI,
+		AuthMethod:    sharedtokens.AuthMethodAPIKey,
+		Operation:     operation,
+		RequestId:     "request-id",
+	})
+	if err != nil {
+		t.Fatalf("issue API delegation token: %v", err)
+	}
+	return *token
+}
+
+func requestBodyForOperation(operation string) []byte {
+	return []byte(`{"version":"v1","operation":"` + operation + `","metadata":{"requestId":"request-id"},"dto":{}}`)
+}
+
+func newRouterForAuthSelection() *gin.Engine {
+	return corerouters.NewRouter(
+		func(ctx *gin.Context) { ctx.AbortWithStatus(http.StatusUpgradeRequired) },
+		func(ctx *gin.Context) { ctx.AbortWithStatus(http.StatusTeapot) },
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+}

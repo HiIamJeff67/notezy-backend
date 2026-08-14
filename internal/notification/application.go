@@ -33,6 +33,10 @@ type Application struct {
 	ready   atomic.Bool
 }
 
+func NewApplication() *Application {
+	return &Application{}
+}
+
 func (a *Application) IsHealthy() bool {
 	return a.healthy.Load()
 }
@@ -41,8 +45,8 @@ func (a *Application) IsReady() bool {
 	return a.ready.Load()
 }
 
-func Start() func() {
-	application := &Application{}
+func (a *Application) Start() func() {
+	application := a
 	config, err := configs.LoadConfig()
 	if err != nil {
 		panic(err)
@@ -51,6 +55,8 @@ func Start() func() {
 		context.Background(),
 		observability.LoadConfig("notezy-notification"),
 	)
+
+	// Initialize persistence and Kafka dependencies before starting notification workers.
 	db, err := database.Connect(config.Database)
 	if err != nil {
 		shutdownObservability()
@@ -98,6 +104,7 @@ func Start() func() {
 	shutdownRelay := relay.Start(context.Background())
 	shutdownCleanup := cleanup.Start(context.Background())
 
+	// Start the internal HTTP transport after consumers and outbox workers are ready.
 	router := gin.New()
 	router.GET("/healthz", func(ctx *gin.Context) {
 		if !application.IsReady() {
@@ -136,6 +143,7 @@ func Start() func() {
 	}()
 
 	return func() {
+		// Stop background workers before closing the HTTP, Kafka, and database resources.
 		application.ready.Store(false)
 		application.healthy.Store(false)
 		shutdownCleanup()
@@ -152,4 +160,8 @@ func Start() func() {
 		}
 		shutdownObservability()
 	}
+}
+
+func Start() func() {
+	return NewApplication().Start()
 }

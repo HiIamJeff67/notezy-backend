@@ -39,6 +39,10 @@ type Application struct {
 	ready   atomic.Bool
 }
 
+func NewApplication() *Application {
+	return &Application{}
+}
+
 func (a *Application) IsHealthy() bool {
 	return a.healthy.Load()
 }
@@ -47,8 +51,8 @@ func (a *Application) IsReady() bool {
 	return a.ready.Load()
 }
 
-func Start() func() {
-	application := &Application{}
+func (a *Application) Start() func() {
+	application := a
 	config, err := realtimeconfig.LoadConfig()
 	if err != nil {
 		panic(err)
@@ -65,6 +69,8 @@ func Start() func() {
 		context.Background(),
 		observability.LoadConfig("notezy-realtime-gateway"),
 	)
+
+	// Initialize the Redis-backed caches used by realtime leases and rate limits.
 	redisClientSet, err := platformredis.NewClientSet(redisConfig)
 	if err != nil {
 		shutdownObservability()
@@ -84,11 +90,15 @@ func Start() func() {
 		panic(err)
 	}
 	rateLimitRecordCacheClient := ratelimitrecord.NewRateLimitRecordCacheClient(rateLimitRecordCacheStore)
+
+	// Create both process-owned limiters before registering routes, then inject
+	// the instances into the middleware chain.
 	upgradeRateLimitConfig := realtimeconfig.DefaultUpgradeRateLimitConfig()
 	upgradeRateLimitConfig.CacheClient = rateLimitRecordCacheClient
 	unauthorizedRateLimiter := ratelimit.NewHybridRateLimiter(upgradeRateLimitConfig, false)
 	authorizedRateLimiter := ratelimit.NewHybridRateLimiter(upgradeRateLimitConfig, true)
 
+	// Build the HTTP and websocket gateway routes after their dependencies exist.
 	router := gin.Default()
 	if err := router.SetTrustedProxies(config.TrustedProxies); err != nil {
 		unauthorizedRateLimiter.Stop()
@@ -194,6 +204,7 @@ func Start() func() {
 	}()
 
 	return func() {
+		// Stop request handling and background workers before closing shared caches.
 		application.ready.Store(false)
 		application.healthy.Store(false)
 		shutdownLifecycleConsumer()
@@ -212,4 +223,8 @@ func Start() func() {
 		}
 		shutdownObservability()
 	}
+}
+
+func Start() func() {
+	return NewApplication().Start()
 }

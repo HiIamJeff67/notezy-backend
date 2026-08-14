@@ -7,8 +7,9 @@ import (
 )
 
 func main() {
+	application := durablejob.NewApplication()
 	if len(os.Args) == 1 {
-		shutdown := durablejob.Start()
+		shutdown := application.Start()
 		defer shutdown()
 	}
 

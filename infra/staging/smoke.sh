@@ -76,8 +76,10 @@ check_yjs_worker() {
 	return 1
 }
 
-check_http notezy-gateway "${DOCKER_GIN_PORT:-7777}" /startedz
-check_http notezy-gateway "${DOCKER_GIN_PORT:-7777}" /healthz
+check_http notezy-client-gateway "${DOCKER_GIN_PORT:-7777}" /startedz
+check_http notezy-client-gateway "${DOCKER_GIN_PORT:-7777}" /healthz
+check_http notezy-api-gateway "${DOCKER_API_GATEWAY_PORT:-7780}" /startedz
+check_http notezy-api-gateway "${DOCKER_API_GATEWAY_PORT:-7780}" /healthz
 check_http notezy-core 7778 /startedz
 check_http notezy-core 7778 /healthz
 check_http notezy-realtime-gateway 7779 /startedz

@@ -30,7 +30,7 @@ func (r *BadgeRepository) GetOneById(
 
 	badge := schemas.Badge{}
 
-	query := parsedOptions.DB.Table(schemas.Badge{}.TableName())
+	query := parsedOptions.DB.Model(&schemas.Badge{})
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
 			query = query.Preload(string(preload))

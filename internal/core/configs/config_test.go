@@ -20,6 +20,7 @@ func TestLoadConfig(t *testing.T) {
 	t.Setenv("KAFKA_CONSUMER_INITIAL_RETRY_BACKOFF", "250ms")
 	t.Setenv("KAFKA_CONSUMER_MAXIMUM_RETRY_BACKOFF", "5s")
 	t.Setenv("KAFKA_CONSUMER_MAXIMUM_POLL_RECORDS", "100")
+	t.Setenv("CORE_QUOTA_CYCLE_WORKER_INTERVAL", "24h")
 	t.Setenv("STORAGE_KEY_SALT", "salt")
 	t.Setenv("CORE_USER_DATA_CACHE_EXPIRES_IN", "1h")
 	t.Setenv("YJS_DOCUMENT_INITIALIZATION_WORKER_URL", "http://notezy-yjs-worker:8787/core/yjs-document-initialization/v1")

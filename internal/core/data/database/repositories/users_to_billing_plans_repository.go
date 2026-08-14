@@ -39,7 +39,7 @@ func (r *UsersToBillingPlansRepository) GetOnyById(
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	var usersToBillingPlans schemas.UsersToBillingPlans
-	result := parsedOptions.DB.Table(schemas.UsersToBillingPlans{}.TableName()).
+	result := parsedOptions.DB.Model(&schemas.UsersToBillingPlans{}).
 		Where("id = ? and user_id = ?", id, userId).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&usersToBillingPlans)
@@ -59,7 +59,7 @@ func (r *UsersToBillingPlansRepository) GetAllByUserId(
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	var usersToBillingPlans []schemas.UsersToBillingPlans
-	result := parsedOptions.DB.Table(schemas.UsersToBillingPlans{}.TableName()).
+	result := parsedOptions.DB.Model(&schemas.UsersToBillingPlans{}).
 		Where("user_id = ?", userId).
 		Find(&usersToBillingPlans)
 	if exception := exceptions.Cover(nil, []exceptions.Pair{

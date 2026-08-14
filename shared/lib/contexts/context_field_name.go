@@ -18,6 +18,9 @@ const (
 	ContextFieldName_User_Role           ContextFieldName = "User-Role"           // enums.UserRole
 	ContextFieldName_User_Plan           ContextFieldName = "User-Plan"           // enums.UserPlan
 	ContextFieldName_Allowed_Permissions ContextFieldName = "Allowed-Permissions" // []enums.AccessControlPermission
+	ContextFieldName_Gateway_Source      ContextFieldName = "Gateway-Source"      // string: client | api
+	ContextFieldName_Auth_Method         ContextFieldName = "Auth-Method"         // string: jwt | api-key
+	ContextFieldName_API_Key_Id          ContextFieldName = "API-Key-Id"          // string (never the raw key)
 
 	ContextFieldName_GinContext          ContextFieldName = "GinContext"          // gin.Context
 	ContextFieldName_FormDataFileHeaders ContextFieldName = "FormDataFileHeaders" // []*multipart.FileHeader

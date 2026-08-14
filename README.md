@@ -14,7 +14,8 @@ connections, and asynchronous workers into independently runnable runtimes:
 
 | Runtime | Responsibility |
 | --- | --- |
-| `internal/gateway` | Public HTTP/GraphQL entry point, client cookies, request safety, and internal Core adapter calls. |
+| `internal/clientgateway` | Client-facing HTTP/GraphQL entry point, client cookies, request safety, and internal Core adapter calls. |
+| `internal/apigateway` | Independent API-key HTTP entry point for external integrations, with its own Core adapter, Redis cache, rate limits, configuration, transports, and tests. |
 | `internal/core` | PostgreSQL-backed business operations, authorization, repositories, cache ownership, and transactional outbox publishing. |
 | `internal/realtimegateway` | Realtime/WebSocket gateway, ticket verification, connection admission, realtime leases, presence, and YjsWorker connections. |
 | `internal/durablejob` | Durable-job consumers and scheduling strategies. Core remains the owner of database-backed task state. |
@@ -25,7 +26,12 @@ The main request paths are:
 
 ```text
 Client HTTP/GraphQL
-    -> Gateway
+    -> ClientGateway
+    -> Core
+    -> PostgreSQL / Redis
+
+External API-key HTTP
+    -> APIGateway
     -> Core
     -> PostgreSQL / Redis
 
@@ -39,9 +45,10 @@ Core
     -> DurableJob / Email / Realtime consumers
 ```
 
-Gateway and RealtimeGateway are separate public edges. Realtime traffic does
-not pass through the HTTP Gateway. Core owns business authorization and durable
-state; RealtimeGateway owns connection state and realtime Redis data.
+ClientGateway and APIGateway are separate HTTP processes, while
+RealtimeGateway is the WebSocket edge. Realtime traffic does not pass through
+either HTTP gateway. Core owns business authorization and durable state;
+RealtimeGateway owns connection state and realtime Redis data.
 
 ## Repository layout
 
@@ -50,14 +57,16 @@ contracts/                         Versioned cross-runtime contracts
   core/v1/                          Core API, events, and GraphQL contracts
   durablejob/v1/                    DurableJob contracts
   email/v1/                         Email contracts
-  gateway/v1/                       Gateway request/response envelope
+  client-gateway/v1/                ClientGateway public request/response envelope
+  api-gateway/v1/                   APIGateway public request/response contract
   realtime-gateway/v1/              RealtimeGateway contracts
   yjs-worker/v1/                    YjsWorker contracts
   types/                            Portable shared contract shapes
 
 internal/
   cli/                              Shared Cobra command runner
-  gateway/                          Public HTTP/GraphQL gateway
+  clientgateway/                    ClientGateway runtime
+  apigateway/                       APIGateway runtime
   core/                             Core runtime and data ownership
   realtimegateway/                  Realtime/WebSocket gateway runtime
   durablejob/                       Durable-job runtime
@@ -71,8 +80,9 @@ docs/                               Architecture, conventions, contracts, and ru
 ```
 
 Each Go runtime has its own `go.mod`, Dockerfile, application composition root,
-and Cobra commands. Runtime code must not import another runtime's source. The
-`contracts` and `shared` modules are the supported cross-runtime boundaries.
+and Cobra commands. ClientGateway and APIGateway also own separate edge
+transports, Core adapters, Redis caches, rate limits, configurations, and
+tests; runtime dependencies cross only through `contracts` and `shared`.
 
 ## Local development
 

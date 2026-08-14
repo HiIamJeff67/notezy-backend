@@ -41,7 +41,7 @@ func (r *ThemeRepository) GetOneById(
 
 	var theme schemas.Theme
 
-	query := parsedOptions.DB.Table(schemas.Theme{}.TableName())
+	query := parsedOptions.DB.Model(&schemas.Theme{})
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
 			query = query.Preload(string(preload))
@@ -64,7 +64,7 @@ func (r *ThemeRepository) GetAll(
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	var themes []schemas.Theme
-	result := parsedOptions.DB.Table(schemas.Theme{}.TableName()).
+	result := parsedOptions.DB.Model(&schemas.Theme{}).
 		Find(&themes)
 	if err := result.Error; err != nil {
 		return nil, apiexceptions.NewThemeException().NotFound().WithOrigin(err)
@@ -143,7 +143,7 @@ func (r *ThemeRepository) DeleteOneById(
 	// * If you need to use the functionality of RETURNING from PostgreSQL
 	// var deletedTheme schemas.Theme
 
-	// result := r.db.Table(schemas.Theme{}.TableName()).
+	// result := r.db.Model(&schemas.Theme{}).
 	// 	Where("id = ? AND author_id = ?", id, authorId).
 	// 	Clauses(clause.Returning{}).
 	// 	Delete(&deletedTheme)

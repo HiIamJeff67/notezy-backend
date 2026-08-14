@@ -1,10 +1,11 @@
 # ============================== Workspace Commands ============================== #
 
-WORKSPACE_MODULES := contracts shared internal/cli internal/core internal/gateway internal/durablejob internal/email internal/notification internal/realtimegateway test
+WORKSPACE_MODULES := contracts shared internal/cli internal/core internal/durablejob internal/email internal/clientgateway internal/apigateway internal/notification internal/realtimegateway test
 
 .PHONY: ci-format ci-vet ci-unit ci-race ci-generated ci-containers staging-deploy staging-smoke kafka-topics \
 	compose-integration-up compose-integration-down test-integration test-integration-kafka \
-	compose-up compose-down test-integration-managed env-check env-encrypt env-decrypt env-edit env-updatekeys env-rotate
+	compose-up compose-down test-integration-managed env-check env-encrypt env-decrypt env-edit env-updatekeys env-rotate \
+	test-client-gateway test-api-gateway
 
 COMPOSE_INTEGRATION_PROJECT := notezy-integration
 COMPOSE_INTEGRATION_FILE := infra/docker/docker-compose.integration.yaml
@@ -85,7 +86,7 @@ ci-generated:
 
 ci-containers:
 	@set -e; \
-	for runtime in gateway core durablejob email notification realtimegateway yjsworker; do \
+	for runtime in clientgateway apigateway core durablejob email notification realtimegateway yjsworker; do \
 		echo "docker build $$runtime"; \
 		target=production; \
 		if [ "$$runtime" = yjsworker ]; then target=runtime; fi; \
@@ -143,7 +144,13 @@ test-core:
 	$(MAKE) -C internal/core test
 
 test-gateway:
-	$(MAKE) -C internal/gateway test
+	$(MAKE) -C internal/clientgateway test
+
+test-client-gateway:
+	$(MAKE) -C internal/clientgateway test
+
+test-api-gateway:
+	$(MAKE) -C internal/apigateway test
 
 test-durable-job:
 	$(MAKE) -C internal/durablejob test

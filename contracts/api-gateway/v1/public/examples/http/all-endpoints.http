@@ -1,0 +1,1364 @@
+@apiGatewayBaseUrl = http://localhost/api/development/v1
+@apiKey = replace-with-your-api-key
+@userAgent = NotezyHttpFile/1.0
+@id = 1
+@userPublicId = 00000000-0000-4000-8000-000000000001
+@stationId = 00000000-0000-4000-8000-000000000001
+@routineId = 00000000-0000-4000-8000-000000000001
+@routineTagId = 00000000-0000-4000-8000-000000000001
+@routineTaskId = 00000000-0000-4000-8000-000000000001
+@rootShelfId = 00000000-0000-4000-8000-000000000001
+@subShelfId = 00000000-0000-4000-8000-000000000001
+@prevSubShelfId = 00000000-0000-4000-8000-000000000001
+@parentSubShelfId = 00000000-0000-4000-8000-000000000001
+@materialId = 00000000-0000-4000-8000-000000000001
+@blockPackId = 00000000-0000-4000-8000-000000000001
+@blockId = 00000000-0000-4000-8000-000000000001
+@itemId = 00000000-0000-4000-8000-000000000001
+
+### DELETE Delete My Block Packs By Ids
+DELETE {{apiGatewayBaseUrl}}/block-packs/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "blockPackIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### POST Create Block Packs
+POST {{apiGatewayBaseUrl}}/block-packs/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "createdBlockPacks": [
+    {
+      "headerBackgroundURL": "https://example.com",
+      "icon": "😀",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "name": "example",
+      "parentSubShelfId": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}
+
+### PUT Update My Block Packs By Ids
+PUT {{apiGatewayBaseUrl}}/block-packs/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "updatedBlockPacks": [
+    {
+      "blockPackId": "00000000-0000-4000-8000-000000000001",
+      "setNull": {},
+      "values": {
+        "headerBackgroundURL": "https://example.com",
+        "icon": "😀",
+        "name": "example"
+      }
+    }
+  ]
+}
+
+### PUT Move My Block Packs By Parent Sub Shelf Ids
+PUT {{apiGatewayBaseUrl}}/block-packs/batch/position
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "movedBlockPacks": [
+    {
+      "blockPackIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "destinationParentSubShelfId": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}
+
+### PATCH Restore My Block Packs By Ids
+PATCH {{apiGatewayBaseUrl}}/block-packs/batch/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "blockPackIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### PUT Move My Block Packs By Parent Sub Shelf Id
+PUT {{apiGatewayBaseUrl}}/block-packs/position
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "blockPackIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ],
+  "destinationParentSubShelfId": "00000000-0000-4000-8000-000000000001"
+}
+
+### GET Get All My Block Packs By Root Shelf Id
+GET {{apiGatewayBaseUrl}}/block-packs/root-shelf/{{rootShelfId}}?areDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### GET Get My Block Packs By Parent Sub Shelf Id
+GET {{apiGatewayBaseUrl}}/block-packs/sub-shelf/{{parentSubShelfId}}?areDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### POST Create Block Pack
+POST {{apiGatewayBaseUrl}}/block-packs/sub-shelf/{{parentSubShelfId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "headerBackgroundURL": "https://example.com",
+  "icon": "😀",
+  "id": "00000000-0000-4000-8000-000000000001",
+  "name": "example",
+  "parentSubShelfId": "00000000-0000-4000-8000-000000000001"
+}
+
+### DELETE Delete My Block Pack By Id
+DELETE {{apiGatewayBaseUrl}}/block-packs/{{blockPackId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+### GET Get My Block Pack By Id
+GET {{apiGatewayBaseUrl}}/block-packs/{{blockPackId}}?isDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### PUT Update My Block Pack By Id
+PUT {{apiGatewayBaseUrl}}/block-packs/{{blockPackId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "setNull": {},
+  "values": {
+    "headerBackgroundURL": "https://example.com",
+    "icon": "😀",
+    "name": "example"
+  }
+}
+
+### GET Get My Block Pack And Its Parent By Id
+GET {{apiGatewayBaseUrl}}/block-packs/{{blockPackId}}/parent
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### PUT Move My Block Pack By Parent Sub Shelf Id
+PUT {{apiGatewayBaseUrl}}/block-packs/{{blockPackId}}/position
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "blockPackId": "00000000-0000-4000-8000-000000000001",
+  "destinationParentSubShelfId": "00000000-0000-4000-8000-000000000001"
+}
+
+### PATCH Restore My Block Pack By Id
+PATCH {{apiGatewayBaseUrl}}/block-packs/{{blockPackId}}/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+### GET Get My Blocks By Ids
+GET {{apiGatewayBaseUrl}}/blocks/batch?blockIds=00000000-0000-4000-8000-000000000001
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### GET Get My Blocks By Block Pack Id
+GET {{apiGatewayBaseUrl}}/blocks/block-pack/{{blockPackId}}
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### GET Get My Block By Id
+GET {{apiGatewayBaseUrl}}/blocks/{{blockId}}
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### DELETE Delete My Materials By Ids
+DELETE {{apiGatewayBaseUrl}}/materials/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "materialIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### PUT Move My Materials By Ids
+PUT {{apiGatewayBaseUrl}}/materials/batch/parent
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "destinationParentSubShelfId": "00000000-0000-4000-8000-000000000001",
+  "materialIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### PATCH Restore My Materials By Ids
+PATCH {{apiGatewayBaseUrl}}/materials/batch/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "materialIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### GET Get All My Materials By Root Shelf Id
+GET {{apiGatewayBaseUrl}}/materials/root-shelf/{{rootShelfId}}?areDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### GET Get My Materials By Parent Sub Shelf Id
+GET {{apiGatewayBaseUrl}}/materials/sub-shelf/{{parentSubShelfId}}?areDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### POST Create My Material
+POST {{apiGatewayBaseUrl}}/materials/sub-shelf/{{parentSubShelfId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "name": "example",
+  "parentSubShelfId": "00000000-0000-4000-8000-000000000001"
+}
+
+### DELETE Delete My Material By Id
+DELETE {{apiGatewayBaseUrl}}/materials/{{materialId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+### GET Get My Material By Id
+GET {{apiGatewayBaseUrl}}/materials/{{materialId}}?isDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### PUT Update My Material By Id
+PUT {{apiGatewayBaseUrl}}/materials/{{materialId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "setNull": {},
+  "values": {
+    "name": "example"
+  }
+}
+
+### PUT Save My Material By Id
+PUT {{apiGatewayBaseUrl}}/materials/{{materialId}}/content
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "contentFile": [
+    1
+  ]
+}
+
+### GET Get My Material And Its Parent By Id
+GET {{apiGatewayBaseUrl}}/materials/{{materialId}}/parent
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### PUT Move My Material By Id
+PUT {{apiGatewayBaseUrl}}/materials/{{materialId}}/parent
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "destinationParentSubShelfId": "00000000-0000-4000-8000-000000000001",
+  "materialId": "00000000-0000-4000-8000-000000000001"
+}
+
+### PATCH Restore My Material By Id
+PATCH {{apiGatewayBaseUrl}}/materials/{{materialId}}/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+### POST Create Root Shelf
+POST {{apiGatewayBaseUrl}}/root-shelves
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "id": "00000000-0000-4000-8000-000000000001",
+  "name": "example"
+}
+
+### DELETE Delete My Root Shelves By Ids
+DELETE {{apiGatewayBaseUrl}}/root-shelves/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "rootShelfIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### POST Create Root Shelves
+POST {{apiGatewayBaseUrl}}/root-shelves/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "insertedRootShelves": [
+    {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "name": "example"
+    }
+  ]
+}
+
+### PUT Update My Root Shelves By Ids
+PUT {{apiGatewayBaseUrl}}/root-shelves/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "updatedRootShelves": [
+    {
+      "rootShelfId": "00000000-0000-4000-8000-000000000001",
+      "setNull": {},
+      "values": {
+        "name": "example"
+      }
+    }
+  ]
+}
+
+### PATCH Restore My Root Shelves By Ids
+PATCH {{apiGatewayBaseUrl}}/root-shelves/batch/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "rootShelfIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### DELETE Leave My Root Shelves
+DELETE {{apiGatewayBaseUrl}}/root-shelves/memberships/me
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "rootShelves": [
+    {
+      "rootShelfId": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}
+
+### DELETE Delete My Root Shelf By Id
+DELETE {{apiGatewayBaseUrl}}/root-shelves/{{rootShelfId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "rootShelfId": "00000000-0000-4000-8000-000000000001"
+}
+
+### GET Get My Root Shelf By Id
+GET {{apiGatewayBaseUrl}}/root-shelves/{{rootShelfId}}?isDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### PUT Update My Root Shelf By Id
+PUT {{apiGatewayBaseUrl}}/root-shelves/{{rootShelfId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "setNull": {},
+  "values": {
+    "name": "example"
+  }
+}
+
+### DELETE Leave My Root Shelf
+DELETE {{apiGatewayBaseUrl}}/root-shelves/{{rootShelfId}}/memberships/me
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+### POST Transfer My Root Shelf Ownership
+POST {{apiGatewayBaseUrl}}/root-shelves/{{rootShelfId}}/ownership
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "targetUserPublicId": "00000000-0000-4000-8000-000000000001"
+}
+
+### DELETE Delete My Root Shelf Permissions
+DELETE {{apiGatewayBaseUrl}}/root-shelves/{{rootShelfId}}/permissions
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "userPublicIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### PUT Upsert My Root Shelf Permissions
+PUT {{apiGatewayBaseUrl}}/root-shelves/{{rootShelfId}}/permissions
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "permissions": [
+    {
+      "permission": "Read",
+      "userPublicId": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}
+
+### DELETE Delete My Root Shelf Permission
+DELETE {{apiGatewayBaseUrl}}/root-shelves/{{rootShelfId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+### GET Get My Root Shelf Permission
+GET {{apiGatewayBaseUrl}}/root-shelves/{{rootShelfId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### PATCH Update My Root Shelf Permission
+PATCH {{apiGatewayBaseUrl}}/root-shelves/{{rootShelfId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+### POST Create My Root Shelf Permission
+POST {{apiGatewayBaseUrl}}/root-shelves/{{rootShelfId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "permission": "Read"
+}
+
+### PUT Upsert My Root Shelf Permission
+PUT {{apiGatewayBaseUrl}}/root-shelves/{{rootShelfId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+### PATCH Restore My Root Shelf By Id
+PATCH {{apiGatewayBaseUrl}}/root-shelves/{{rootShelfId}}/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "rootShelfId": "00000000-0000-4000-8000-000000000001"
+}
+
+### GET Get All My Routine Tags
+GET {{apiGatewayBaseUrl}}/routine-tags?areDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### POST Create Routine Tag
+POST {{apiGatewayBaseUrl}}/routine-tags
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "color": "example",
+  "icon": "example",
+  "id": "00000000-0000-4000-8000-000000000001",
+  "name": "example"
+}
+
+### POST Create Routine Tags
+POST {{apiGatewayBaseUrl}}/routine-tags/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "createdRoutineTags": [
+    {
+      "color": "example",
+      "icon": "example",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "name": "example"
+    }
+  ]
+}
+
+### PUT Update My Routine Tags By Ids
+PUT {{apiGatewayBaseUrl}}/routine-tags/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "updatedRoutineTags": [
+    {
+      "routineTagId": "00000000-0000-4000-8000-000000000001",
+      "setNull": {},
+      "values": {
+        "color": "example",
+        "icon": "example",
+        "name": "example"
+      }
+    }
+  ]
+}
+
+### DELETE Hard Delete My Routine Tags By Ids
+DELETE {{apiGatewayBaseUrl}}/routine-tags/batch/permanently
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "routineTagIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### GET Get My Routine Tag By Id
+GET {{apiGatewayBaseUrl}}/routine-tags/{{routineTagId}}?isDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### PUT Update My Routine Tag By Id
+PUT {{apiGatewayBaseUrl}}/routine-tags/{{routineTagId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "setNull": {},
+  "values": {
+    "color": "example",
+    "icon": "example",
+    "name": "example"
+  }
+}
+
+### DELETE Hard Delete My Routine Tag By Id
+DELETE {{apiGatewayBaseUrl}}/routine-tags/{{routineTagId}}/permanently
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+### GET Get All My Routine Tasks
+GET {{apiGatewayBaseUrl}}/routine-tasks?areDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### DELETE Hard Delete My Routine Tasks By Ids
+DELETE {{apiGatewayBaseUrl}}/routine-tasks/batch/permanently
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "routineTaskIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### POST Create Routine Task By Routine Id
+POST {{apiGatewayBaseUrl}}/routine-tasks/routine/{{routineId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "maxAttempts": 1,
+  "nextScheduledAt": "2026-01-01T00:00:00Z",
+  "payload": {},
+  "period": "Daily",
+  "priority": 1,
+  "purpose": "CreateRootShelf",
+  "routineId": "00000000-0000-4000-8000-000000000001",
+  "title": "example"
+}
+
+### GET Get All My Routine Tasks By Routine Ids
+GET {{apiGatewayBaseUrl}}/routine-tasks/routines?areDeleted=true&routineIds=00000000-0000-4000-8000-000000000001
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### GET Visualize My Routine Task Actual Ended At Count
+GET {{apiGatewayBaseUrl}}/routine-tasks/visualizations/actual-ended-at-count
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### GET Visualize My Routine Task Actual Started At Count
+GET {{apiGatewayBaseUrl}}/routine-tasks/visualizations/actual-started-at-count
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### GET Visualize My Routine Task Purpose Count
+GET {{apiGatewayBaseUrl}}/routine-tasks/visualizations/purpose-count
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### GET Visualize My Routine Task Scheduled At Count
+GET {{apiGatewayBaseUrl}}/routine-tasks/visualizations/scheduled-at-count?permission=Read&queryRangeEndedAt=2026-01-01T00%3A00%3A00Z&queryRangeStartedAt=2026-01-01T00%3A00%3A00Z&timeHourUnit=1
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### GET Visualize My Routine Task Status Count
+GET {{apiGatewayBaseUrl}}/routine-tasks/visualizations/status-count?permission=Read
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### GET Get My Routine Task By Id
+GET {{apiGatewayBaseUrl}}/routine-tasks/{{routineTaskId}}?isDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### PUT Update My Routine Task By Id
+PUT {{apiGatewayBaseUrl}}/routine-tasks/{{routineTaskId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "routineTaskId": "00000000-0000-4000-8000-000000000001",
+  "setNull": {},
+  "values": {
+    "maxAttempts": 1,
+    "nextScheduledAt": "2026-01-01T00:00:00Z",
+    "payload": {},
+    "period": "Daily",
+    "priority": 1,
+    "purpose": "CreateRootShelf",
+    "routineId": "00000000-0000-4000-8000-000000000001",
+    "title": "example"
+  }
+}
+
+### DELETE Hard Delete My Routine Task By Id
+DELETE {{apiGatewayBaseUrl}}/routine-tasks/{{routineTaskId}}/permanently
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "routineTaskId": "00000000-0000-4000-8000-000000000001"
+}
+
+### DELETE Resume My Routine Task By Id
+DELETE {{apiGatewayBaseUrl}}/routine-tasks/{{routineTaskId}}/suspension
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "routineTaskId": "00000000-0000-4000-8000-000000000001"
+}
+
+### PUT Pause My Routine Task By Id
+PUT {{apiGatewayBaseUrl}}/routine-tasks/{{routineTaskId}}/suspension
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "routineTaskId": "00000000-0000-4000-8000-000000000001"
+}
+
+### GET Get All My Routines By Time Range
+GET {{apiGatewayBaseUrl}}/routines?areDeleted=true&from=2026-01-01T00%3A00%3A00Z&stationIds=00000000-0000-4000-8000-000000000001&to=2026-01-01T00%3A00%3A00Z
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### DELETE Delete My Routines By Ids
+DELETE {{apiGatewayBaseUrl}}/routines/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "routineIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### POST Create Routines By Station Ids
+POST {{apiGatewayBaseUrl}}/routines/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "createdRoutines": [
+    {
+      "description": "example",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "isPinned": true,
+      "period": "Daily",
+      "scheduledEndAt": "2026-01-01T00:00:00Z",
+      "scheduledStartAt": "2026-01-01T00:00:00Z",
+      "stationId": "00000000-0000-4000-8000-000000000001",
+      "status": "Scheduled",
+      "timezone": "example",
+      "title": "example"
+    }
+  ]
+}
+
+### PUT Update My Routines By Ids
+PUT {{apiGatewayBaseUrl}}/routines/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "updatedRoutines": [
+    {
+      "routineId": "00000000-0000-4000-8000-000000000001",
+      "setNull": {},
+      "values": {
+        "description": "example",
+        "isPinned": true,
+        "period": "Daily",
+        "scheduledEndAt": "2026-01-01T00:00:00Z",
+        "scheduledStartAt": "2026-01-01T00:00:00Z",
+        "stationId": "00000000-0000-4000-8000-000000000001",
+        "status": "Scheduled",
+        "timezone": "example",
+        "title": "example"
+      }
+    }
+  ]
+}
+
+### DELETE Hard Delete My Routines By Ids
+DELETE {{apiGatewayBaseUrl}}/routines/batch/permanently
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+### PATCH Restore My Routines By Ids
+PATCH {{apiGatewayBaseUrl}}/routines/batch/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "routineIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### POST Link Routine Items By Ids
+POST {{apiGatewayBaseUrl}}/routines/items
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "isUnlink": true,
+  "linkedRoutinesAndItems": [
+    {
+      "itemId": "00000000-0000-4000-8000-000000000001",
+      "itemType": "BlockPack",
+      "routineId": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}
+
+### GET Get My Routines By Station Id
+GET {{apiGatewayBaseUrl}}/routines/station/{{stationId}}?areDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### POST Create Routine By Station Id
+POST {{apiGatewayBaseUrl}}/routines/station/{{stationId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "description": "example",
+  "id": "00000000-0000-4000-8000-000000000001",
+  "isPinned": true,
+  "period": "Daily",
+  "scheduledEndAt": "2026-01-01T00:00:00Z",
+  "scheduledStartAt": "2026-01-01T00:00:00Z",
+  "stationId": "00000000-0000-4000-8000-000000000001",
+  "status": "Scheduled",
+  "timezone": "example",
+  "title": "example"
+}
+
+### POST Link Routine Tags By Ids
+POST {{apiGatewayBaseUrl}}/routines/tags
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "isUnlink": true,
+  "linkedRoutinesAndTags": [
+    {
+      "routineId": "00000000-0000-4000-8000-000000000001",
+      "routineTagId": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}
+
+### GET Visualize My Routine Period Count
+GET {{apiGatewayBaseUrl}}/routines/visualizations/period-count
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### GET Visualize My Routine Scheduled End At Count
+GET {{apiGatewayBaseUrl}}/routines/visualizations/scheduled-end-at-count
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### GET Visualize My Routine Scheduled Start At Count
+GET {{apiGatewayBaseUrl}}/routines/visualizations/scheduled-start-at-count?permission=Read&queryRangeEndedAt=2026-01-01T00%3A00%3A00Z&queryRangeStartedAt=2026-01-01T00%3A00%3A00Z&timeHourUnit=1
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### GET Visualize My Routine Status Count
+GET {{apiGatewayBaseUrl}}/routines/visualizations/status-count?permission=Read
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### DELETE Delete My Routine By Id
+DELETE {{apiGatewayBaseUrl}}/routines/{{routineId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "routineId": "00000000-0000-4000-8000-000000000001"
+}
+
+### GET Get My Routine By Id
+GET {{apiGatewayBaseUrl}}/routines/{{routineId}}?isDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### PUT Update My Routine By Id
+PUT {{apiGatewayBaseUrl}}/routines/{{routineId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "routineId": "00000000-0000-4000-8000-000000000001",
+  "setNull": {},
+  "values": {
+    "description": "example",
+    "isPinned": true,
+    "period": "Daily",
+    "scheduledEndAt": "2026-01-01T00:00:00Z",
+    "scheduledStartAt": "2026-01-01T00:00:00Z",
+    "stationId": "00000000-0000-4000-8000-000000000001",
+    "status": "Scheduled",
+    "timezone": "example",
+    "title": "example"
+  }
+}
+
+### POST Link Routine Item By Id
+POST {{apiGatewayBaseUrl}}/routines/{{routineId}}/items/{{itemId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "isUnlink": true,
+  "itemId": "00000000-0000-4000-8000-000000000001",
+  "itemType": "BlockPack",
+  "routineId": "00000000-0000-4000-8000-000000000001"
+}
+
+### DELETE Hard Delete My Routine By Id
+DELETE {{apiGatewayBaseUrl}}/routines/{{routineId}}/permanently
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+### PATCH Restore My Routine By Id
+PATCH {{apiGatewayBaseUrl}}/routines/{{routineId}}/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "routineId": "00000000-0000-4000-8000-000000000001"
+}
+
+### POST Link Routine Tag By Id
+POST {{apiGatewayBaseUrl}}/routines/{{routineId}}/tags/{{routineTagId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "isUnlink": true,
+  "routineId": "00000000-0000-4000-8000-000000000001",
+  "routineTagId": "00000000-0000-4000-8000-000000000001"
+}
+
+### GET Get All My Stations
+GET {{apiGatewayBaseUrl}}/stations?areDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### POST Create Station
+POST {{apiGatewayBaseUrl}}/stations
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "description": "example",
+  "headerBackgroundURL": "https://example.com",
+  "icon": "example",
+  "id": "00000000-0000-4000-8000-000000000001",
+  "name": "example"
+}
+
+### DELETE Delete My Stations By Ids
+DELETE {{apiGatewayBaseUrl}}/stations/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "stationIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### POST Create Stations
+POST {{apiGatewayBaseUrl}}/stations/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "createdStations": [
+    {
+      "description": "example",
+      "headerBackgroundURL": "https://example.com",
+      "icon": "example",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "name": "example"
+    }
+  ]
+}
+
+### PUT Update My Stations By Ids
+PUT {{apiGatewayBaseUrl}}/stations/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "updatedStations": [
+    {
+      "setNull": {},
+      "stationId": "00000000-0000-4000-8000-000000000001",
+      "values": {
+        "description": "example",
+        "headerBackgroundURL": "https://example.com",
+        "icon": "example",
+        "name": "example"
+      }
+    }
+  ]
+}
+
+### DELETE Hard Delete My Stations By Ids
+DELETE {{apiGatewayBaseUrl}}/stations/batch/permanently
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "stationIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### PATCH Restore My Stations By Ids
+PATCH {{apiGatewayBaseUrl}}/stations/batch/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "stationIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### DELETE Leave My Stations
+DELETE {{apiGatewayBaseUrl}}/stations/memberships/me
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "stations": [
+    {
+      "stationId": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}
+
+### GET Visualize My Total Count
+GET {{apiGatewayBaseUrl}}/stations/visualizations/total-count?permission=Read
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### DELETE Delete My Station By Id
+DELETE {{apiGatewayBaseUrl}}/stations/{{stationId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "stationId": "00000000-0000-4000-8000-000000000001"
+}
+
+### GET Get My Station By Id
+GET {{apiGatewayBaseUrl}}/stations/{{stationId}}?isDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### PUT Update My Station By Id
+PUT {{apiGatewayBaseUrl}}/stations/{{stationId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "setNull": {},
+  "values": {
+    "description": "example",
+    "headerBackgroundURL": "https://example.com",
+    "icon": "example",
+    "name": "example"
+  }
+}
+
+### DELETE Leave My Station
+DELETE {{apiGatewayBaseUrl}}/stations/{{stationId}}/memberships/me
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+### POST Transfer My Station Ownership
+POST {{apiGatewayBaseUrl}}/stations/{{stationId}}/ownership
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "targetUserPublicId": "00000000-0000-4000-8000-000000000001"
+}
+
+### DELETE Hard Delete My Station By Id
+DELETE {{apiGatewayBaseUrl}}/stations/{{stationId}}/permanently
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "stationId": "00000000-0000-4000-8000-000000000001"
+}
+
+### DELETE Delete My Station Permissions
+DELETE {{apiGatewayBaseUrl}}/stations/{{stationId}}/permissions
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "userPublicIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### PUT Upsert My Station Permissions
+PUT {{apiGatewayBaseUrl}}/stations/{{stationId}}/permissions
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "permissions": [
+    {
+      "permission": "Read",
+      "userPublicId": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}
+
+### DELETE Delete My Station Permission
+DELETE {{apiGatewayBaseUrl}}/stations/{{stationId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+### GET Get My Station Permission
+GET {{apiGatewayBaseUrl}}/stations/{{stationId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### PATCH Update My Station Permission
+PATCH {{apiGatewayBaseUrl}}/stations/{{stationId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+### POST Create My Station Permission
+POST {{apiGatewayBaseUrl}}/stations/{{stationId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "permission": "Read"
+}
+
+### PUT Upsert My Station Permission
+PUT {{apiGatewayBaseUrl}}/stations/{{stationId}}/permissions/{{userPublicId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+### PATCH Restore My Station By Id
+PATCH {{apiGatewayBaseUrl}}/stations/{{stationId}}/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "stationId": "00000000-0000-4000-8000-000000000001"
+}
+
+### DELETE Delete My Sub Shelves By Ids
+DELETE {{apiGatewayBaseUrl}}/sub-shelves/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "subShelfIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### POST Create Sub Shelves By Root Shelf Ids
+POST {{apiGatewayBaseUrl}}/sub-shelves/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "createdSubShelves": [
+    {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "name": "example",
+      "prevSubShelfId": "00000000-0000-4000-8000-000000000001",
+      "rootShelfId": "00000000-0000-4000-8000-000000000001"
+    }
+  ]
+}
+
+### PUT Update My Sub Shelves By Ids
+PUT {{apiGatewayBaseUrl}}/sub-shelves/batch
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "updatedSubShelves": [
+    {
+      "setNull": {},
+      "subShelfId": "00000000-0000-4000-8000-000000000001",
+      "values": {
+        "name": "example"
+      }
+    }
+  ]
+}
+
+### PUT Move My Sub Shelves By Root Shelf Ids
+PUT {{apiGatewayBaseUrl}}/sub-shelves/batch/position
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "movedSubShelves": [
+    {
+      "destinationRootShelfId": "00000000-0000-4000-8000-000000000001",
+      "destinationSubShelfId": "00000000-0000-4000-8000-000000000001",
+      "sourceRootShelfId": "00000000-0000-4000-8000-000000000001",
+      "sourceSubShelfIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ]
+    }
+  ]
+}
+
+### PATCH Restore My Sub Shelves By Ids
+PATCH {{apiGatewayBaseUrl}}/sub-shelves/batch/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "subShelfIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### PUT Move My Sub Shelves By Root Shelf Id
+PUT {{apiGatewayBaseUrl}}/sub-shelves/position
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "destinationRootShelfId": "00000000-0000-4000-8000-000000000001",
+  "destinationSubShelfId": "00000000-0000-4000-8000-000000000001",
+  "sourceRootShelfId": "00000000-0000-4000-8000-000000000001",
+  "sourceSubShelfIds": [
+    "00000000-0000-4000-8000-000000000001"
+  ]
+}
+
+### GET Get My Sub Shelves By Prev Sub Shelf Id
+GET {{apiGatewayBaseUrl}}/sub-shelves/prev-sub-shelf/{{prevSubShelfId}}?areDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### GET Get My Sub Shelves And Items By Prev Sub Shelf Id
+GET {{apiGatewayBaseUrl}}/sub-shelves/prev-sub-shelf/{{prevSubShelfId}}/items?areDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### GET Get All My Sub Shelves By Root Shelf Id
+GET {{apiGatewayBaseUrl}}/sub-shelves/root-shelf/{{rootShelfId}}?areDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### POST Create Sub Shelf By Root Shelf Id
+POST {{apiGatewayBaseUrl}}/sub-shelves/root-shelf/{{rootShelfId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "id": "00000000-0000-4000-8000-000000000001",
+  "name": "example",
+  "prevSubShelfId": "00000000-0000-4000-8000-000000000001",
+  "rootShelfId": "00000000-0000-4000-8000-000000000001"
+}
+
+### DELETE Delete My Sub Shelf By Id
+DELETE {{apiGatewayBaseUrl}}/sub-shelves/{{subShelfId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+### GET Get My Sub Shelf By Id
+GET {{apiGatewayBaseUrl}}/sub-shelves/{{subShelfId}}?isDeleted=true
+User-Agent: {{userAgent}}
+X-API-Key: {{apiKey}}
+
+### PUT Update My Sub Shelf By Id
+PUT {{apiGatewayBaseUrl}}/sub-shelves/{{subShelfId}}
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "setNull": {},
+  "values": {
+    "name": "example"
+  }
+}
+
+### PUT Move My Sub Shelf By Root Shelf Id
+PUT {{apiGatewayBaseUrl}}/sub-shelves/{{subShelfId}}/position
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "destinationRootShelfId": "00000000-0000-4000-8000-000000000001",
+  "destinationSubShelfId": "00000000-0000-4000-8000-000000000001",
+  "sourceRootShelfId": "00000000-0000-4000-8000-000000000001",
+  "sourceSubShelfId": "00000000-0000-4000-8000-000000000001"
+}
+
+### PATCH Restore My Sub Shelf By Id
+PATCH {{apiGatewayBaseUrl}}/sub-shelves/{{subShelfId}}/restore
+User-Agent: {{userAgent}}
+Content-Type: application/json
+X-API-Key: {{apiKey}}

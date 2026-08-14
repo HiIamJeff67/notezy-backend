@@ -1,4 +1,6 @@
-# Notezy RealtimeGateway v1 public API
+# Deprecated RealtimeGateway v1 artifact
+
+This legacy output is retained temporarily for migration compatibility. Use `contracts/realtime-gateway/v1/public/` for the current RealtimeGateway public contract.
 
 This directory specifies every versioned endpoint emitted directly by RealtimeGateway v1.
 

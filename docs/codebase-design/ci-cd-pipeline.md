@@ -11,7 +11,7 @@ or `internal/cli`; a pipeline must not duplicate a second test workflow.
 
 - formatting, `go vet`, unit tests, and `go test -race` for every Go module;
 - a clean-tree check after regenerating GraphQL artifacts;
-- production container builds for the five Go runtimes and the Yjs Worker;
+- production container builds for the six Go runtimes and the Yjs Worker;
 - publishing runtime images to GitHub Container Registry after a version tag
   passes every gate.
 
@@ -31,7 +31,7 @@ the `staging` environment. On a self-hosted runner labeled `staging`, it runs
 `infra/docker/docker-compose.prod.yaml` with the selected GHCR tag, promotes
 immutable images through `infra/staging/deploy.sh`, and checks every runtime's
 `/startedz` and `/healthz` with `infra/staging/smoke.sh`. Compose accepts
-`GATEWAY_IMAGE`, `CORE_IMAGE`, `DURABLE_JOB_IMAGE`, `EMAIL_IMAGE`,
+`CLIENT_GATEWAY_IMAGE`, `API_GATEWAY_IMAGE`, `CORE_IMAGE`, `DURABLE_JOB_IMAGE`, `EMAIL_IMAGE`,
 `REALTIME_GATEWAY_IMAGE`, and `YJS_WORKER_IMAGE`, so promotion does not rebuild
 images. The staging runner may provide plaintext settings in
 `/etc/notezy/staging.env` for compatibility, or provide an encrypted

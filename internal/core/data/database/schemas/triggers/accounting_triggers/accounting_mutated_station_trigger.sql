@@ -4,10 +4,7 @@ DECLARE
     target_plan_name TEXT;
     max_station_count INTEGER;
     max_routine_count_per_station INTEGER;
-    max_routine_task_cost_unit_count INTEGER;
-    routine_task_cost_unit_delta BIGINT;
     transferred_station_count BIGINT;
-    transferred_routine_task_cost_unit_count BIGINT;
 BEGIN
     IF TG_OP <> 'UPDATE' THEN
         RAISE EXCEPTION 'Invalid operation for trigger_function_accounting_mutated_station: %. Expected UPDATE.', TG_OP
@@ -21,12 +18,10 @@ BEGIN
     SELECT
         pl.max_station_count,
         pl.max_routine_count_per_station,
-        pl.max_routine_task_cost_unit_count,
         u.plan::TEXT
     INTO
         max_station_count,
         max_routine_count_per_station,
-        max_routine_task_cost_unit_count,
         target_plan_name
     FROM "UserTable" u
     JOIN "PlanLimitationTable" pl ON pl.key = u.plan
@@ -43,17 +38,10 @@ BEGIN
         USING ERRCODE = 'check_violation';
     END IF;
 
-    SELECT COALESCE(sum(rt.cost_unit), 0)
-    INTO routine_task_cost_unit_delta
-    FROM "RoutineTaskTable" rt
-    JOIN "RoutineTable" r ON r.id = rt.routine_id
-    WHERE r.station_id = NEW.id;
-
     UPDATE "UserAccountTable"
     SET
         station_count = GREATEST(0, station_count - 1),
         routine_count = GREATEST(0, routine_count - OLD.routine_count),
-        routine_task_cost_unit_count = GREATEST(0, routine_task_cost_unit_count - routine_task_cost_unit_delta),
         updated_at = NOW()
     WHERE user_id = OLD.owner_id;
 
@@ -66,19 +54,17 @@ BEGIN
     SET
         station_count = station_count + 1,
         routine_count = routine_count + NEW.routine_count,
-        routine_task_cost_unit_count = routine_task_cost_unit_count + routine_task_cost_unit_delta,
         updated_at = NOW()
     WHERE user_id = NEW.owner_id
-    RETURNING station_count, routine_task_cost_unit_count
-    INTO transferred_station_count, transferred_routine_task_cost_unit_count;
+    RETURNING station_count
+    INTO transferred_station_count;
 
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Data integrity: Cannot find UserAccount of the new Station owner (Owner ID: %).', NEW.owner_id
         USING ERRCODE = 'integrity_constraint_violation';
     END IF;
 
-    IF transferred_station_count > max_station_count
-        OR transferred_routine_task_cost_unit_count > max_routine_task_cost_unit_count THEN
+    IF transferred_station_count > max_station_count THEN
         RAISE EXCEPTION 'Quota exceeded while transferring Station ownership to plan "%".', target_plan_name
         USING ERRCODE = 'check_violation';
     END IF;

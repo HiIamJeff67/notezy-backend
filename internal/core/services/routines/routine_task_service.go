@@ -66,6 +66,7 @@ type RoutineTaskService struct {
 	routineTaskScope            scopes.RoutineTaskScopeInterface
 	routineTaskRepository       repositories.RoutineTaskRepositoryInterface
 	routineTaskRecordRepository repositories.RoutineTaskRecordRepositoryInterface
+	userQuotaRepository         repositories.UserQuotaRepositoryInterface
 	routineTaskExecutionService RoutineTaskExecutionServiceInterface
 }
 
@@ -75,6 +76,7 @@ func NewRoutineTaskService(
 	routineTaskScope scopes.RoutineTaskScopeInterface,
 	routineTaskRepository repositories.RoutineTaskRepositoryInterface,
 	routineTaskRecordRepository repositories.RoutineTaskRecordRepositoryInterface,
+	userQuotaRepository repositories.UserQuotaRepositoryInterface,
 	routineTaskExecutionServices ...RoutineTaskExecutionServiceInterface,
 ) RoutineTaskServiceInterface {
 	if db == nil {
@@ -87,6 +89,9 @@ func NewRoutineTaskService(
 		routineTaskRecordRepository = repositories.NewRoutineTaskRecordRepository(
 			scopes.NewRoutineTaskRecordScope(),
 		)
+	}
+	if userQuotaRepository == nil {
+		userQuotaRepository = repositories.NewUserQuotaRepository()
 	}
 	var routineTaskExecutionService RoutineTaskExecutionServiceInterface
 	if len(routineTaskExecutionServices) > 0 {
@@ -102,6 +107,7 @@ func NewRoutineTaskService(
 		routineTaskScope:            routineTaskScope,
 		routineTaskRepository:       routineTaskRepository,
 		routineTaskRecordRepository: routineTaskRecordRepository,
+		userQuotaRepository:         userQuotaRepository,
 		routineTaskExecutionService: routineTaskExecutionService,
 	}
 }
@@ -1132,6 +1138,9 @@ func (s *RoutineTaskService) ClaimRoutineTasks(
 
 	type claimableRoutineTask struct {
 		Id          uuid.UUID `gorm:"column:id;"`
+		ActorUserId uuid.UUID `gorm:"column:actor_user_id;"`
+		CostUnit    int64     `gorm:"column:cost_unit;"`
+		Priority    int32     `gorm:"column:priority;"`
 		ScheduledAt time.Time `gorm:"column:scheduled_at;"`
 	}
 
@@ -1139,7 +1148,7 @@ func (s *RoutineTaskService) ClaimRoutineTasks(
 	var claimableRoutineTasks []claimableRoutineTask
 	result = tx.
 		Model(&schemas.RoutineTask{}).
-		Select("id, scheduled_at").
+		Select("id, actor_user_id, cost_unit, priority, scheduled_at").
 		Where("status = ?", enums.RoutineTaskStatus_Idle).
 		Where("scheduled_at <= ?", now).
 		Where("attempts < max_attempts").
@@ -1160,6 +1169,59 @@ func (s *RoutineTaskService) ClaimRoutineTasks(
 			http.StatusInternalServerError,
 			true,
 		).WithOrigin(result.Error)
+	}
+
+	if len(claimableRoutineTasks) > 0 {
+		consumptionInputs := make([]inputs.ConsumeRoutineTaskCostUnitInput, len(claimableRoutineTasks))
+		actorUserIdSet := make(map[uuid.UUID]struct{}, len(claimableRoutineTasks))
+		for index, routineTask := range claimableRoutineTasks {
+			consumptionInputs[index] = inputs.ConsumeRoutineTaskCostUnitInput{
+				RoutineTaskId: routineTask.Id,
+				UserId:        routineTask.ActorUserId,
+				CostUnit:      routineTask.CostUnit,
+				Priority:      routineTask.Priority,
+				ScheduledAt:   routineTask.ScheduledAt,
+			}
+			actorUserIdSet[routineTask.ActorUserId] = struct{}{}
+		}
+
+		actorUserIds := make([]uuid.UUID, 0, len(actorUserIdSet))
+		for actorUserId := range actorUserIdSet {
+			actorUserIds = append(actorUserIds, actorUserId)
+		}
+
+		if exception := s.userQuotaRepository.InitializeMissingForUserIds(
+			ctx,
+			actorUserIds,
+			now,
+			options.WithTransactionDB(tx),
+		); exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
+
+		consumedRoutineTaskIds, exception := s.userQuotaRepository.ConsumeRoutineTaskCostUnits(
+			ctx,
+			consumptionInputs,
+			options.WithTransactionDB(tx),
+		)
+		if exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
+
+		consumedRoutineTaskIdSet := make(map[uuid.UUID]struct{}, len(consumedRoutineTaskIds))
+		for _, routineTaskId := range consumedRoutineTaskIds {
+			consumedRoutineTaskIdSet[routineTaskId] = struct{}{}
+		}
+
+		consumableRoutineTasks := make([]claimableRoutineTask, 0, len(claimableRoutineTasks))
+		for _, routineTask := range claimableRoutineTasks {
+			if _, ok := consumedRoutineTaskIdSet[routineTask.Id]; ok {
+				consumableRoutineTasks = append(consumableRoutineTasks, routineTask)
+			}
+		}
+		claimableRoutineTasks = consumableRoutineTasks
 	}
 
 	if len(claimableRoutineTasks) == 0 {

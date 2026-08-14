@@ -38,7 +38,8 @@ if [ -n "$compose_encrypted_env_file" ]; then
 	compose_env_file=$temporary_env_file
 fi
 
-export GATEWAY_IMAGE="$IMAGE_REGISTRY/notezy-gateway:$IMAGE_TAG"
+export CLIENT_GATEWAY_IMAGE="$IMAGE_REGISTRY/notezy-client-gateway:$IMAGE_TAG"
+export API_GATEWAY_IMAGE="$IMAGE_REGISTRY/notezy-api-gateway:$IMAGE_TAG"
 export CORE_IMAGE="$IMAGE_REGISTRY/notezy-core:$IMAGE_TAG"
 export DURABLE_JOB_IMAGE="$IMAGE_REGISTRY/notezy-durablejob:$IMAGE_TAG"
 export EMAIL_IMAGE="$IMAGE_REGISTRY/notezy-email:$IMAGE_TAG"

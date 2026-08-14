@@ -8,13 +8,15 @@ Notezy adopts a staged migration rather than a one-time domain/database split. `
 
 ```text
 internal/
- gateway/commands/
+ clientgateway/commands/        # ClientGateway command
+ apigateway/commands/           # APIGateway command
  core/commands/
  realtimegateway/commands/
  durablejob/commands/
  email/commands/
 contracts/
-  gateway/v1/              # Gateway-owned private request/response envelope
+  client-gateway/v1/       # ClientGateway-owned public request/response envelope
+  api-gateway/v1/          # APIGateway-owned public request/response contract
   core/
     v1/
       api/                 # Core-owned HTTP and GraphQL operation DTOs
@@ -30,7 +32,7 @@ contracts/
   realtime-gateway/v1/     # RealtimeGateway-owned internal boundary
   yjs-worker/v1/           # YjsWorker-owned internal boundary
 internal/
-  gateway/
+  clientgateway/                 # ClientGateway-owned edge implementation
     transports/
       api/
         binders/
@@ -95,7 +97,7 @@ tests/
 
 Directories are created only when they receive an owned implementation. Runtime
 composition roots and Cobra commands live under their owning runtime's `commands/`
-directory (`internal/gateway/commands/`, `internal/core/commands/`, and so on). GraphQL
+directory (`internal/clientgateway/commands/`, `internal/apigateway/commands/`, `internal/core/commands/`, and so on). GraphQL
 SDL, generated artifacts, and generator configuration live under
 `contracts/core/v1/graphql/`. Later issues establish the remaining owners; no
 empty directory tree is committed merely to mirror this diagram.
@@ -109,7 +111,8 @@ contracts/go.mod
 shared/go.mod
 internal/core/go.mod
 internal/cli/go.mod
-internal/gateway/go.mod
+internal/clientgateway/go.mod
+internal/apigateway/go.mod
 internal/durablejob/go.mod
 internal/email/go.mod
 internal/realtimegateway/go.mod
@@ -146,8 +149,9 @@ than the cross-runtime contract.
 
 ```text
 runtime commands -> owning internal runtime
-gateway -> contracts + shared
-gateway -X-> service data/repository
+clientgateway -> contracts + shared + own edge implementation
+apigateway -> contracts + shared + own edge implementation
+clientgateway -X-> service data/repository
 internal/<runtime>/* -> contracts + shared + own data
 internal/<runtime>/* -X-> another runtime's source
 shared/lib -X-> all Notezy packages
@@ -194,7 +198,7 @@ Neither layer owns transactions, business workflows, or persistence queries.
 
 Gateway internal-API adapters are outbound clients reusable by REST and
 GraphQL. They live in
-`internal/gateway/transports/core/adapters/`; client transport code must
+`internal/clientgateway/transports/core/adapters/`; client transport code must
 not contain Core service client implementation. Core transports are
 inbound adapters: they verify the internal delegation credential, map a
 versioned request to a Core service call, and map the service result to a
@@ -209,9 +213,10 @@ methods. Delegation and Core-owned authorization middleware belongs in
 `internal/core/transports/gateway/middlewares/`. Tests live beside
 their endpoint, router, or middleware target.
 
-`internal/gateway/commands`, `internal/core/commands`, and
+`internal/clientgateway/commands`, `internal/apigateway/commands`, `internal/core/commands`, and
 `internal/realtimegateway/commands` are independent composition
-roots. API Gateway accepts HTTP and GraphQL browser traffic only; Core owns
+roots. ClientGateway accepts browser HTTP and GraphQL traffic; APIGateway accepts
+the allowlisted external API-key resource HTTP traffic; Core owns
 PostgreSQL-backed operations and its private listener; RealtimeGateway is the
 separate WebSocket edge runtime, directly addressed by the Nginx WebSocket
 upstream. RealtimeGateway owns connection admission, ticket verification, Redis
@@ -348,6 +353,26 @@ Core quota functions are one-function-per-file under
 `internal/core/data/cache/userdata/libraries/`. The UserData store
 embeds and joins them into one `user_quota_library`, then performs a single
 `FUNCTION LOAD REPLACE` during `Initialize()`.
+
+### Monthly RoutineTask execution quota
+
+RoutineTask payload cost remains an immutable task attribute, calculated by the
+database trigger. Monthly execution consumption is separate from that payload
+accounting: `UserQuotaTable` stores the actor-owned consumed cost units and its
+cycle timestamps. `QuotaCycleWorker` is a Core-owned daily reconciliation loop;
+it initializes missing quota rows from the active billing cycle (or account
+creation for a free user) and resets rows whose `next_reset_at` has elapsed.
+RoutineTask claim atomically consumes the task creator's accumulated cost units
+against the creator's current plan limit in the same transaction that changes a
+task to `Running`. Consequently, sharing a RoutineTask does not charge the user
+who happens to execute or view it, and an unavailable/late worker cannot make a
+task execute beyond the monthly quota.
+
+`GetMyAccountResponseDto.routineTaskCostUnitCount` remains temporarily for
+client contract compatibility, but now reports the actor's monthly consumed
+execution cost from `UserQuotaTable`. Clients must not use it to reject
+RoutineTask creation or payload edits; quota is enforced only when Core claims
+an execution.
 
 ### Registration and operation flow
 

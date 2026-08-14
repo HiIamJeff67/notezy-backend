@@ -115,7 +115,7 @@ exception := exceptions.New(
 
 - `shared/contexts` contains only generic `context.Context` value
   helpers; it never imports exceptions or framework code.
-- `internal/gateway/contexts` owns Gin/request-context parsing and the
+- `internal/clientgateway/contexts` owns Gin/request-context parsing and the
   route-declared permission set used to construct an outbound delegation.
 - `internal/core/contexts` owns verified API-service context values,
   including permissions reconstructed from the verified delegation credential.

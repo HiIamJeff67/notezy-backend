@@ -7,8 +7,9 @@ import (
 )
 
 func main() {
+	application := notification.NewApplication()
 	if len(os.Args) == 1 {
-		shutdown := notification.Start()
+		shutdown := application.Start()
 		defer shutdown()
 	}
 

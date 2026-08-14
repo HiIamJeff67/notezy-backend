@@ -1,4 +1,6 @@
-# Notezy Gateway v1 public API
+# Deprecated Gateway v1 artifact
+
+This legacy output is retained temporarily for migration compatibility. It is no longer the public contract and must not be linked from external documentation. Use `contracts/api-gateway/v1/public/` for the APIGateway integration API and `contracts/client-gateway/v1/public/` for the ClientGateway user/client boundary.
 
 This directory contains the machine-readable and human-readable contract for all 168 versioned routes currently emitted by Gateway v1.
 

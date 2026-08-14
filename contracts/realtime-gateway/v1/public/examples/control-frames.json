@@ -1,0 +1,29 @@
+{
+  "clientToServer": [
+    {"version":1,"type":"subscribe","requestId":"sub-1","channelType":"BlockPack","channelId":"00000000-0000-4000-8000-000000000001","channelTicket":"<single-use-channel-ticket>"},
+    {"version":1,"type":"ack","requestId":"ack-1","connectorChannelId":1,"sequence":42},
+    {"version":1,"type":"ping","requestId":"ping-1"},
+    {"version":1,"type":"heartbeat","requestId":"heartbeat-1"},
+    {"version":1,"type":"unsubscribe","requestId":"unsub-1","connectorChannelId":1}
+  ],
+  "serverToClient": [
+    {"version":1,"type":"ready","connectionId":"00000000-0000-4000-8000-000000000002","resubscribeRequired":true},
+    {"version":1,"type":"subscribed","requestId":"sub-1","channelType":"BlockPack","channelId":"00000000-0000-4000-8000-000000000001","connectorChannelId":1,"existing":false,"documentQuotaPolicyVersion":1,"maximumBlockCount":1000,"participants":[]},
+    {"version":1,"type":"acknowledged","requestId":"ack-1","connectorChannelId":1,"sequence":42},
+    {"version":1,"type":"pong","requestId":"ping-1"},
+    {"version":1,"type":"heartbeat","requestId":"heartbeat-1","unixMilliNow":1767225600000},
+    {"version":1,"type":"presence-joined","channelType":"BlockPack","channelId":"00000000-0000-4000-8000-000000000001","participant":{"userPublicId":"00000000-0000-4000-8000-000000000003","channelPermission":"write","connectionCount":1}},
+    {"version":1,"type":"presence-updated","channelType":"BlockPack","channelId":"00000000-0000-4000-8000-000000000001","participant":{"userPublicId":"00000000-0000-4000-8000-000000000003","channelPermission":"read","connectionCount":2}},
+    {"version":1,"type":"presence-left","channelType":"BlockPack","channelId":"00000000-0000-4000-8000-000000000001","participant":{"userPublicId":"00000000-0000-4000-8000-000000000003","channelPermission":"read","connectionCount":0}},
+    {"version":1,"type":"resource-event","eventId":"00000000-0000-4000-8000-000000000004","eventType":"RootShelfPermissionChanged","resourceId":"00000000-0000-4000-8000-000000000005","targetUserPublicId":"00000000-0000-4000-8000-000000000003","change":"permission_updated","permission":"write"},
+    {"version":1,"type":"notification","eventId":"00000000-0000-4000-8000-000000000006","notificationId":"00000000-0000-4000-8000-000000000007","notificationType":"security-alert","priority":"important","templateKey":"security.alert","templateVersion":1,"payload":{},"createdAt":"2026-01-01T00:00:00Z"},
+	{"version":1,"type":"routine-task-lifecycle","eventId":"00000000-0000-4000-8000-000000000008","routineTaskId":"00000000-0000-4000-8000-000000000009","routineTaskRecordId":"00000000-0000-4000-8000-000000000010","routineId":"00000000-0000-4000-8000-000000000011","purpose":"CreateBlockPack","status":"running","attempt":1,"occurredAt":"2026-01-01T00:00:00Z"},
+    {"version":1,"type":"unsubscribed","requestId":"unsub-1","channelType":"BlockPack","channelId":"00000000-0000-4000-8000-000000000001","connectorChannelId":1},
+    {"version":1,"type":"error","requestId":"sub-1","connectorChannelId":1,"code":"invalid_channel_ticket","message":"channel ticket is invalid"}
+  ],
+  "binaryFrameLayoutExamples": {
+    "yjsDocumentHex": "010100000001<payload>",
+    "awarenessHex": "010200000001<payload>",
+    "note": "The first byte is protocol version, second byte is frame type, next four bytes are big-endian connectorChannelId, and the remainder is raw binary payload."
+  }
+}

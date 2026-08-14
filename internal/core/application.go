@@ -23,6 +23,7 @@ import (
 	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
 
 	coreconfig "github.com/HiIamJeff67/notezy-backend/internal/core/configs"
+	apikeycache "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/apikey"
 	userdata "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/userdata"
 	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
@@ -57,6 +58,10 @@ type Application struct {
 	ready   atomic.Bool
 }
 
+func NewApplication() *Application {
+	return &Application{}
+}
+
 func (a *Application) IsHealthy() bool {
 	return a.healthy.Load()
 }
@@ -70,6 +75,7 @@ func NewCoreTransportRouter(
 	kafkaProducer *platformkafka.Producer,
 	userDataCacheClient *userdata.UserDataCacheClient,
 	yjsDocumentInitializationClient *yjsworkertransport.DocumentInitializationClient,
+	apiKeyCacheClient *apikeycache.APIKeyCacheClient,
 ) *gin.Engine {
 	validator := validation.New()
 
@@ -155,6 +161,7 @@ func NewCoreTransportRouter(
 		data.NotezyDB,
 		userRepository,
 		userAccountRepository,
+		repositories.NewUserQuotaRepository(),
 		oauthService,
 	)
 	userService := userservices.NewUserService(
@@ -234,15 +241,22 @@ func NewCoreTransportRouter(
 		routineTaskScope,
 		routineTaskRepository,
 		routineTaskRecordRepository,
+		repositories.NewUserQuotaRepository(),
 		routineTaskExecutionService,
 	)
 	themeService := otherservices.NewThemeService(data.NotezyDB)
 	itemService := shelfservices.NewItemService(data.NotezyDB, itemScope)
 	badgeService := otherservices.NewBadgeService(data.NotezyDB)
 	authMiddleware := coremiddlewares.AuthMiddleware(userRepository)
+	apiKeyMiddleware := coremiddlewares.APIKeyMiddleware(
+		repositories.NewAPIKeyRepository(),
+		userRepository,
+		apiKeyCacheClient,
+	)
 
 	router := gatewayrouters.NewRouter(
 		authMiddleware,
+		apiKeyMiddleware,
 		authService,
 		rootShelfService,
 		stationService,
@@ -287,8 +301,8 @@ func newKafkaConsumerConfig(
 	}
 }
 
-func Start() func() {
-	application := &Application{}
+func (a *Application) Start() func() {
+	application := a
 	config, err := coreconfig.LoadConfig()
 	if err != nil {
 		panic(err)
@@ -310,6 +324,8 @@ func Start() func() {
 		context.Background(),
 		observability.LoadConfig("notezy-core"),
 	)
+
+	// Initialize shared infrastructure before constructing Core repositories and workers.
 	redisClientSet, err := platformredis.NewClientSet(redisConfig)
 	if err != nil {
 		shutdownObservability()
@@ -327,6 +343,7 @@ func Start() func() {
 		panic(errors.New("failed to initialize Core database schema"))
 	}
 
+	// Build cache clients and asynchronous workers used by the Core transport.
 	userDataCacheStore, err := userdata.Register(context.Background(), redisClientSet)
 	if err != nil {
 		exception := exceptions.New(
@@ -349,6 +366,7 @@ func Start() func() {
 		panic(exception)
 	}
 	userDataCacheClient := userdata.NewUserDataCacheClient(config.UserDataCache, userDataCacheStore)
+	apiKeyCacheClient := apikeycache.NewAPIKeyCacheClient(redisClientSet)
 	yjsDocumentInitializationClient := yjsworkertransport.NewDocumentInitializationClient(
 		config.YjsDocumentInitialization,
 	)
@@ -383,6 +401,12 @@ func Start() func() {
 		repositories.NewOutboxEventRepository(),
 	)
 	shutdownYjsMaintenanceReconciliationWorker := yjsMaintenanceReconciliationWorker.Start(context.Background())
+	quotaCycleWorker := coreworkers.NewQuotaCycleWorker(
+		data.NotezyDB,
+		config.QuotaCycleWorker,
+		repositories.NewUserQuotaRepository(),
+	)
+	shutdownQuotaCycleWorker := quotaCycleWorker.Start(context.Background())
 	routineTaskExecutionService := routineservices.NewRoutineTaskExecutionService(
 		validation.New(),
 		data.NotezyDB,
@@ -395,6 +419,7 @@ func Start() func() {
 			scopes.NewRoutineTaskScope(),
 			repositories.NewRoutineTaskRepository(scopes.NewRoutineTaskScope()),
 			repositories.NewRoutineTaskRecordRepository(scopes.NewRoutineTaskRecordScope()),
+			repositories.NewUserQuotaRepository(),
 			routineTaskExecutionService,
 		),
 		newKafkaConsumerConfig(
@@ -412,6 +437,7 @@ func Start() func() {
 			scopes.NewRoutineTaskScope(),
 			repositories.NewRoutineTaskRepository(scopes.NewRoutineTaskScope()),
 			repositories.NewRoutineTaskRecordRepository(scopes.NewRoutineTaskRecordScope()),
+			repositories.NewUserQuotaRepository(),
 			routineTaskExecutionService,
 		),
 		newKafkaConsumerConfig(
@@ -466,6 +492,7 @@ func Start() func() {
 	)
 	shutdownYjsCommandConsumer := yjsCommandConsumer.Start(context.Background())
 
+	// Bind the transport only after all consumers, workers, and dependencies are ready.
 	coreTransportListener, err := net.Listen("tcp", config.ListenAddress)
 	if err != nil {
 		fmt.Println("Failed to listen for Core service transport: ", err)
@@ -473,6 +500,7 @@ func Start() func() {
 		shutdownYjsMaintenanceResultConsumer()
 		shutdownYjsMaintenanceRequestConsumer()
 		shutdownYjsMaintenanceReconciliationWorker()
+		shutdownQuotaCycleWorker()
 		shutdownRoutineTaskResultConsumer()
 		shutdownRoutineTaskClaimConsumer()
 		shutdownOutboxRelay()
@@ -489,6 +517,7 @@ func Start() func() {
 		kafkaProducer,
 		userDataCacheClient,
 		yjsDocumentInitializationClient,
+		apiKeyCacheClient,
 	)
 	status.ConfigureStartedRouter(coreTransportRouter, application.IsHealthy)
 	status.ConfigureHealthRouter(coreTransportRouter, application.IsReady)
@@ -503,6 +532,7 @@ func Start() func() {
 	}()
 
 	return func() {
+		// Stop serving requests before shutting down workers and shared infrastructure.
 		application.ready.Store(false)
 		application.healthy.Store(false)
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -514,6 +544,7 @@ func Start() func() {
 		shutdownYjsMaintenanceResultConsumer()
 		shutdownYjsMaintenanceRequestConsumer()
 		shutdownYjsMaintenanceReconciliationWorker()
+		shutdownQuotaCycleWorker()
 		shutdownRoutineTaskResultConsumer()
 		shutdownRoutineTaskClaimConsumer()
 		shutdownOutboxRelay()
@@ -538,4 +569,8 @@ func Start() func() {
 		_ = data.DisconnectToDatabase(data.NotezyDB)
 		shutdownObservability()
 	}
+}
+
+func Start() func() {
+	return NewApplication().Start()
 }

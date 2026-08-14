@@ -3,7 +3,7 @@ package main
 import "path/filepath"
 
 func writeRealtimeArtifacts(root string) {
-	base := filepath.Join(root, "contracts", "realtime-gateway", "v1", "public-api")
+	base := filepath.Join(root, "contracts", "realtime-gateway", "v1", "public")
 	exception := map[string]any{"type": "object", "properties": map[string]any{
 		"reason": map[string]any{"type": "string"}, "domain": map[string]any{"type": "string"}, "operation": map[string]any{"type": "string"},
 		"message": map[string]any{"type": "string"}, "retryable": map[string]any{"type": "boolean"},
@@ -203,9 +203,9 @@ socket.addEventListener("error", (error) => console.error("websocket error", err
 }
 
 func writeRealtimeRules(base string) {
-	writeText(filepath.Join(base, "README.md"), `# Notezy RealtimeGateway v1 public API
+	writeText(filepath.Join(base, "README.md"), `# Notezy RealtimeGateway v1 public contract
 
-This directory specifies every versioned endpoint emitted directly by RealtimeGateway v1.
+This directory specifies every versioned endpoint emitted directly by RealtimeGateway v1 for realtime clients. It is a runtime-specific public contract, separate from the APIGateway integration contract.
 
 - `+"`openapi/openapi.json`"+`: participant HTTP API (OpenAPI 3.1).
 - `+"`asyncapi/asyncapi.json`"+`: public WebSocket messages (AsyncAPI 3.0).
@@ -214,7 +214,7 @@ This directory specifies every versioned endpoint emitted directly by RealtimeGa
 - `+"`postman/`"+`: importable participant request and credential-free environment.
 - `+"`versions/`"+`: development log and cross-version comparison.
 
-Connection and BlockPack channel tickets are issued by the Gateway v1 endpoints in the Gateway OpenAPI contract.`)
+Connection and BlockPack channel tickets are issued by ClientGateway v1 endpoints. They are not public APIGateway operations.`)
 	writeText(filepath.Join(base, "rules", "connection-and-admission.md"), `# Connection and admission rules
 
 - WebSocket path: `+"`/realtime/development/v1`"+`.

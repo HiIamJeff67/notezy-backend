@@ -34,6 +34,7 @@ type UserAccountService struct {
 	db                    *gorm.DB
 	userRepository        repositories.UserRepositoryInterface
 	userAccountRepository repositories.UserAccountRepositoryInterface
+	userQuotaRepository   repositories.UserQuotaRepositoryInterface
 	oauthService          authservices.OAuthServiceInterface
 }
 
@@ -42,6 +43,7 @@ func NewUserAccountService(
 	db *gorm.DB,
 	userRepository repositories.UserRepositoryInterface,
 	userAccountRepository repositories.UserAccountRepositoryInterface,
+	userQuotaRepository repositories.UserQuotaRepositoryInterface,
 	oauthService authservices.OAuthServiceInterface,
 ) UserAccountServiceInterface {
 	if db == nil {
@@ -52,6 +54,7 @@ func NewUserAccountService(
 		db:                    db,
 		userRepository:        userRepository,
 		userAccountRepository: userAccountRepository,
+		userQuotaRepository:   userQuotaRepository,
 		oauthService:          oauthService,
 	}
 }
@@ -77,6 +80,15 @@ func (s *UserAccountService) GetMyAccount(
 
 	db := s.db.WithContext(ctx)
 
+	routineTaskCostUnitUsed, exception := s.userQuotaRepository.GetRoutineTaskCostUnitUsed(
+		ctx,
+		actorUserId,
+		options.WithDB(db),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
 	userAccount, exception := s.userAccountRepository.GetOneByUserId(actorUserId, options.WithDB(db))
 	if exception != nil {
 		return nil, exception
@@ -100,7 +112,7 @@ func (s *UserAccountService) GetMyAccount(
 		AdditionalItemCount:      userAccount.AdditionalItemCount,
 		StationCount:             userAccount.StationCount,
 		RoutineCount:             userAccount.RoutineCount,
-		RoutineTaskCostUnitCount: userAccount.RoutineTaskCostUnitCount,
+		RoutineTaskCostUnitCount: routineTaskCostUnitUsed,
 		RoutineTagCount:          userAccount.RoutineTagCount,
 		UpdatedAt:                userAccount.UpdatedAt,
 	}, nil

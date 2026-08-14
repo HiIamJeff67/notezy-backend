@@ -7,8 +7,9 @@ import (
 )
 
 func main() {
+	application := email.NewApplication()
 	if len(os.Args) == 1 {
-		shutdown := email.Start()
+		shutdown := application.Start()
 		defer shutdown()
 	}
 

@@ -30,14 +30,16 @@ Inspect status and logs with:
 
 ```sh
 docker compose ps
-docker compose logs -f notezy-gateway
+docker compose logs -f notezy-client-gateway
+docker compose logs -f notezy-api-gateway
 ```
 
 ### Hot reload
 
-The Go runtimes use Air in development. Gateway, Core, DurableJob, Email,
-Notification, and RealtimeGateway each run `air -c .air.toml` from their own
-module directory. Source changes are rebuilt and restarted automatically;
+The Go runtimes use Air in development. ClientGateway, Core, DurableJob, Email,
+Notification, and RealtimeGateway run `air -c .air.toml` from their own module
+directory; APIGateway currently runs `go run ./commands` from its module. Source
+changes are rebuilt and restarted automatically;
 changes to dependencies, environment variables, Dockerfiles, or Compose
 configuration still require an image rebuild and container recreation.
 

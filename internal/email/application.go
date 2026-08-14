@@ -23,6 +23,10 @@ type Application struct {
 	ready   atomic.Bool
 }
 
+func NewApplication() *Application {
+	return &Application{}
+}
+
 func (a *Application) IsHealthy() bool {
 	return a.healthy.Load()
 }
@@ -31,8 +35,8 @@ func (a *Application) IsReady() bool {
 	return a.ready.Load()
 }
 
-func Start() func() {
-	application := &Application{}
+func (a *Application) Start() func() {
+	application := a
 	config, err := emailconfig.LoadConfig()
 	if err != nil {
 		panic(err)
@@ -41,6 +45,8 @@ func Start() func() {
 		context.Background(),
 		observability.LoadConfig("notezy-email"),
 	)
+
+	// Initialize renderers, the bounded sender queue, and the Kafka consumer.
 	deliverySender := emailsenders.NewEmailSender(config.SMTP)
 	emailWorkerManager := NewEmailWorkerManager(16, deliverySender)
 	welcomeRenderer, err := renderers.NewRenderer(config.Renderers.Welcome)
@@ -70,6 +76,7 @@ func Start() func() {
 	emailRequestConsumer := coretransport.NewEmailRequestConsumer(sender, validation, config.KafkaConsumer)
 	shutdownEmailRequestConsumer := emailRequestConsumer.Start(context.Background())
 
+	// Bind the health server after the email consumer is running.
 	listener, err := net.Listen("tcp", config.ListenAddress)
 	if err != nil {
 		shutdownEmailRequestConsumer()
@@ -90,6 +97,7 @@ func Start() func() {
 	}()
 
 	return func() {
+		// Drain email work after HTTP traffic has stopped, then release observability.
 		application.ready.Store(false)
 		application.healthy.Store(false)
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -101,4 +109,8 @@ func Start() func() {
 		emailWorkerManager.Shutdown()
 		shutdownObservability()
 	}
+}
+
+func Start() func() {
+	return NewApplication().Start()
 }

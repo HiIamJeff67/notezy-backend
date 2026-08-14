@@ -16,7 +16,7 @@ func TestComposeRuntimeBoundaries(t *testing.T) {
 
 	composeText := string(compose)
 	for _, serviceName := range []string{
-		"  notezy-gateway:",
+		"  notezy-client-gateway:",
 		"  notezy-core:",
 		"  notezy-realtime-gateway:",
 		"  notezy-durable-job:",

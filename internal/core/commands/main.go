@@ -7,8 +7,9 @@ import (
 )
 
 func main() {
+	application := core.NewApplication()
 	if len(os.Args) == 1 {
-		shutdown := core.Start()
+		shutdown := application.Start()
 		defer shutdown()
 	}
 

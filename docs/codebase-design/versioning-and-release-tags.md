@@ -120,7 +120,7 @@ Docker images must use the same version tag:
 
 ```text
 notezy-core:v0.1.0-beta.1
-notezy-gateway:v0.1.0-beta.1
+notezy-client-gateway:v0.1.0-beta.1
 notezy-notification:v0.1.0-beta.1
 ```
 

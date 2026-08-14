@@ -11,6 +11,9 @@ import (
 
 type DelegationTokenClaims struct {
 	Actor              string   `json:"actor"`
+	GatewaySource      string   `json:"gatewaySource,omitempty"`
+	AuthMethod         string   `json:"authMethod,omitempty"`
+	ApiKeyId           string   `json:"apiKeyId,omitempty"`
 	UserSubject        string   `json:"userSubject,omitempty"`
 	AllowedPermissions []string `json:"allowedPermissions"`
 	Operation          string   `json:"operation"`
@@ -18,9 +21,29 @@ type DelegationTokenClaims struct {
 	jwt.RegisteredClaims
 }
 
+const (
+	GatewaySourceClient = "client"
+	GatewaySourceAPI    = "api"
+
+	AuthMethodJWT    = "jwt"
+	AuthMethodAPIKey = "api-key"
+)
+
 func GenerateDelegationToken(claims DelegationTokenClaims) (*string, error) {
 	if claims.Actor == "" || claims.Operation == "" || claims.RequestId == "" {
 		return nil, errors.New("delegation token claims are invalid")
+	}
+	if claims.GatewaySource != "" && claims.GatewaySource != GatewaySourceClient && claims.GatewaySource != GatewaySourceAPI {
+		return nil, errors.New("delegation gateway source is invalid")
+	}
+	if claims.AuthMethod != "" && claims.AuthMethod != AuthMethodJWT && claims.AuthMethod != AuthMethodAPIKey {
+		return nil, errors.New("delegation auth method is invalid")
+	}
+	if claims.GatewaySource == GatewaySourceAPI && claims.AuthMethod != AuthMethodAPIKey {
+		return nil, errors.New("api gateway delegation requires api key authentication")
+	}
+	if claims.GatewaySource == GatewaySourceClient && claims.AuthMethod == AuthMethodAPIKey {
+		return nil, errors.New("client gateway delegation cannot use api key authentication")
 	}
 	if claims.UserSubject != "" {
 		if _, err := uuid.Parse(claims.UserSubject); err != nil {
@@ -64,6 +87,18 @@ func ParseDelegationToken(tokenString string) (*DelegationTokenClaims, error) {
 	}
 	if claims.Actor == "" || claims.Operation == "" || claims.RequestId == "" {
 		return nil, errors.New("delegation token claims are invalid")
+	}
+	if claims.GatewaySource != "" && claims.GatewaySource != GatewaySourceClient && claims.GatewaySource != GatewaySourceAPI {
+		return nil, errors.New("delegation gateway source is invalid")
+	}
+	if claims.AuthMethod != "" && claims.AuthMethod != AuthMethodJWT && claims.AuthMethod != AuthMethodAPIKey {
+		return nil, errors.New("delegation auth method is invalid")
+	}
+	if claims.GatewaySource == GatewaySourceAPI && claims.AuthMethod != AuthMethodAPIKey {
+		return nil, errors.New("api gateway delegation requires api key authentication")
+	}
+	if claims.GatewaySource == GatewaySourceClient && claims.AuthMethod == AuthMethodAPIKey {
+		return nil, errors.New("client gateway delegation cannot use api key authentication")
 	}
 	if claims.Subject != claims.UserSubject {
 		return nil, errors.New("delegation token claims are invalid")

@@ -91,7 +91,9 @@ func DelegationAuthenticatedMiddleware(expectedOperation string) gin.HandlerFunc
 			permissions = append(permissions, *permission)
 		}
 
-		if delegationClaims.UserSubject == "" {
+		isAPIKeyDelegation := delegationClaims.GatewaySource == sharedtokens.GatewaySourceAPI &&
+			delegationClaims.AuthMethod == sharedtokens.AuthMethodAPIKey
+		if delegationClaims.UserSubject == "" && !isAPIKeyDelegation {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
 				Version: gatewaycontract.Version,
 				Metadata: gatewaycontract.ResponseMetadata{
@@ -109,29 +111,30 @@ func DelegationAuthenticatedMiddleware(expectedOperation string) gin.HandlerFunc
 			})
 			return
 		}
-		userSubject, err := uuid.Parse(delegationClaims.UserSubject)
-		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
-				Version: gatewaycontract.Version,
-				Metadata: gatewaycontract.ResponseMetadata{
-					RequestId:   ctx.GetHeader("X-Request-Id"),
-					RespondedAt: time.Now(),
-				},
-				Data: struct{}{},
-				Exception: exceptions.New(
-					"InvalidDelegation",
-					"Core",
-					"VerifyDelegation",
-					"delegation user subject is invalid",
-					http.StatusUnauthorized,
-				),
-			})
-			return
+		requestContext := contexts.WithDelegationMetadata(ctx.Request.Context(), delegationClaims)
+		if delegationClaims.UserSubject != "" {
+			userSubject, err := uuid.Parse(delegationClaims.UserSubject)
+			if err != nil {
+				ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
+					Version: gatewaycontract.Version,
+					Metadata: gatewaycontract.ResponseMetadata{
+						RequestId:   ctx.GetHeader("X-Request-Id"),
+						RespondedAt: time.Now(),
+					},
+					Data: struct{}{},
+					Exception: exceptions.New(
+						"InvalidDelegation",
+						"Core",
+						"VerifyDelegation",
+						"delegation user subject is invalid",
+						http.StatusUnauthorized,
+					),
+				})
+				return
+			}
+			requestContext = contexts.WithActorUserPublicId(requestContext, userSubject)
 		}
-
-		ctx.Request = ctx.Request.WithContext(
-			contexts.WithActorUserPublicId(ctx.Request.Context(), userSubject),
-		)
+		ctx.Request = ctx.Request.WithContext(requestContext)
 		if len(permissions) > 0 {
 			ctx.Request = ctx.Request.WithContext(
 				contexts.WithAllowedPermissions(ctx.Request.Context(), permissions),

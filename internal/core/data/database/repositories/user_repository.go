@@ -43,7 +43,7 @@ func (r *UserRepository) GetOneById(
 
 	user := schemas.User{}
 
-	db := parsedOptions.DB.Table(schemas.User{}.TableName())
+	db := parsedOptions.DB.Model(&schemas.User{})
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
 			db = db.Preload(string(preload))
@@ -71,7 +71,7 @@ func (r *UserRepository) GetOneByPublicId(
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	user := schemas.User{}
-	query := parsedOptions.DB.Table(schemas.User{}.TableName())
+	query := parsedOptions.DB.Model(&schemas.User{})
 	for _, preload := range preloads {
 		query = query.Preload(string(preload))
 	}
@@ -99,7 +99,7 @@ func (r *UserRepository) GetOneByName(
 
 	user := schemas.User{}
 
-	db := parsedOptions.DB.Table(schemas.User{}.TableName())
+	db := parsedOptions.DB.Model(&schemas.User{})
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
 			db = db.Preload(string(preload))
@@ -128,7 +128,7 @@ func (r *UserRepository) GetOneByEmail(
 
 	user := schemas.User{}
 
-	query := parsedOptions.DB.Table(schemas.User{}.TableName())
+	query := parsedOptions.DB.Model(&schemas.User{})
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
 			query = query.Preload(string(preload))

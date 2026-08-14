@@ -11,6 +11,7 @@ type Config struct {
 	OAuthGoogle               OAuthGoogleConfig
 	OutboxRelay               OutboxRelayConfig
 	KafkaConsumer             KafkaConsumerConfig
+	QuotaCycleWorker          QuotaCycleWorkerConfig
 	UserDataCache             UserDataCacheConfig
 	YjsDocumentInitialization YjsDocumentInitializationConfig
 	StorageKeySalt            string
@@ -33,6 +34,10 @@ func LoadConfig() (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+	quotaCycleWorker, err := loadQuotaCycleWorkerConfig()
+	if err != nil {
+		return Config{}, err
+	}
 	storageKeySalt := os.Getenv("STORAGE_KEY_SALT")
 	if storageKeySalt == "" {
 		return Config{}, fmt.Errorf("STORAGE_KEY_SALT is required")
@@ -50,6 +55,7 @@ func LoadConfig() (Config, error) {
 		OAuthGoogle:               oauthGoogle,
 		OutboxRelay:               outboxRelay,
 		KafkaConsumer:             kafkaConsumer,
+		QuotaCycleWorker:          quotaCycleWorker,
 		UserDataCache:             userDataCache,
 		YjsDocumentInitialization: yjsDocumentInitialization,
 		StorageKeySalt:            storageKeySalt,

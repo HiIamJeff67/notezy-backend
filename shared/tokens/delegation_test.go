@@ -52,3 +52,27 @@ func TestDelegationTokenWithoutUserSubjectRoundTrip(t *testing.T) {
 		t.Fatalf("unexpected delegation claims without user subject: %#v", claims)
 	}
 }
+
+func TestDelegationTokenCarriesGatewaySourceAndAPIKeyMetadata(t *testing.T) {
+	t.Setenv("CORE_DELEGATION_SECRET", "delegation-secret")
+	t.Setenv("CORE_DELEGATION_AUDIENCE", "core")
+	t.Setenv("CORE_DELEGATION_ISSUER", "gateway")
+	token, err := GenerateDelegationToken(DelegationTokenClaims{
+		Actor:         "gateway",
+		GatewaySource: GatewaySourceAPI,
+		AuthMethod:    AuthMethodAPIKey,
+		ApiKeyId:      "api-key-id",
+		Operation:     "get-user",
+		RequestId:     "request-id",
+	})
+	if err != nil {
+		t.Fatalf("generate API delegation token: %v", err)
+	}
+	claims, err := ParseDelegationToken(*token)
+	if err != nil {
+		t.Fatalf("parse API delegation token: %v", err)
+	}
+	if claims.GatewaySource != GatewaySourceAPI || claims.AuthMethod != AuthMethodAPIKey || claims.ApiKeyId != "api-key-id" {
+		t.Fatalf("unexpected API delegation metadata: %+v", claims)
+	}
+}

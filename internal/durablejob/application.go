@@ -27,6 +27,10 @@ type Application struct {
 	routineTaskEngine *routinetask.Engine
 }
 
+func NewApplication() *Application {
+	return &Application{}
+}
+
 func (a *Application) IsHealthy() bool {
 	return a.healthy.Load()
 }
@@ -35,7 +39,7 @@ func (a *Application) IsReady() bool {
 	return a.ready.Load() && a.routineTaskEngine != nil && a.routineTaskEngine.IsReady()
 }
 
-func Start() func() {
+func (a *Application) Start() func() {
 	config, err := durablejobconfig.LoadConfig()
 	if err != nil {
 		panic(err)
@@ -49,6 +53,7 @@ func Start() func() {
 		observability.LoadConfig("notezy-durable-job"),
 	)
 
+	// Establish the Kafka producer before constructing engines and consumers.
 	kafkaProducer, err := platformkafka.NewProducer(platformkafka.ClientConfig{
 		ConnectionConfig: kafkaConnectionConfig,
 		ClientId:         "notezy-durable-job",
@@ -63,8 +68,10 @@ func Start() func() {
 		panic(err)
 	}
 
+	// Construct and start the durable-job workers that consume and publish tasks.
 	routineTaskEngine := routinetask.NewEngine(config)
-	application := &Application{routineTaskEngine: routineTaskEngine}
+	a.routineTaskEngine = routineTaskEngine
+	application := a
 	routineTaskClaimProducer := coreproducers.NewRoutineTaskClaimProducer(kafkaProducer)
 	routineTaskResultProducer := coreproducers.NewRoutineTaskResultProducer(kafkaProducer)
 	routineTaskLifecycleProducer := realtimegatewayproducers.NewRoutineTaskLifecycleProducer(kafkaProducer)
@@ -126,6 +133,7 @@ func Start() func() {
 	)
 	shutdownYjsMaintenanceResultConsumer := yjsMaintenanceResultConsumer.Start(context.Background())
 
+	// Expose health endpoints only after worker dependencies have started.
 	mux := http.NewServeMux()
 	status.ConfigureStartedRouter(mux, application.IsHealthy)
 	status.ConfigureHealthRouter(mux, application.IsReady)
@@ -151,6 +159,7 @@ func Start() func() {
 	}()
 
 	return func() {
+		// Stop HTTP traffic before stopping workers and Kafka.
 		application.ready.Store(false)
 		application.healthy.Store(false)
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -165,4 +174,8 @@ func Start() func() {
 		kafkaProducer.Close()
 		shutdownObservability()
 	}
+}
+
+func Start() func() {
+	return NewApplication().Start()
 }

@@ -13,8 +13,9 @@ clients, workers, transports, and services.
 | Redis connection | `shared/platform/redis/config.go` | `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_INIT_DB` |
 | Kafka connection and TLS | `shared/platform/kafka/config.go` | `KAFKA_BROKERS`, `KAFKA_DIAL_TIMEOUT`, `KAFKA_TLS_*`, `KAFKA_SASL_*` |
 | OpenTelemetry SDK | `shared/platform/observability/config.go` | `OTEL_SERVICE_*`, `OTEL_EXPORTER_OTLP_GRPC_ENDPOINT` |
-| Gateway | `internal/gateway/configs/` | `GATEWAY_LISTEN_ADDRESS`, `CORE_BASE_URL` |
-| Core | `internal/core/configs/` | `CORE_LISTEN_ADDRESS`, `OAUTH_GOOGLE_*`, `STORAGE_KEY_SALT`, `OUTBOX_RELAY_*`, user-data cache TTL, Yjs document initialization endpoint/timeout |
+| ClientGateway | `internal/clientgateway/configs/` | `CLIENT_GATEWAY_LISTEN_ADDRESS`, legacy `GATEWAY_LISTEN_ADDRESS`, `CORE_BASE_URL` |
+| APIGateway | `internal/apigateway/configs/` | `API_GATEWAY_LISTEN_ADDRESS`, `CORE_BASE_URL` |
+| Core | `internal/core/configs/` | `CORE_LISTEN_ADDRESS`, `OAUTH_GOOGLE_*`, `STORAGE_KEY_SALT`, `OUTBOX_RELAY_*`, user-data cache TTL, quota-cycle worker interval, Yjs document initialization endpoint/timeout |
 | DurableJob | `internal/durablejob/configs/` | `DURABLEJOB_LISTEN_ADDRESS`, runtime Kafka and maintenance strategy settings |
 | Email | `internal/email/configs/` | `EMAIL_LISTEN_ADDRESS`, `SMTP_*`, `NOTEZY_OFFICIAL_*`, `KAFKA_*` consumer settings |
 | RealtimeGateway | `internal/realtimegateway/configs/` | `REALTIME_GATEWAY_LISTEN_ADDRESS`, `REALTIME_ENABLED`, `YJS_WORKER_URLS` |
@@ -52,6 +53,7 @@ OUTBOX_RELAY_INITIAL_BACKOFF=1s
 OUTBOX_RELAY_MAXIMUM_BACKOFF=1m
 OUTBOX_RELAY_RETENTION=168h
 OUTBOX_RELAY_CLEANUP_INTERVAL=1h
+CORE_QUOTA_CYCLE_WORKER_INTERVAL=24h
 ```
 
 All credentials, salts, passwords, client secrets, and SASL credentials are

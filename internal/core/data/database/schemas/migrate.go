@@ -6,7 +6,9 @@ var MigratingTables = []any{
 	&User{},
 	&UserInfo{},
 	&UserAccount{},
+	&UserQuota{},
 	&UserSetting{},
+	&APIKey{},
 
 	&UsersToBadges{},
 	&Badge{},

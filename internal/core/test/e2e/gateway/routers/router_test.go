@@ -189,5 +189,6 @@ func newRouterForDelegationValidation() *gin.Engine {
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 }

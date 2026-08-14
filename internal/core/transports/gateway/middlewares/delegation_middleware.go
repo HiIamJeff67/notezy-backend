@@ -90,6 +90,9 @@ func DelegationMiddleware(expectedOperation string) gin.HandlerFunc {
 			permissions = append(permissions, *permission)
 		}
 
+		ctx.Request = ctx.Request.WithContext(
+			contexts.WithDelegationMetadata(ctx.Request.Context(), delegationClaims),
+		)
 		if len(permissions) > 0 {
 			ctx.Request = ctx.Request.WithContext(
 				contexts.WithAllowedPermissions(ctx.Request.Context(), permissions),

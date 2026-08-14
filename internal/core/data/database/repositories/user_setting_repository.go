@@ -37,7 +37,7 @@ func (r *UserSettingRepository) GetOneByUserId(
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	var userSetting schemas.UserSetting
-	result := parsedOptions.DB.Table(schemas.UserSetting{}.TableName()).
+	result := parsedOptions.DB.Model(&schemas.UserSetting{}).
 		Where("user_id = ?", userId).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&userSetting)

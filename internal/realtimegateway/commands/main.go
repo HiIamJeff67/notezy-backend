@@ -7,8 +7,9 @@ import (
 )
 
 func main() {
+	application := realtimegateway.NewApplication()
 	if len(os.Args) == 1 {
-		shutdown := realtimegateway.Start()
+		shutdown := application.Start()
 		defer shutdown()
 	}
 

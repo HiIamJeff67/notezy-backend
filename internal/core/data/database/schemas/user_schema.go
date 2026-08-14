@@ -36,6 +36,7 @@ type User struct {
 	UserInfo            UserInfo              `json:"userInfo" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UserAccount         UserAccount           `json:"userAccount" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UserSetting         UserSetting           `json:"userSetting" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	APIKeys             []APIKey              `json:"apiKeys" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	Themes              []Theme               `json:"themes" gorm:"foreignKey:AuthorId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UsersToBadges       []UsersToBadges       `json:"usersToBadges" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UsersToShelves      []UsersToShelves      `json:"usersToShelves" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
@@ -58,6 +59,7 @@ const (
 	UserRelation_UserInfo            UserRelation = "UserInfo"
 	UserRelation_UserAccount         UserRelation = "UserAccount"
 	UserRelation_UserSetting         UserRelation = "UserSetting"
+	UserRelation_APIKeys             UserRelation = "APIKeys"
 	UserRelation_Themes              UserRelation = "Themes"
 	UserRelation_UsersToBadges       UserRelation = "UsersToBadges"
 	UserRelation_UsersToShelves      UserRelation = "UsersToShelves"

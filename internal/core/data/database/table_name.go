@@ -5,6 +5,7 @@ import platformdatabase "github.com/HiIamJeff67/notezy-backend/shared/platform/d
 const (
 	TableName_UserTable        platformdatabase.TableName = "UserTable"
 	TableName_UserAccountTable platformdatabase.TableName = "UserAccountTable"
+	TableName_UserQuotaTable   platformdatabase.TableName = "UserQuotaTable"
 	TableName_UserInfoTable    platformdatabase.TableName = "UserInfoTable"
 	TableName_UserSettingTable platformdatabase.TableName = "UserSettingTable"
 
@@ -42,6 +43,7 @@ const (
 var _validTableNames = map[string]platformdatabase.TableName{
 	"UserTable":        TableName_UserTable,
 	"UserAccountTable": TableName_UserAccountTable,
+	"UserQuotaTable":   TableName_UserQuotaTable,
 	"UserInfoTable":    TableName_UserInfoTable,
 	"UserSettingTable": TableName_UserSettingTable,
 

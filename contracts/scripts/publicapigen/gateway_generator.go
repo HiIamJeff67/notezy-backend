@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -14,7 +13,7 @@ import (
 )
 
 func writeGatewayArtifacts(root string, endpoints []endpoint) {
-	base := filepath.Join(root, "contracts", "gateway", "v1", "public-api")
+	base := filepath.Join(root, "contracts", "api-gateway", "v1", "public")
 	components := map[string]any{
 		"schemas": map[string]any{
 			"Exception": map[string]any{
@@ -36,8 +35,7 @@ func writeGatewayArtifacts(root string, endpoints []endpoint) {
 			},
 		},
 		"securitySchemes": map[string]any{
-			"accessCookie":  map[string]any{"type": "apiKey", "in": "cookie", "name": "accessToken", "description": "HttpOnly cookie issued by register/login."},
-			"refreshCookie": map[string]any{"type": "apiKey", "in": "cookie", "name": "refreshToken", "description": "HttpOnly fallback cookie used to rotate access and CSRF tokens."},
+			"apiKey": map[string]any{"type": "apiKey", "in": "header", "name": "X-API-Key", "description": "User-owned API key. The secret is shown only once when created."},
 		},
 	}
 	schemas := components["schemas"].(map[string]any)
@@ -58,7 +56,7 @@ func writeGatewayArtifacts(root string, endpoints []endpoint) {
 			"x-go-response-dto": route.ResponseType,
 		}
 		if route.Tag == "graphql" {
-			operation["description"] = "The complete GraphQL SDL is published at public-api/graphql/schema.graphql; executable search operations are under examples/graphql."
+			operation["description"] = "The complete GraphQL SDL is published at public/graphql/schema.graphql; executable search operations are under examples/graphql."
 		}
 		header, body, param, query := requestParts(route.RequestType)
 		query = routeQuery(route.Path, param, query)
@@ -84,9 +82,6 @@ func writeGatewayArtifacts(root string, endpoints []endpoint) {
 		}
 		if _, ok := properties(header)["userAgent"]; ok {
 			parameters = append(parameters, map[string]any{"name": "User-Agent", "in": "header", "required": true, "schema": map[string]any{"type": "string"}, "example": "NotezyIntegration/1.0"})
-		}
-		if csrfRequired(route.OperationID) {
-			parameters = append(parameters, map[string]any{"name": "X-CSRF-Token", "in": "header", "required": true, "schema": map[string]any{"type": "string"}, "description": "Use data.csrfToken from login/register or refreshableTokens.newCSRFToken."})
 		}
 		if len(parameters) > 0 {
 			sort.Slice(parameters, func(i, j int) bool {
@@ -139,7 +134,7 @@ func writeGatewayArtifacts(root string, endpoints []endpoint) {
 		}
 		operation["responses"] = gatewayResponses(successName, route.OperationID)
 		if authenticated(route.OperationID) {
-			operation["security"] = []any{map[string]any{"accessCookie": []any{}}, map[string]any{"refreshCookie": []any{}}}
+			operation["security"] = []any{map[string]any{"apiKey": []any{}}}
 		} else {
 			operation["security"] = []any{}
 		}
@@ -155,8 +150,8 @@ func writeGatewayArtifacts(root string, endpoints []endpoint) {
 	openAPI := map[string]any{
 		"openapi": "3.1.0",
 		"info": map[string]any{
-			"title": "Notezy Gateway API", "version": "1.0.0",
-			"description": "Complete machine-readable contract for routes emitted by Gateway v1. Cookie authentication is the Beta integration mechanism.",
+			"title": "Notezy APIGateway API", "version": "1.0.0",
+			"description": "Complete machine-readable contract for routes exposed by APIGateway v1. Authenticated requests use user-owned API keys.",
 		},
 		"servers": []any{
 			map[string]any{"url": "http://localhost/api/development/v1", "description": "Local development"},
@@ -165,43 +160,12 @@ func writeGatewayArtifacts(root string, endpoints []endpoint) {
 		"tags": tagList, "paths": paths, "components": components,
 	}
 	writeJSON(filepath.Join(base, "openapi", "openapi.json"), openAPI)
-	writeJSON(filepath.Join(base, "postman", "Notezy-Gateway-v1.postman_collection.json"), gatewayPostman(endpoints))
-	writeJSON(filepath.Join(base, "postman", "Notezy-Gateway-v1.postman_environment.example.json"), postmanEnvironment())
+	writeJSON(filepath.Join(base, "postman", "Notezy-APIGateway-v1.postman_collection.json"), gatewayPostman(endpoints))
+	writeJSON(filepath.Join(base, "postman", "Notezy-APIGateway-v1.postman_environment.example.json"), postmanEnvironment())
 	writeText(filepath.Join(base, "examples", "curl", "all-endpoints.sh"), curlExamples(endpoints))
-	writeText(filepath.Join(base, "examples", "curl", "authenticated-session.sh"), authenticatedSessionExample())
 	writeText(filepath.Join(base, "examples", "http", "all-endpoints.http"), httpExamples(endpoints))
 	writeText(filepath.Join(base, "reference", "endpoints.md"), endpointReference(endpoints))
-	writeGraphQLArtifacts(root, base)
 	writeGatewayRules(base, len(endpoints))
-}
-
-func writeGraphQLArtifacts(root, base string) {
-	graphqlRoot := filepath.Join(root, "contracts", "core", "v1", "graphql")
-	writeText(filepath.Join(base, "graphql", "schema.graphql"), bundleGraphQLFiles(filepath.Join(graphqlRoot, "schemas")))
-	var examples strings.Builder
-	examples.WriteString(bundleGraphQLFiles(filepath.Join(graphqlRoot, "fragments")))
-	examples.WriteString("\n")
-	examples.WriteString(bundleGraphQLFiles(filepath.Join(graphqlRoot, "queries")))
-	writeText(filepath.Join(base, "examples", "graphql", "search.graphql"), examples.String())
-}
-
-func bundleGraphQLFiles(directory string) string {
-	paths := []string{}
-	must(filepath.WalkDir(directory, func(path string, entry os.DirEntry, err error) error {
-		if err == nil && !entry.IsDir() && filepath.Ext(path) == ".graphql" {
-			paths = append(paths, path)
-		}
-		return err
-	}))
-	sort.Strings(paths)
-	var output strings.Builder
-	for _, path := range paths {
-		content, err := os.ReadFile(path)
-		must(err)
-		relative, _ := filepath.Rel(directory, path)
-		fmt.Fprintf(&output, "# Source: %s\n%s\n\n", filepath.ToSlash(relative), strings.TrimSpace(string(content)))
-	}
-	return output.String()
 }
 
 func removePrivateTokenFields(schema map[string]any) {
@@ -359,15 +323,15 @@ func gatewayPostman(endpoints []endpoint) map[string]any {
 		_, body, param, query := requestParts(route.RequestType)
 		query = routeQuery(route.Path, param, query)
 		headers := []any{map[string]any{"key": "User-Agent", "value": "{{userAgent}}", "type": "text"}}
+		if authenticated(route.OperationID) {
+			headers = append(headers, map[string]any{"key": "X-API-Key", "value": "{{apiKey}}", "type": "text"})
+		}
 		if route.Method != "GET" {
 			headers = append(headers, map[string]any{"key": "Content-Type", "value": "application/json", "type": "text"})
 		}
-		if route.Method != "GET" && authenticated(route.OperationID) {
-			headers = append(headers, map[string]any{"key": "X-CSRF-Token", "value": "{{csrfToken}}", "type": "text", "disabled": !csrfRequired(route.OperationID)})
-		}
 		request := map[string]any{
 			"method": route.Method, "header": headers,
-			"url":         postmanURL("gatewayBaseUrl", route.Path, query),
+			"url":         postmanURL("apiGatewayBaseUrl", route.Path, query),
 			"description": fmt.Sprintf("%s. Go DTO: `%s`; response DTO: `%s`.", words(route.OperationID), route.RequestType, route.ResponseType),
 		}
 		if len(properties(body)) > 0 || (route.Tag == "graphql" && route.Method == "POST") {
@@ -380,8 +344,6 @@ func gatewayPostman(endpoints []endpoint) map[string]any {
 		}
 		tests := []string{
 			"pm.test('HTTP response is below 500', function () { pm.expect(pm.response.code).to.be.below(500); });",
-			"if (pm.response.headers.has('X-CSRF-Token')) pm.environment.set('csrfToken', pm.response.headers.get('X-CSRF-Token'));",
-			"try { const body = pm.response.json(); const token = body?.data?.csrfToken || body?.refreshableTokens?.newCSRFToken; if (token) pm.environment.set('csrfToken', token); } catch (_) {}",
 		}
 		name := kebabCase(route.OperationID)
 		if route.Method == "DELETE" || strings.Contains(strings.ToLower(route.OperationID), "reset") {
@@ -402,8 +364,8 @@ func gatewayPostman(endpoints []endpoint) map[string]any {
 	})
 	return map[string]any{
 		"info": map[string]any{
-			"_postman_id": "a8f3fa62-f2cd-4cf0-97ab-a801b42ee101", "name": "Notezy Gateway v1",
-			"description": "Generated from the complete Gateway v1 route and Go DTO contracts. Postman manages HttpOnly accessToken and refreshToken cookies in its cookie jar.",
+			"_postman_id": "a8f3fa62-f2cd-4cf0-97ab-a801b42ee101", "name": "Notezy APIGateway v1",
+			"description": "Generated from the APIGateway v1 route and Go DTO contracts. Authenticated requests use X-API-Key.",
 			"schema":      "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		},
 		"item": folders,
@@ -412,13 +374,9 @@ func gatewayPostman(endpoints []endpoint) map[string]any {
 
 func postmanEnvironment() map[string]any {
 	values := []any{
-		map[string]any{"key": "gatewayBaseUrl", "value": "http://localhost/api/development/v1", "enabled": true},
-		map[string]any{"key": "realtimeBaseUrl", "value": "http://localhost/realtime/development/v1", "enabled": true},
+		map[string]any{"key": "apiGatewayBaseUrl", "value": "http://localhost/api/development/v1", "enabled": true},
 		map[string]any{"key": "userAgent", "value": "Postman/Notezy-v1", "enabled": true},
-		map[string]any{"key": "account", "value": "", "enabled": true, "type": "secret"},
-		map[string]any{"key": "email", "value": "", "enabled": true},
-		map[string]any{"key": "password", "value": "", "enabled": true, "type": "secret"},
-		map[string]any{"key": "csrfToken", "value": "", "enabled": true, "type": "secret"},
+		map[string]any{"key": "apiKey", "value": "", "enabled": true, "type": "secret"},
 	}
 	for _, name := range []string{"id", "userPublicId", "stationId", "routineId", "routineTagId", "routineTaskId", "rootShelfId", "subShelfId", "prevSubShelfId", "parentSubShelfId", "materialId", "blockPackId", "blockId", "itemId"} {
 		value := "00000000-0000-4000-8000-000000000001"
@@ -443,9 +401,8 @@ func shellPath(path string) string {
 func curlExamples(endpoints []endpoint) string {
 	var output bytes.Buffer
 	output.WriteString("#!/usr/bin/env bash\nset -euo pipefail\n\n")
-	output.WriteString("gateway_base_url=\"${GATEWAY_BASE_URL:-http://localhost/api/development/v1}\"\ncookie_jar=\"${COOKIE_JAR:-./notezy-cookies.txt}\"\ncsrf_token=\"${CSRF_TOKEN:-}\"\n")
+	output.WriteString("api_gateway_base_url=\"${API_GATEWAY_BASE_URL:-http://localhost/api/development/v1}\"\napi_key=\"${API_KEY:-}\"\n")
 	output.WriteString("user_agent=\"${USER_AGENT:-NotezyCurlExample/1.0}\"\n")
-	output.WriteString("account=\"${ACCOUNT:-}\"\nemail=\"${EMAIL:-}\"\npassword=\"${PASSWORD:-}\"\n")
 	output.WriteString("id=\"${AVATAR_ID:-1}\"\n")
 	for _, id := range []string{"userPublicId", "stationId", "routineId", "routineTagId", "routineTaskId", "rootShelfId", "subShelfId", "prevSubShelfId", "parentSubShelfId", "materialId", "blockPackId", "blockId", "itemId"} {
 		fmt.Fprintf(&output, "%s=\"${%s:-00000000-0000-4000-8000-000000000001}\"\n", id, strings.ToUpper(id))
@@ -455,65 +412,30 @@ func curlExamples(endpoints []endpoint) string {
 		_, body, param, query := requestParts(route.RequestType)
 		query = routeQuery(route.Path, param, query)
 		fmt.Fprintf(&output, "\n%s() {\n", route.OperationID)
-		fmt.Fprintf(&output, "  curl --fail-with-body --silent --show-error -X %s \\\n    -b \"$cookie_jar\" -c \"$cookie_jar\" \\\n    -H \"User-Agent: $user_agent\"", route.Method)
+		fmt.Fprintf(&output, "  curl --fail-with-body --silent --show-error -X %s \\\n    -H \"User-Agent: $user_agent\"", route.Method)
 		if route.Method != "GET" {
 			output.WriteString(" \\\n    -H \"Content-Type: application/json\"")
 		}
-		if route.Method != "GET" && authenticated(route.OperationID) {
-			output.WriteString(" \\\n    -H \"X-CSRF-Token: $csrf_token\"")
+		if authenticated(route.OperationID) {
+			output.WriteString(" \\\n    -H \"X-API-Key: $api_key\"")
 		}
 		if len(properties(body)) > 0 || (route.Tag == "graphql" && route.Method == "POST") {
 			if route.Tag == "graphql" {
 				output.WriteString(" \\\n    --data '{\"query\":\"query ContractCheck { __typename }\",\"variables\":{}}'")
-			} else if route.OperationID == "login" {
-				output.WriteString(" \\\n    --data \"{\\\"account\\\":\\\"$account\\\",\\\"password\\\":\\\"$password\\\"}\"")
-			} else if route.OperationID == "register" {
-				output.WriteString(" \\\n    --data \"{\\\"name\\\":\\\"$account\\\",\\\"email\\\":\\\"$email\\\",\\\"password\\\":\\\"$password\\\"}\"")
 			} else {
 				example, _ := json.Marshal(operationBodyExample(route.OperationID, body, false))
 				fmt.Fprintf(&output, " \\\n    --data '%s'", strings.ReplaceAll(string(example), "'", "'\\''"))
 			}
 		}
-		fmt.Fprintf(&output, " \\\n    \"$gateway_base_url%s\"\n}\n", appendQuery(shellPath(route.Path), query))
+		fmt.Fprintf(&output, " \\\n    \"$api_gateway_base_url%s\"\n}\n", appendQuery(shellPath(route.Path), query))
 	}
 	return output.String()
 }
 
-func authenticatedSessionExample() string {
-	return `#!/usr/bin/env bash
-set -euo pipefail
-
-gateway_base_url="${GATEWAY_BASE_URL:-http://localhost/api/development/v1}"
-account="${ACCOUNT:?set ACCOUNT}"
-password="${PASSWORD:?set PASSWORD}"
-cookie_jar="$(mktemp -t notezy-cookie-jar.XXXXXX)"
-response_file="$(mktemp -t notezy-login-response.XXXXXX)"
-trap 'rm -f "$cookie_jar" "$response_file"' EXIT
-login_payload="$(jq -cn --arg account "$account" --arg password "$password" '{account:$account,password:$password}')"
-
-curl --fail-with-body --silent --show-error \
-  -c "$cookie_jar" \
-  -H 'Content-Type: application/json' \
-  -H 'User-Agent: NotezyCurlSession/1.0' \
-  --data "$login_payload" \
-  "$gateway_base_url/auth/login" > "$response_file"
-
-csrf_token="$(jq -er '.data.csrfToken' "$response_file")"
-
-curl --fail-with-body --silent --show-error \
-  -b "$cookie_jar" -c "$cookie_jar" \
-  -H 'User-Agent: NotezyCurlSession/1.0' \
-  -H "X-CSRF-Token: $csrf_token" \
-  "$gateway_base_url/users/me"
-
-# Keep the cookie jar private and short-lived. Read replacement CSRF values from
-# X-CSRF-Token or refreshableTokens.newCSRFToken after access-token rotation.`
-}
-
 func endpointReference(endpoints []endpoint) string {
 	var output bytes.Buffer
-	output.WriteString("# Gateway v1 endpoint reference\n\n")
-	output.WriteString("This catalog is generated from the registered Gateway routes. Request and response property definitions live in `../openapi/openapi.json`.\n\n")
+	output.WriteString("# APIGateway v1 endpoint reference\n\n")
+	output.WriteString("This catalog is generated from the APIGateway public route allowlist. Request and response property definitions live in `../openapi/openapi.json`.\n\n")
 	output.WriteString("| Method | Path | Operation | Request DTO | Response DTO |\n| --- | --- | --- | --- | --- |\n")
 	for _, route := range endpoints {
 		fmt.Fprintf(&output, "| `%s` | `%s` | `%s` | `%s` | `%s` |\n", route.Method, route.Path, route.OperationID, route.RequestType, route.ResponseType)
@@ -523,7 +445,7 @@ func endpointReference(endpoints []endpoint) string {
 
 func httpExamples(endpoints []endpoint) string {
 	var output bytes.Buffer
-	output.WriteString("@gatewayBaseUrl = http://localhost/api/development/v1\n@userAgent = NotezyHttpFile/1.0\n@csrfToken = replace-after-login\n")
+	output.WriteString("@apiGatewayBaseUrl = http://localhost/api/development/v1\n@apiKey = replace-with-your-api-key\n@userAgent = NotezyHttpFile/1.0\n")
 	output.WriteString("@id = 1\n")
 	for _, id := range []string{"userPublicId", "stationId", "routineId", "routineTagId", "routineTaskId", "rootShelfId", "subShelfId", "prevSubShelfId", "parentSubShelfId", "materialId", "blockPackId", "blockId", "itemId"} {
 		fmt.Fprintf(&output, "@%s = 00000000-0000-4000-8000-000000000001\n", id)
@@ -535,12 +457,12 @@ func httpExamples(endpoints []endpoint) string {
 		for _, name := range pathNames(path) {
 			path = strings.ReplaceAll(path, "{"+name+"}", "{{"+parameterVariableName(name)+"}}")
 		}
-		fmt.Fprintf(&output, "\n### %s %s\n%s {{gatewayBaseUrl}}%s\nUser-Agent: {{userAgent}}\n", route.Method, words(route.OperationID), route.Method, appendQuery(path, query))
+		fmt.Fprintf(&output, "\n### %s %s\n%s {{apiGatewayBaseUrl}}%s\nUser-Agent: {{userAgent}}\n", route.Method, words(route.OperationID), route.Method, appendQuery(path, query))
 		if route.Method != "GET" {
 			output.WriteString("Content-Type: application/json\n")
 		}
-		if route.Method != "GET" && authenticated(route.OperationID) {
-			output.WriteString("X-CSRF-Token: {{csrfToken}}\n")
+		if authenticated(route.OperationID) {
+			output.WriteString("X-API-Key: {{apiKey}}\n")
 		}
 		if len(properties(body)) > 0 || (route.Tag == "graphql" && route.Method == "POST") {
 			example := operationBodyExample(route.OperationID, body, false)
@@ -555,16 +477,17 @@ func httpExamples(endpoints []endpoint) string {
 }
 
 func writeGatewayRules(base string, endpointCount int) {
-	writeText(filepath.Join(base, "README.md"), fmt.Sprintf(`# Notezy Gateway v1 public API
+	writeText(filepath.Join(base, "README.md"), fmt.Sprintf(`# Notezy APIGateway v1 public API
 
-This directory contains the machine-readable and human-readable contract for all %d versioned routes currently emitted by Gateway v1.
+This directory contains the machine-readable and human-readable contract for all %d versioned routes currently exposed by APIGateway v1.
+
+The published domains are RootShelf, SubShelf, Material, BlockPack, Block, Station, Routine, RoutineTask, and RoutineTag. Client-only auth, user/account, notification, realtime, GraphQL, and static routes are intentionally excluded.
 
 - **Canonical contract:** `+"`openapi/openapi.json`"+` (OpenAPI 3.1)
 - **Rules:** `+"`rules/`"+`
 - **Endpoint catalog:** `+"`reference/endpoints.md`"+`
-- **GraphQL SDL:** `+"`graphql/schema.graphql`"+`
 - **Runnable examples:** `+"`examples/curl/all-endpoints.sh`"+` and `+"`examples/http/all-endpoints.http`"+`
-- **Cookie session example:** `+"`examples/curl/authenticated-session.sh`"+`
+- **API key example:** send `+"`X-API-Key`"+` using the value in your private environment.
 - **Postman:** import both JSON files in `+"`postman/`"+`
 - **Version records:** `+"`versions/dev-log.md`"+` and `+"`versions/comparison.md`"+`
 
@@ -577,23 +500,17 @@ make -C contracts public-api-gen
 No real account, password, cookie, CSRF token, or API secret belongs in this directory.`, endpointCount))
 	writeText(filepath.Join(base, "rules", "authentication.md"), `# Authentication and credential rules
 
-Gateway v1 Beta integrations authenticate by calling register or login with an account and password. A successful response sets `+"`accessToken`"+` and `+"`refreshToken`"+` as HttpOnly cookies. Clients must use a cookie jar and return both cookies on subsequent requests.
+APIGateway v1 integrations authenticate with a user-owned `+"`X-API-Key`"+` header. Create the key through the authenticated ClientGateway flow, record the returned secret once, and send it on subsequent API requests.
 
-- Access cookie lifetime: 30 minutes.
-- Refresh cookie lifetime: 14 days.
-- Production cookies are Secure.
-- Access cookie uses SameSite Lax; refresh cookie uses SameSite Strict.
-- Access and refresh tokens are never returned in the public JSON body.
-- The login/register response exposes a CSRF token. Required operations send it as `+"`X-CSRF-Token`"+`.
-- When refresh occurs, read the replacement from the `+"`X-CSRF-Token`"+` response header or `+"`refreshableTokens.newCSRFToken`"+`.
-- Do not collect Notezy passwords in an untrusted third-party browser application. The Beta flow is intended for a user's own client or trusted server-side integration.
-- Do not log request bodies for login/register, Cookie headers, Set-Cookie headers, or CSRF values.
-
-The server may also accept a Bearer access token, but the public Beta contract is the cookie flow. API-key authentication is not part of v1.`)
+- The full secret is returned only once. Store it in a secret manager or local environment and never commit it.
+- The server persists only a SHA-256 digest and a short display prefix.
+- Keys can be expired or revoked; revoked keys fail immediately even if a cache entry exists.
+- Do not log request bodies containing credentials, `+"`X-API-Key`"+`, Cookie, Set-Cookie, or CSRF values.
+- Unauthorized rate limits are primarily keyed by client IP; API key ID is auxiliary only.`)
 	writeText(filepath.Join(base, "rules", "http-contract.md"), `# HTTP contract rules
 
 - Base path: `+"`/api/development/v1`"+` for the current Beta namespace.
-- Request and response media type: `+"`application/json`"+`, except GraphQL Playground GET.
+- Request and response media type: `+"`application/json`"+`.
 - Path resource identifiers are UUID strings unless the operation schema says otherwise.
 - Times use RFC 3339 date-time strings.
 - Public success envelope: `+"`{ \"success\": true, \"data\": ..., \"exception\": null }`"+`.
@@ -608,7 +525,7 @@ The server may also accept a Bearer access token, but the public Beta contract i
 The OpenAPI operation extensions `+"`x-go-request-dto`"+` and `+"`x-go-response-dto`"+` identify the source contracts used to generate each schema.`)
 	writeText(filepath.Join(base, "rules", "rate-limits-and-retries.md"), `# Rate limits and retry rules
 
-Gateway emits these headers on rate-limited routes:
+APIGateway emits these headers on rate-limited routes:
 
 - `+"`X-RateLimit-Limit`"+`: request allowance for the active window.
 - `+"`X-RateLimit-Remaining`"+`: remaining allowance.
@@ -616,18 +533,17 @@ Gateway emits these headers on rate-limited routes:
 - `+"`X-RateLimit-Window`"+`: configured window duration.
 - `+"`X-RateLimit-Policy`"+`: currently `+"`hybrid-token-bucket`"+`.
 
-Current Gateway v1 routes use an IP/fingerprint limit of 1,000 requests per minute with a 100 requests/second token bucket and burst 10. An authenticated-user limiter exists internally but is not a documented allowance for these routes. These are service limits, not permanent entitlements, and may be lowered during Beta.
+Current APIGateway v1 routes use an IP/fingerprint limit of 1,000 requests per minute with a 100 requests/second token bucket and burst 10. An authenticated-user limiter exists internally but is not a documented allowance for these routes. These are service limits, not permanent entitlements, and may be lowered during Beta.
 
 On HTTP 429, wait until the reset time and add randomized backoff. Retry only idempotent reads or writes carrying an application-level idempotency guarantee. The current public mutations do not generally expose an idempotency key, so a client must reconcile state before retrying a timed-out mutation.`)
 	writeText(filepath.Join(base, "rules", "origins-and-security.md"), `# Origin and security rules
 
-- Browser requests must use `+"`credentials: include`"+` so cookies are accepted and returned.
-- Cross-origin browser access works only for origins configured in the Gateway allowlist.
+- Send the API key in `+"`X-API-Key`"+`; never put it in a URL, query string, or request body.
+- Cross-origin browser access works only for origins configured in the APIGateway allowlist.
 - CLI and server clients should omit Origin and Referer rather than forge an allowed browser origin.
 - HTTPS is mandatory outside local development.
 - Never commit Postman environments after adding credentials.
-- Never place account passwords, cookies, CSRF tokens, realtime tickets, or authorization codes in URLs.
-- Realtime connection and channel tickets expire after five minutes and are single-use.
+- Never place account passwords, API keys, or authorization codes in URLs.
 - Treat all IDs and permissions returned by the client as untrusted; server authorization remains authoritative.
 
 Public documentation does not itself grant a third-party origin permission to call the service.`)
@@ -643,27 +559,27 @@ The URL version (`+"`v1`"+`) is the compatibility boundary for request and respo
 - OpenAPI, Postman, examples, rules, routes, and Go DTO changes must ship together.
 
 Compare generated OpenAPI artifacts between releases to produce the public API change log.`)
-	writeText(filepath.Join(base, "versions", "dev-log.md"), fmt.Sprintf(`# Gateway v1 development log
+	writeText(filepath.Join(base, "versions", "dev-log.md"), fmt.Sprintf(`# APIGateway v1 development log
 
 ## Current contract baseline
 
-- Published surface: %d Gateway operations.
-- Contract format: OpenAPI 3.1 with bundled GraphQL SDL.
-- Authentication: account/password registration or login followed by HttpOnly cookie reuse and CSRF handling.
+- Published surface: %d APIGateway operations across nine enabled resource domains.
+- Contract format: OpenAPI 3.1.
+- Authentication: user-owned `+"`X-API-Key`"+` header; key creation remains on ClientGateway.
 - Tooling: Postman 2.1 collection/environment, curl functions, and an HTTP client file.
 - Stability: Beta namespace with v1 compatibility rules.
 
 Future entries must identify added, changed, deprecated, and removed operations and link to their migration notes. Never record a breaking change only in application release notes.`, endpointCount))
-	writeText(filepath.Join(base, "versions", "comparison.md"), `# Gateway API version comparison
+	writeText(filepath.Join(base, "versions", "comparison.md"), `# APIGateway API version comparison
 
-Only Gateway v1 is currently published, so there is no second public contract to compare yet.
+Only APIGateway v1 is currently published, so there is no second public contract to compare yet.
 
 | Capability | v1 Beta |
 | --- | --- |
 | HTTP contract | OpenAPI 3.1 |
-| GraphQL contract | Bundled SDL and operation examples |
-| Authentication | HttpOnly access/refresh cookies plus CSRF |
-| API keys | Not available |
+| Public domains | RootShelf, SubShelf, Material, BlockPack, Block, Station, Routine, RoutineTask, RoutineTag |
+| Authentication | User-owned `+"`X-API-Key`"+` header |
+| API keys | Required for every published operation |
 | Importable client | Postman Collection 2.1 |
 
 When another API version is introduced, this file must compare base paths, authentication, renamed or removed operations, schema changes, error behavior, rate limits, and migration deadlines.`)

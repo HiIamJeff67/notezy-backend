@@ -10,9 +10,83 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 
 	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
 )
+
+func WithGatewaySource(ctx context.Context, source string) context.Context {
+	return sharedcontexts.WithValue(ctx, sharedcontexts.ContextFieldName_Gateway_Source, source)
+}
+
+func WithAuthMethod(ctx context.Context, method string) context.Context {
+	return sharedcontexts.WithValue(ctx, sharedcontexts.ContextFieldName_Auth_Method, method)
+}
+
+func WithAPIKeyId(ctx context.Context, apiKeyId string) context.Context {
+	return sharedcontexts.WithValue(ctx, sharedcontexts.ContextFieldName_API_Key_Id, apiKeyId)
+}
+
+func WithDelegationMetadata(ctx context.Context, claims *sharedtokens.DelegationTokenClaims) context.Context {
+	if claims == nil {
+		return ctx
+	}
+	source := claims.GatewaySource
+	if source == "" {
+		source = sharedtokens.GatewaySourceClient
+	}
+	method := claims.AuthMethod
+	if method == "" {
+		method = sharedtokens.AuthMethodJWT
+	}
+	ctx = WithGatewaySource(ctx, source)
+	ctx = WithAuthMethod(ctx, method)
+	if claims.ApiKeyId != "" {
+		ctx = WithAPIKeyId(ctx, claims.ApiKeyId)
+	}
+	return ctx
+}
+
+func GetGatewaySource(ctx context.Context) (string, *exceptions.Exception) {
+	source, err := sharedcontexts.GetValue[string](ctx, sharedcontexts.ContextFieldName_Gateway_Source)
+	if err != nil || (source != sharedtokens.GatewaySourceClient && source != sharedtokens.GatewaySourceAPI) {
+		return "", exceptions.New(
+			"DelegationClaimsInvalid", "API", "ReadGatewaySource",
+			"The verified delegation context does not contain a valid gateway source",
+			http.StatusInternalServerError, true,
+		).WithOrigin(err)
+	}
+	return source, nil
+}
+
+func IsClientGateway(ctx context.Context) bool {
+	source, err := sharedcontexts.GetValue[string](ctx, sharedcontexts.ContextFieldName_Gateway_Source)
+	return err == nil && source == sharedtokens.GatewaySourceClient
+}
+
+func GetAuthMethod(ctx context.Context) (string, *exceptions.Exception) {
+	method, err := sharedcontexts.GetValue[string](ctx, sharedcontexts.ContextFieldName_Auth_Method)
+	if err != nil || (method != sharedtokens.AuthMethodJWT && method != sharedtokens.AuthMethodAPIKey) {
+		return "", exceptions.New(
+			"DelegationClaimsInvalid", "API", "ReadAuthMethod",
+			"The verified delegation context does not contain a valid authentication method",
+			http.StatusInternalServerError, true,
+		).WithOrigin(err)
+	}
+	return method, nil
+}
+
+func GetAPIKeyId(ctx context.Context) (string, *exceptions.Exception) {
+	apiKeyId, err := sharedcontexts.GetValue[string](ctx, sharedcontexts.ContextFieldName_API_Key_Id)
+	if err != nil || apiKeyId == "" {
+		return "", exceptions.New(
+			"DelegationClaimsInvalid", "API", "ReadAPIKeyId",
+			"The verified delegation context does not contain a valid API key ID",
+			http.StatusInternalServerError, true,
+		).WithOrigin(err)
+	}
+	return apiKeyId, nil
+}
 
 func WithAllowedPermissions(
 	ctx context.Context,
