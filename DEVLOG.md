@@ -1,0 +1,11 @@
+# Development Log
+
+This file is an automatically maintained index of recent snapshots.
+
+## Recent snapshots
+
+- [2026-08/2026-08-15](docs/devlogs/2026-08/2026-08-15.md)
+- [2026-08/2026-08-14](docs/devlogs/2026-08/2026-08-14.md)
+- [2026-08/2026-08-13](docs/devlogs/2026-08/2026-08-13.md)
+- [2026-08/2026-08-12](docs/devlogs/2026-08/2026-08-12.md)
+- [2026-08/2026-08-11](docs/devlogs/2026-08/2026-08-11.md)

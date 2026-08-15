@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root="$(git rev-parse --show-toplevel)"
+today="$(date +%F)"
+month="${today%-??}"
+relative_path="docs/devlogs/$month/$today.md"
+temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/notezy-devlog-check.XXXXXX")"
+trap 'rm -rf "$temporary_dir"' EXIT INT TERM
+
+if ! git -C "$root" cat-file -e ":$relative_path" 2>/dev/null; then
+	cat >&2 <<'EOF'
+Today's devlog is not staged.
+Run `make devlog`, then `git add .` before committing.
+EOF
+	exit 1
+fi
+
+DEVLOG_ARCHIVE_DIR="$temporary_dir/devlogs" \
+DEVLOG_INDEX_FILE="$temporary_dir/DEVLOG.md" \
+	"$root/scripts/devlog.sh" >/dev/null
+
+git -C "$root" show ":$relative_path" > "$temporary_dir/staged.md"
+
+if ! cmp -s "$temporary_dir/devlogs/$month/$today.md" "$temporary_dir/staged.md"; then
+	cat >&2 <<'EOF'
+Today's staged devlog is out of date.
+Run `make devlog`, then `git add .` before committing.
+EOF
+	exit 1
+fi

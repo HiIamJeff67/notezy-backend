@@ -24,6 +24,7 @@ directly after changing a decision so future agents follow the latest rules.
 | [04-persistence.md](04-persistence.md) | services, repositories, scopes, schemas, transactions, and SQL |
 | [05-testing-and-generated-code.md](05-testing-and-generated-code.md) | tests, test data, generated GraphQL code, and verification checklist |
 | [06-exceptions.md](06-exceptions.md) | base/service exception domains, error origins, and `exceptions.Cover()` |
+| [07-version-control.md](07-version-control.md) | commit messages, daily devlogs, and Git hooks |
 
 ## Priority Order
 

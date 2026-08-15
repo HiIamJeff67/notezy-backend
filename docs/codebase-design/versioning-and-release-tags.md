@@ -84,7 +84,7 @@ Tag:    v0.1.0-beta.1
 ```
 
 - A branch describes a group of work in progress.
-- A commit describes one change and follows the project's Conventional Commit format.
+- A commit describes one change and follows the project's [version-control convention](../conventions/07-version-control.md).
 - A tag identifies a confirmed, deployable version.
 
 The following must not be used as release tags:
