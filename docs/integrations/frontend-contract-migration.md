@@ -19,10 +19,10 @@
 
 | 先前位置 | 現在位置 | 前端用途 |
 | --- | --- | --- |
-| `contracts/gateway/v1/public-api/` | 已 deprecated，暫留作遷移相容 | 不要再作為文件或 code generation 的來源 |
+| `contracts/gateway/v1/public-api/` | 已移除 | 使用 `contracts/client-gateway/v1/public/` 或 `contracts/api-gateway/v1/public/` |
 | — | `contracts/client-gateway/v1/public/` | 現有 Web client 的 JWT cookie、登入、註冊與 client-only flow |
 | — | `contracts/api-gateway/v1/public/` | 給外部整合、CLI 或使用者自有 server 的公開 API |
-| `contracts/realtime-gateway/v1/public-api/` | `contracts/realtime-gateway/v1/public/` | RealtimeGateway 的 runtime public contract；既有前端 realtime 串接維持既有 ticket flow |
+| `contracts/realtime-gateway/v1/public-api/` | 已移除；使用 `contracts/realtime-gateway/v1/public/` | RealtimeGateway 的 runtime public contract；既有前端 realtime 串接維持既有 ticket flow |
 
 `contracts/api-gateway/v1/public/` 的 OpenAPI、Postman 與 examples
 才是唯一公開 API 文件。它的 authenticated request 使用：

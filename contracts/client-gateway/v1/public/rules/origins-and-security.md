@@ -1,7 +1,7 @@
 # Origin and security rules
 
 - Browser requests must use `credentials: include` so cookies are accepted and returned.
-- Cross-origin browser access works only for origins configured in the Gateway allowlist.
+- Cross-origin browser access works only for origins configured in the ClientGateway allowlist.
 - CLI and server clients should omit Origin and Referer rather than forge an allowed browser origin.
 - HTTPS is mandatory outside local development.
 - Never commit Postman environments after adding credentials.

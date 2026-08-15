@@ -1,6 +1,6 @@
 # Authentication and credential rules
 
-Gateway v1 Beta integrations authenticate by calling register or login with an account and password. A successful response sets `accessToken` and `refreshToken` as HttpOnly cookies. Clients must use a cookie jar and return both cookies on subsequent requests.
+ClientGateway v1 Beta integrations authenticate by calling register or login with an account and password. A successful response sets `accessToken` and `refreshToken` as HttpOnly cookies. Clients must use a cookie jar and return both cookies on subsequent requests.
 
 - Access cookie lifetime: 30 minutes.
 - Refresh cookie lifetime: 14 days.

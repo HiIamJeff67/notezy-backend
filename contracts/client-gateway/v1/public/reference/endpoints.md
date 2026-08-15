@@ -1,6 +1,6 @@
-# Gateway v1 endpoint reference
+# ClientGateway v1 endpoint reference
 
-This catalog is generated from the registered Gateway routes. Request and response property definitions live in `../openapi/openapi.json`.
+This catalog is generated from the registered ClientGateway routes. Request and response property definitions live in `../openapi/openapi.json`.
 
 | Method | Path | Operation | Request DTO | Response DTO |
 | --- | --- | --- | --- | --- |

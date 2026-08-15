@@ -32,6 +32,16 @@ X-API-Key: nzy_<base64url-secret>
 
 raw key 僅允許出現在 request header 的短暫生命週期，禁止寫入 log、trace、metrics、Redis value 或 error response。
 
+ClientGateway 以既有 JWT cookie session 提供 API key 管理：
+
+| Method | Route | 用途 |
+| --- | --- | --- |
+| `POST` | `/api/v1/me/api-keys/create` | 建立 key；完整 secret 只在這次 response 出現 |
+| `GET` | `/api/v1/me/api-keys/` | 列出目前使用者的 key metadata |
+| `DELETE` | `/api/v1/me/api-keys/:api-key-id` | 撤銷目前使用者擁有的 key |
+
+建立與撤銷只接受 ClientGateway 的 JWT flow；APIGateway 不提供 key management route。
+
 ## 驗證流程
 
 1. APIGateway 先以 `KeyMiddleware()` 檢查 header 存在與基本格式。
@@ -50,13 +60,13 @@ APIGateway 沿用 `UnauthorizedRateLimitMiddleware()`。主要 partition 永遠�
 
 目前 APIGateway v1 只註冊以下九個 resource domains：RootShelf、SubShelf、Material、BlockPack、Block、Station、Routine、RoutineTask、RoutineTag。其餘 auth、user/account、notification、realtime、GraphQL 與 static routes 只註冊在 ClientGateway。
 
-總 router 只負責傳遞 repository/service dependencies。`AuthMiddleware()`、`APIKeyMiddleware()`、`EitherMiddleware()` 等應在各 `*_router.go` 就地組合，讓 route allowlist 與認證規則靠近 endpoint；目前 Core router 只建立 source-aware authentication selector，實際分支仍由已驗證的 delegation source 決定。
+總 router 只負責傳遞 repository/service dependencies。`AuthMiddleware()`、`APIKeyMiddleware()`、`EitherMiddleware()` 等應在各 `*_router.go` 就地組合，讓 route allowlist 與認證規則靠近 endpoint；目前每個可共享 domain router 都依已驗證的 delegation source 就地建立 selector。
 
 ClientGateway 與 APIGateway 各自擁有自己的 route registration、Core adapter、Redis cache、rate limiter、configuration、transport 與 tests：ClientGateway 使用 JWT cookie flow；APIGateway 以 `KeyMiddleware()` 設定 API source，再由 Core API-key middleware 完成 cache/DB fallback。APIGateway 是獨立 module，command 位於 `internal/apigateway/commands/`，使用 `API_GATEWAY_LISTEN_ADDRESS`，不 import ClientGateway runtime source。
 
 本地 Compose 會讓 ClientGateway 綁定 `7777`、APIGateway 綁定 `7780`；目前 Nginx 的預設 `/` upstream 仍指向 ClientGateway，API service 可透過獨立 port/host 配置接入。正式環境若要使用不同網域，應在 Nginx/Ingress 以 host rule 將該網域導向 `notezy-api-gateway:7780`。
 
-現有 `Reposition` helper 已支援把 fronts、shared/default middlewares 與 route-specific backs 依序組合；`RepositionMiddleware` 暫時保留 compatibility alias，待所有 route migration 完成後移除。
+現有 `Reposition` helper 已支援把 fronts、shared/default middlewares 與 route-specific backs 依序組合；兩個 gateway 的 route 已完成 `Reposition` 命名遷移。
 
 ## Contract 與文件輸出
 

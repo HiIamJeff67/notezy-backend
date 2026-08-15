@@ -1,8 +1,8 @@
-# Gateway v1 development log
+# ClientGateway v1 development log
 
 ## Current contract baseline
 
-- Published surface: 168 Gateway operations.
+- Published surface: 168 ClientGateway operations.
 - Contract format: OpenAPI 3.1 with bundled GraphQL SDL.
 - Authentication: account/password registration or login followed by HttpOnly cookie reuse and CSRF handling.
 - Tooling: Postman 2.1 collection/environment, curl functions, and an HTTP client file.
