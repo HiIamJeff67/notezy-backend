@@ -54,7 +54,7 @@ func (r *BlockRepository) HasPermission(
 ) bool {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 	if parsedOptions.DB == nil {
-		parsedOptions.DB = data.NotezyDB
+		parsedOptions.DB = data.DB
 	}
 
 	var marker int
@@ -80,7 +80,7 @@ func (r *BlockRepository) HavePermissions(
 ) bool {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 	if parsedOptions.DB == nil {
-		parsedOptions.DB = data.NotezyDB
+		parsedOptions.DB = data.DB
 	}
 
 	var permittedIds []uuid.UUID
@@ -106,7 +106,7 @@ func (r *BlockRepository) CheckPermissionAndGetOneById(
 ) (*schemas.Block, *exceptions.Exception) {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 	if parsedOptions.DB == nil {
-		parsedOptions.DB = data.NotezyDB
+		parsedOptions.DB = data.DB
 	}
 
 	var block schemas.Block
@@ -142,7 +142,7 @@ func (r *BlockRepository) CheckPermissionsAndGetManyByIds(
 ) ([]schemas.Block, *exceptions.Exception) {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 	if parsedOptions.DB == nil {
-		parsedOptions.DB = data.NotezyDB
+		parsedOptions.DB = data.DB
 	}
 
 	var blocks []schemas.Block
@@ -191,7 +191,7 @@ func (r *BlockRepository) BulkCheckPermissionsAndGetManyByIds(
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 	if parsedOptions.DB == nil {
-		parsedOptions.DB = data.NotezyDB
+		parsedOptions.DB = data.DB
 	}
 
 	successes := make([]bool, len(bulkInputs))
@@ -272,7 +272,7 @@ func (r *BlockRepository) BulkCreateMany(
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 	if parsedOptions.DB == nil {
-		parsedOptions.DB = data.NotezyDB
+		parsedOptions.DB = data.DB
 	}
 
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
@@ -366,7 +366,7 @@ func (r *BlockRepository) BulkUpdateMany(
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 	if parsedOptions.DB == nil {
-		parsedOptions.DB = data.NotezyDB
+		parsedOptions.DB = data.DB
 	}
 
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted

@@ -36,7 +36,7 @@ func NewUserSettingService(
 	userSettingRepository repositories.UserSettingRepositoryInterface,
 ) UserSettingServiceInterface {
 	if db == nil {
-		db = data.NotezyDB
+		db = data.DB
 	}
 	return &UserSettingService{
 		validator:             validator,

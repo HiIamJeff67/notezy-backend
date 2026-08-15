@@ -8,7 +8,7 @@ import (
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 
-	platformdatabase "github.com/HiIamJeff67/notezy-backend/shared/platform/database"
+	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
 
 	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
 )
@@ -38,7 +38,7 @@ func (Material) TableName() string {
 }
 
 // Material Table Relations
-type MaterialRelation platformdatabase.RelationName
+type MaterialRelation platformpostgres.RelationName
 
 const (
 	MaterialRelation_ParentSubShelf MaterialRelation = "ParentSubShelf"

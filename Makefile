@@ -5,19 +5,23 @@ WORKSPACE_MODULES := contracts shared internal/cli internal/core internal/durabl
 .PHONY: ci-format ci-vet ci-unit ci-race ci-generated ci-containers staging-deploy staging-smoke kafka-topics \
 	compose-integration-up compose-integration-down test-integration test-integration-kafka \
 	compose-up compose-down test-integration-managed env-check env-encrypt env-decrypt env-edit env-updatekeys env-rotate \
-	test-client-gateway test-api-gateway
+	env-encrypt-all development production test staging \
+	test-client-gateway test-api-gateway devlog install-hooks
 
 COMPOSE_INTEGRATION_PROJECT := notezy-integration
 COMPOSE_INTEGRATION_FILE := infra/docker/docker-compose.integration.yaml
 COMPOSE_FILE ?= docker-compose.yaml
-COMPOSE_ENCRYPTED_ENV_FILE ?= secrets/envs/.env.enc
+COMPOSE_ENCRYPTED_ENV_FILE ?= .env.development.enc
 COMPOSE_SOPS_CONFIG ?= .sops.yaml
 SOPS ?= sops
 SOPS_CONFIG ?= .sops.yaml
+ENVIRONMENTS := development production test staging
 ENVIRONMENT ?= development
-ENV_DIRECTORY ?= secrets/envs
-ENV_PLAINTEXT_FILE ?= $(if $(filter development,$(ENVIRONMENT)),.env,$(ENV_DIRECTORY)/.env.$(ENVIRONMENT))
-ENV_ENCRYPTED_FILE ?= $(ENV_DIRECTORY)/$(if $(filter development,$(ENVIRONMENT)),.env,.env.$(ENVIRONMENT)).enc
+ENV_DIRECTORY ?= .
+ENVIRONMENT_GOAL := $(firstword $(filter $(ENVIRONMENTS),$(MAKECMDGOALS)))
+SELECTED_ENVIRONMENT := $(if $(ENVIRONMENT_GOAL),$(ENVIRONMENT_GOAL),$(ENVIRONMENT))
+ENV_PLAINTEXT_FILE ?= $(ENV_DIRECTORY)/.env.$(SELECTED_ENVIRONMENT)
+ENV_ENCRYPTED_FILE ?= $(ENV_DIRECTORY)/.env.$(SELECTED_ENVIRONMENT).enc
 
 env-check:
 	@command -v "$(SOPS)" >/dev/null 2>&1 || { echo "sops is required; install SOPS before using env-* targets" >&2; exit 1; }
@@ -34,6 +38,17 @@ env-encrypt: env-check
 	mv "$$temporary_file" "$(ENV_ENCRYPTED_FILE)"; \
 	trap - EXIT INT TERM
 	@echo "Encrypted $(ENV_PLAINTEXT_FILE) -> $(ENV_ENCRYPTED_FILE)"
+
+env-encrypt-all: env-check
+	@set -eu; \
+	for environment in $(ENVIRONMENTS); do \
+		echo "Encrypting $$environment"; \
+		$(MAKE) --no-print-directory env-encrypt ENVIRONMENT="$$environment"; \
+	done
+
+# GNU Make consumes -e itself; the environment goal makes `make env-encrypt -e development` select development.
+development production test staging:
+	@:
 
 env-decrypt: env-check
 	@test -f "$(ENV_ENCRYPTED_FILE)" || { echo "missing $(ENV_ENCRYPTED_FILE)" >&2; exit 1; }
@@ -151,6 +166,13 @@ test-client-gateway:
 
 test-api-gateway:
 	$(MAKE) -C internal/apigateway test
+
+devlog:
+	./scripts/devlog.sh
+
+install-hooks:
+	git config core.hooksPath .githooks
+	@echo "Git hooks enabled from .githooks"
 
 test-durable-job:
 	$(MAKE) -C internal/durablejob test

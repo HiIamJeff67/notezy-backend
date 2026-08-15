@@ -77,7 +77,7 @@ func NewStationService(
 	usersToStationsRepository repositories.UsersToStationsRepositoryInterface,
 ) StationServiceInterface {
 	if db == nil {
-		db = data.NotezyDB
+		db = data.DB
 	}
 	return &StationService{
 		validator:                 validator,

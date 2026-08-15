@@ -75,7 +75,7 @@ func (ros RepositoryOptionFields) HasAllowedPermissions() bool {
 
 func GetDefaultOptions() RepositoryOptionFields {
 	return RepositoryOptionFields{
-		DB:                   data.NotezyDB,
+		DB:                   data.DB,
 		IsTransactionStarted: false,
 		AllowedPermissions:   nil,
 		OnlyDeleted:          types.Ternary_Neutral,

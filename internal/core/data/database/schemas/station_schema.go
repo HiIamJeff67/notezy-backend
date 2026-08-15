@@ -8,7 +8,7 @@ import (
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 
-	platformdatabase "github.com/HiIamJeff67/notezy-backend/shared/platform/database"
+	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
 
 	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
 )
@@ -37,7 +37,7 @@ func (Station) TableName() string {
 }
 
 // Station Table Relations
-type StationRelation platformdatabase.RelationName
+type StationRelation platformpostgres.RelationName
 
 const (
 	StationRelation_Owner           StationRelation = "Owner"

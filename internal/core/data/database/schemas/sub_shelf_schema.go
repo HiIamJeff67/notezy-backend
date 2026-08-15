@@ -9,7 +9,7 @@ import (
 
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 
-	platformdatabase "github.com/HiIamJeff67/notezy-backend/shared/platform/database"
+	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
 )
 
 type SubShelf struct {
@@ -40,7 +40,7 @@ func (SubShelf) TableName() string {
 }
 
 // SubShelf Table Relations
-type SubShelfRelation platformdatabase.RelationName
+type SubShelfRelation platformpostgres.RelationName
 
 const (
 	SubShelfRelation_RootShelf      SubShelfRelation = "RootShelf"

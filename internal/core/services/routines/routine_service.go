@@ -81,7 +81,7 @@ func NewRoutineService(
 	itemRepository repositories.ItemRepositoryInterface,
 ) RoutineServiceInterface {
 	if db == nil {
-		db = data.NotezyDB
+		db = data.DB
 	}
 	return &RoutineService{
 		validator:             validator,

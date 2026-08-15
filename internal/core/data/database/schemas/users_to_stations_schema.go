@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	platformdatabase "github.com/HiIamJeff67/notezy-backend/shared/platform/database"
+	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
 
 	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
 )
@@ -29,7 +29,7 @@ func (UsersToStations) TableName() string {
 }
 
 // UsersToStations Table Relations
-type UsersToStationsRelation platformdatabase.RelationName
+type UsersToStationsRelation platformpostgres.RelationName
 
 const (
 	UsersToStationsRelation_User    UsersToStationsRelation = "User"

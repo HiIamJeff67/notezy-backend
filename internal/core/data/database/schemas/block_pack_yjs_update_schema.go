@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	platformdatabase "github.com/HiIamJeff67/notezy-backend/shared/platform/database"
+	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
 )
 
 type BlockPackYjsUpdate struct {
@@ -27,7 +27,7 @@ func (BlockPackYjsUpdate) TableName() string {
 	return "BlockPackYjsUpdateTable"
 }
 
-type BlockPackYjsUpdateRelation platformdatabase.RelationName
+type BlockPackYjsUpdateRelation platformpostgres.RelationName
 
 const (
 	BlockPackYjsUpdateRelation_BlockPack BlockPackYjsUpdateRelation = "BlockPack"

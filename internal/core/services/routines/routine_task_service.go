@@ -80,7 +80,7 @@ func NewRoutineTaskService(
 	routineTaskExecutionServices ...RoutineTaskExecutionServiceInterface,
 ) RoutineTaskServiceInterface {
 	if db == nil {
-		db = data.NotezyDB
+		db = data.DB
 	}
 	if routineTaskScope == nil {
 		routineTaskScope = scopes.NewRoutineTaskScope()

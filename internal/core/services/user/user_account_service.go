@@ -47,7 +47,7 @@ func NewUserAccountService(
 	oauthService authservices.OAuthServiceInterface,
 ) UserAccountServiceInterface {
 	if db == nil {
-		db = data.NotezyDB
+		db = data.DB
 	}
 	return &UserAccountService{
 		validator:             validator,

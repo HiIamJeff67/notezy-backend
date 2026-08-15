@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
 )
 
 type Config struct {
+	Postgres                  platformpostgres.Config
 	ListenAddress             string
 	OAuthGoogle               OAuthGoogleConfig
 	OutboxRelay               OutboxRelayConfig
@@ -18,6 +21,10 @@ type Config struct {
 }
 
 func LoadConfig() (Config, error) {
+	postgres, err := LoadPostgresConfig()
+	if err != nil {
+		return Config{}, err
+	}
 	listenAddress := strings.TrimSpace(os.Getenv("CORE_LISTEN_ADDRESS"))
 	if listenAddress == "" {
 		return Config{}, fmt.Errorf("CORE_LISTEN_ADDRESS is required")
@@ -51,6 +58,7 @@ func LoadConfig() (Config, error) {
 		return Config{}, err
 	}
 	return Config{
+		Postgres:                  postgres,
 		ListenAddress:             listenAddress,
 		OAuthGoogle:               oauthGoogle,
 		OutboxRelay:               outboxRelay,

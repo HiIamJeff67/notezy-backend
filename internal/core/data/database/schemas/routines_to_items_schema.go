@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	platformdatabase "github.com/HiIamJeff67/notezy-backend/shared/platform/database"
+	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
 
 	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
 )
@@ -27,7 +27,7 @@ func (RoutinesToItems) TableName() string {
 }
 
 // RoutinesToItems Table Relations
-type RoutinesToItemsRelation platformdatabase.RelationName
+type RoutinesToItemsRelation platformpostgres.RelationName
 
 const (
 	RoutinesToItemsRelation_Routine RoutinesToItemsRelation = "Routine"

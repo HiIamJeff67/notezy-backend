@@ -8,7 +8,7 @@ import (
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 
-	platformdatabase "github.com/HiIamJeff67/notezy-backend/shared/platform/database"
+	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
 
 	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
 )
@@ -36,7 +36,7 @@ func (RootShelf) TableName() string {
 }
 
 // Shelf Table Relations
-type RootShelfRelation platformdatabase.RelationName
+type RootShelfRelation platformpostgres.RelationName
 
 const (
 	RootShelfRelation_SubShelves          RootShelfRelation = "SubShelves"

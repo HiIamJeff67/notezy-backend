@@ -68,28 +68,16 @@ func requestBodyForOperation(operation string) []byte {
 }
 
 func newRouterForAuthSelection() *gin.Engine {
-	return corerouters.NewRouter(
-		func(ctx *gin.Context) { ctx.AbortWithStatus(http.StatusUpgradeRequired) },
-		func(ctx *gin.Context) { ctx.AbortWithStatus(http.StatusTeapot) },
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-	)
+	return corerouters.NewRouter(corerouters.RouterDependencies{
+		Auth: corerouters.AuthRouterDependencies{
+			AuthMiddleware: func(ctx *gin.Context) { ctx.AbortWithStatus(http.StatusUpgradeRequired) },
+		},
+		RootShelf: corerouters.RootShelfRouterDependencies{
+			AuthMiddleware:   func(ctx *gin.Context) { ctx.AbortWithStatus(http.StatusUpgradeRequired) },
+			APIKeyMiddleware: func(ctx *gin.Context) { ctx.AbortWithStatus(http.StatusTeapot) },
+		},
+		User: corerouters.UserRouterDependencies{
+			AuthMiddleware: func(ctx *gin.Context) { ctx.AbortWithStatus(http.StatusUpgradeRequired) },
+		},
+	})
 }

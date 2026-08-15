@@ -1,21 +1,15 @@
-package database
+package config
 
 import (
 	"fmt"
 	"os"
 	"strings"
+
+	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
 )
 
-type Config struct {
-	Host     string
-	User     string
-	Password string
-	Name     string
-	Port     string
-}
-
-func LoadConfig() (Config, error) {
-	config := Config{
+func LoadPostgresConfig() (platformpostgres.Config, error) {
+	config := platformpostgres.Config{
 		Host:     strings.TrimSpace(os.Getenv("DB_HOST")),
 		User:     strings.TrimSpace(os.Getenv("DB_USER")),
 		Password: os.Getenv("DB_PASSWORD"),
@@ -23,7 +17,7 @@ func LoadConfig() (Config, error) {
 		Port:     strings.TrimSpace(os.Getenv("DOCKER_DB_PORT")),
 	}
 	if config.Host == "" || config.User == "" || config.Password == "" || config.Name == "" || config.Port == "" {
-		return Config{}, fmt.Errorf("DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, and DOCKER_DB_PORT are required")
+		return platformpostgres.Config{}, fmt.Errorf("DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, and DOCKER_DB_PORT are required")
 	}
 
 	return config, nil

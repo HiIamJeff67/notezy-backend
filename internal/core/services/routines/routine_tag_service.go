@@ -52,7 +52,7 @@ func NewRoutineTagService(
 	routineTagRepository repositories.RoutineTagRepositoryInterface,
 ) RoutineTagServiceInterface {
 	if db == nil {
-		db = data.NotezyDB
+		db = data.DB
 	}
 	return &RoutineTagService{
 		validator:            validator,

@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	platformdatabase "github.com/HiIamJeff67/notezy-backend/shared/platform/database"
+	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
 
 	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
 )
@@ -33,7 +33,7 @@ func (UsersToBillingPlans) TableName() string {
 }
 
 // UsersToBilling Plans Relations
-type UsersToBullingPlansRelation platformdatabase.RelationName
+type UsersToBullingPlansRelation platformpostgres.RelationName
 
 const (
 	UsersToBillingPlansRelation_User        UsersToBullingPlansRelation = "User"

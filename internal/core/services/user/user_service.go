@@ -56,7 +56,7 @@ func NewUserService(
 	userDataCacheClient *userdata.UserDataCacheClient,
 ) UserServiceInterface {
 	if db == nil {
-		db = data.NotezyDB
+		db = data.DB
 	}
 	return &UserService{
 		validator:           validator,

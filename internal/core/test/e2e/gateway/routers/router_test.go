@@ -165,30 +165,21 @@ func TestRouterRejectsDelegationForAnotherOperation(t *testing.T) {
 }
 
 func newRouterForDelegationValidation() *gin.Engine {
-	return corerouters.NewRouter(
-		func(ctx *gin.Context) {
-			ctx.Next()
+	return corerouters.NewRouter(corerouters.RouterDependencies{
+		Auth: corerouters.AuthRouterDependencies{
+			AuthMiddleware: func(ctx *gin.Context) {
+				ctx.Next()
+			},
 		},
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-	)
+		RootShelf: corerouters.RootShelfRouterDependencies{
+			AuthMiddleware: func(ctx *gin.Context) {
+				ctx.Next()
+			},
+		},
+		Station: corerouters.StationRouterDependencies{
+			AuthMiddleware: func(ctx *gin.Context) {
+				ctx.Next()
+			},
+		},
+	})
 }

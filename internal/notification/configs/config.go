@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	platformdatabase "github.com/HiIamJeff67/notezy-backend/shared/platform/database"
+	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
 )
 
 type Config struct {
 	ListenAddress         string
-	Database              platformdatabase.Config
+	Postgres              platformpostgres.Config
 	Kafka                 KafkaConsumerConfig
 	OutboxPollInterval    time.Duration
 	OutboxClaimTimeout    time.Duration
@@ -34,7 +34,7 @@ func LoadConfig() (Config, error) {
 		strings.TrimSpace(os.Getenv("CORE_DELEGATION_ISSUER")) == "" {
 		return Config{}, fmt.Errorf("CORE_DELEGATION_SECRET, CORE_DELEGATION_AUDIENCE, and CORE_DELEGATION_ISSUER are required")
 	}
-	database, err := LoadDatabaseConfig()
+	postgres, err := LoadPostgresConfig()
 	if err != nil {
 		return Config{}, err
 	}
@@ -77,7 +77,7 @@ func LoadConfig() (Config, error) {
 
 	return Config{
 		ListenAddress:         listenAddress,
-		Database:              database,
+		Postgres:              postgres,
 		Kafka:                 kafka,
 		OutboxPollInterval:    outboxPollInterval,
 		OutboxClaimTimeout:    outboxClaimTimeout,

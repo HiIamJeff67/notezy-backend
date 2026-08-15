@@ -76,7 +76,7 @@ func NewSubShelfService(
 	blockPackRepository repositories.BlockPackRepositoryInterface,
 ) SubShelfServiceInterface {
 	if db == nil {
-		db = data.NotezyDB
+		db = data.DB
 	}
 	return &SubShelfService{
 		validator:           validator,

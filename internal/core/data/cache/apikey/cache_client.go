@@ -1,15 +1,17 @@
 package apikey
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 
-	redisclient "github.com/go-redis/redis"
+	"github.com/go-redis/redis"
 	"github.com/google/uuid"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
 	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
 )
 
@@ -24,63 +26,141 @@ type APIKeyCache struct {
 }
 
 type APIKeyCacheClient struct {
-	clientSet *platformredis.ClientSet
-	expiresIn time.Duration
+	cacheStore *APIKeyCacheStore
+	expiresIn  time.Duration
 }
 
-func NewAPIKeyCacheClient(clientSet *platformredis.ClientSet, expiresIn ...time.Duration) *APIKeyCacheClient {
-	ttl := defaultCacheExpiresIn
-	if len(expiresIn) > 0 && expiresIn[0] > 0 {
-		ttl = expiresIn[0]
+/* ============================== Constructor ============================== */
+
+func NewAPIKeyCacheClient(cacheStore *APIKeyCacheStore) *APIKeyCacheClient {
+	return &APIKeyCacheClient{
+		cacheStore: cacheStore,
+		expiresIn:  defaultCacheExpiresIn,
 	}
-	return &APIKeyCacheClient{clientSet: clientSet, expiresIn: ttl}
 }
 
-func formatAPIKeyCacheKey(keyHash string) string {
-	return fmt.Sprintf("APIKey:%s", keyHash)
-}
+/* ============================== Auxiliary Methods ============================== */
 
-func (c *APIKeyCacheClient) redisClient(keyHash string) (*redisclient.Client, *exceptions.Exception) {
-	if c == nil || c.clientSet == nil {
-		return nil, exceptions.New("CacheClientUnavailable", "Cache", "GetAPIKey", "API key cache is unavailable", http.StatusInternalServerError, true)
+func (s *APIKeyCacheClient) getRedisClient(identifier string) (*redis.Client, int, *exceptions.Exception) {
+	if s == nil || s.cacheStore == nil {
+		return nil, 0, exceptions.New(
+			"CacheClientUnavailable",
+			"Cache",
+			"GetRedisClient",
+			"API key cache client is unavailable",
+			http.StatusInternalServerError,
+			true,
+		)
 	}
-	client, _, err := c.clientSet.ClientForKey(keyHash)
-	if err != nil || client == nil {
-		return nil, exceptions.New("CacheClientUnavailable", "Cache", "GetAPIKey", "API key cache is unavailable", http.StatusInternalServerError, true).WithOrigin(err)
+
+	redisClient, shardIndex, err := s.cacheStore.ClientSet().ClientForKey(identifier)
+	if err != nil {
+		return nil, 0, exceptions.New(
+			"CacheClientUnavailable",
+			"Cache",
+			"GetRedisClient",
+			"API key cache client is unavailable",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
 	}
-	return client, nil
+
+	return redisClient, shardIndex, nil
 }
 
-func (c *APIKeyCacheClient) Get(keyHash string) (*APIKeyCache, *exceptions.Exception) {
-	client, exception := c.redisClient(keyHash)
+func (s *APIKeyCacheClient) formatAPIKeyCacheKey(keyHash string) string {
+	return fmt.Sprintf("%s:%s", platformredis.CachePurpose_APIKey.String(), keyHash)
+}
+
+/* ============================== CRUD Method ============================== */
+
+func (s *APIKeyCacheClient) Get(keyHash string) (*APIKeyCache, *exceptions.Exception) {
+	redisClient, shardIndex, exception := s.getRedisClient(keyHash)
 	if exception != nil {
 		return nil, exception
 	}
-	value, err := client.Get(formatAPIKeyCacheKey(keyHash)).Result()
-	if err == redisclient.Nil {
+
+	cacheString, err := redisClient.Get(s.formatAPIKeyCacheKey(keyHash)).Result()
+	if err == redis.Nil {
 		return nil, nil
 	}
 	if err != nil {
-		return nil, exceptions.New("CacheReadFailed", "Cache", "GetAPIKey", "API key cache read failed", http.StatusInternalServerError, true).WithOrigin(err)
+		return nil, exceptions.New(
+			"NotFound",
+			"Cache",
+			"GetAPIKey",
+			"Cached API key was not found",
+			http.StatusNotFound,
+			true,
+		).WithOrigin(err)
 	}
-	cache := &APIKeyCache{}
-	if err := json.Unmarshal([]byte(value), cache); err != nil {
-		return nil, exceptions.New("CacheDecodeFailed", "Cache", "GetAPIKey", "API key cache value is invalid", http.StatusInternalServerError, true).WithOrigin(err)
+
+	var apiKeyCache APIKeyCache
+	if err := json.Unmarshal([]byte(cacheString), &apiKeyCache); err != nil {
+		return nil, exceptions.New(
+			"DeserializationFailed",
+			"Cache",
+			"GetAPIKey",
+			"Failed to decode cached API key",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
 	}
-	return cache, nil
+
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully got cached API key from Redis shard %d", shardIndex))
+	return &apiKeyCache, nil
 }
 
-func (c *APIKeyCacheClient) Set(keyHash string, value APIKeyCache) *exceptions.Exception {
-	client, exception := c.redisClient(keyHash)
+func (s *APIKeyCacheClient) Set(keyHash string, apiKeyCache APIKeyCache) *exceptions.Exception {
+	redisClient, shardIndex, exception := s.getRedisClient(keyHash)
 	if exception != nil {
 		return exception
 	}
-	encoded, err := json.Marshal(value)
+
+	value, err := json.Marshal(apiKeyCache)
 	if err != nil {
-		return exceptions.New("CacheEncodeFailed", "Cache", "SetAPIKey", "API key cache value could not be encoded", http.StatusInternalServerError, true).WithOrigin(err)
+		return exceptions.New(
+			"SerializationFailed",
+			"Cache",
+			"SetAPIKey",
+			"Failed to encode cached API key",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
 	}
-	if err := client.Set(formatAPIKeyCacheKey(keyHash), encoded, c.expiresIn).Err(); err != nil {
-		return exceptions.New("CacheWriteFailed", "Cache", "SetAPIKey", "API key cache write failed", http.StatusInternalServerError, true).WithOrigin(err)
+
+	if err := redisClient.Set(s.formatAPIKeyCacheKey(keyHash), string(value), s.expiresIn).Err(); err != nil {
+		return exceptions.New(
+			"FailedToCreate",
+			"Cache",
+			"SetAPIKey",
+			"Failed to store cached API key",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
 	}
+
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully set cached API key in Redis shard %d", shardIndex))
+	return nil
+}
+
+func (s *APIKeyCacheClient) Delete(keyHash string) *exceptions.Exception {
+	redisClient, shardIndex, exception := s.getRedisClient(keyHash)
+	if exception != nil {
+		return exception
+	}
+
+	if err := redisClient.Del(s.formatAPIKeyCacheKey(keyHash)).Err(); err != nil {
+		return exceptions.New(
+			"FailedToDelete",
+			"Cache",
+			"DeleteAPIKey",
+			"Failed to delete cached API key",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
+
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully deleted cached API key from Redis shard %d", shardIndex))
 	return nil
 }

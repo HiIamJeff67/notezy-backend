@@ -27,6 +27,19 @@ type Application struct {
 	routineTaskEngine *routinetask.Engine
 }
 
+type ApplicationInterface interface {
+	loadConfig() durablejobconfig.Config
+	loadKafkaConnectionConfig() platformkafka.ConnectionConfig
+	initializeObservability() func()
+	initializeKafka(platformkafka.ConnectionConfig, func()) *platformkafka.Producer
+	initializeWorkers(durablejobconfig.Config, platformkafka.ConnectionConfig, *platformkafka.Producer) func()
+	buildRouter() *http.ServeMux
+	startHTTP(durablejobconfig.Config, *http.ServeMux, func(), *platformkafka.Producer, func()) func()
+	Start() func()
+	IsHealthy() bool
+	IsReady() bool
+}
+
 func NewApplication() *Application {
 	return &Application{}
 }
@@ -39,23 +52,35 @@ func (a *Application) IsReady() bool {
 	return a.ready.Load() && a.routineTaskEngine != nil && a.routineTaskEngine.IsReady()
 }
 
-func (a *Application) Start() func() {
+func (a *Application) loadConfig() durablejobconfig.Config {
 	config, err := durablejobconfig.LoadConfig()
 	if err != nil {
 		panic(err)
 	}
+	return config
+}
+
+func (a *Application) loadKafkaConnectionConfig() platformkafka.ConnectionConfig {
 	kafkaConnectionConfig, err := platformkafka.LoadConnectionConfig()
 	if err != nil {
 		panic(err)
 	}
-	shutdownObservability := observability.Initialize(
+	return kafkaConnectionConfig
+}
+
+func (a *Application) initializeObservability() func() {
+	return observability.Initialize(
 		context.Background(),
 		observability.LoadConfig("notezy-durable-job"),
 	)
+}
 
-	// Establish the Kafka producer before constructing engines and consumers.
+func (a *Application) initializeKafka(
+	config platformkafka.ConnectionConfig,
+	shutdownObservability func(),
+) *platformkafka.Producer {
 	kafkaProducer, err := platformkafka.NewProducer(platformkafka.ClientConfig{
-		ConnectionConfig: kafkaConnectionConfig,
+		ConnectionConfig: config,
 		ClientId:         "notezy-durable-job",
 	})
 	if err != nil {
@@ -67,11 +92,17 @@ func (a *Application) Start() func() {
 		shutdownObservability()
 		panic(err)
 	}
+	return kafkaProducer
+}
 
+func (a *Application) initializeWorkers(
+	config durablejobconfig.Config,
+	kafkaConnection platformkafka.ConnectionConfig,
+	kafkaProducer *platformkafka.Producer,
+) func() {
 	// Construct and start the durable-job workers that consume and publish tasks.
 	routineTaskEngine := routinetask.NewEngine(config)
 	a.routineTaskEngine = routineTaskEngine
-	application := a
 	routineTaskClaimProducer := coreproducers.NewRoutineTaskClaimProducer(kafkaProducer)
 	routineTaskResultProducer := coreproducers.NewRoutineTaskResultProducer(kafkaProducer)
 	routineTaskLifecycleProducer := realtimegatewayproducers.NewRoutineTaskLifecycleProducer(kafkaProducer)
@@ -83,7 +114,7 @@ func (a *Application) Start() func() {
 		routineTaskEngine,
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
-				ConnectionConfig: kafkaConnectionConfig,
+				ConnectionConfig: kafkaConnection,
 				ClientId:         "notezy-durable-job-routine-task",
 			},
 			ConsumerGroup:       durablejobconfig.RoutineTaskConsumerGroup,
@@ -106,7 +137,7 @@ func (a *Application) Start() func() {
 		yjsMaintenanceStrategy,
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
-				ConnectionConfig: kafkaConnectionConfig,
+				ConnectionConfig: kafkaConnection,
 				ClientId:         "notezy-durable-job-yjs-maintenance",
 			},
 			ConsumerGroup:       durablejobconfig.YjsMaintenanceHintConsumerGroup,
@@ -121,7 +152,7 @@ func (a *Application) Start() func() {
 		yjsMaintenanceStrategy,
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
-				ConnectionConfig: kafkaConnectionConfig,
+				ConnectionConfig: kafkaConnection,
 				ClientId:         "notezy-durable-job-yjs-maintenance-result",
 			},
 			ConsumerGroup:       durablejobconfig.YjsMaintenanceResultConsumerGroup,
@@ -133,25 +164,38 @@ func (a *Application) Start() func() {
 	)
 	shutdownYjsMaintenanceResultConsumer := yjsMaintenanceResultConsumer.Start(context.Background())
 
-	// Expose health endpoints only after worker dependencies have started.
-	mux := http.NewServeMux()
-	status.ConfigureStartedRouter(mux, application.IsHealthy)
-	status.ConfigureHealthRouter(mux, application.IsReady)
-	listener, err := net.Listen("tcp", config.ListenAddress)
-	if err != nil {
+	return func() {
 		shutdownYjsMaintenanceResultConsumer()
 		shutdownYjsMaintenanceHintConsumer()
 		shutdownRoutineTaskEngine()
 		shutdownRoutineTaskAssignmentConsumer()
+	}
+}
+
+func (a *Application) buildRouter() *http.ServeMux {
+	mux := http.NewServeMux()
+	status.ConfigureStartedRouter(mux, a.IsHealthy)
+	status.ConfigureHealthRouter(mux, a.IsReady)
+	return mux
+}
+
+func (a *Application) startHTTP(
+	config durablejobconfig.Config,
+	mux *http.ServeMux,
+	shutdownWorkers func(),
+	kafkaProducer *platformkafka.Producer,
+	shutdownObservability func(),
+) func() {
+	listener, err := net.Listen("tcp", config.ListenAddress)
+	if err != nil {
+		shutdownWorkers()
 		kafkaProducer.Close()
 		shutdownObservability()
 		panic(err)
 	}
-	application.healthy.Store(true)
-	application.ready.Store(application.routineTaskEngine.IsReady())
-	server := &http.Server{
-		Handler: mux,
-	}
+	a.healthy.Store(true)
+	a.ready.Store(a.routineTaskEngine.IsReady())
+	server := &http.Server{Handler: mux}
 	go func() {
 		if err := server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			panic(err)
@@ -160,22 +204,28 @@ func (a *Application) Start() func() {
 
 	return func() {
 		// Stop HTTP traffic before stopping workers and Kafka.
-		application.ready.Store(false)
-		application.healthy.Store(false)
+		a.ready.Store(false)
+		a.healthy.Store(false)
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			fmt.Println("Failed to shutdown DurableJob server: ", err)
 		}
-		shutdownYjsMaintenanceResultConsumer()
-		shutdownYjsMaintenanceHintConsumer()
-		shutdownRoutineTaskEngine()
-		shutdownRoutineTaskAssignmentConsumer()
+		shutdownWorkers()
 		kafkaProducer.Close()
 		shutdownObservability()
 	}
 }
 
-func Start() func() {
-	return NewApplication().Start()
+func (a *Application) Start() func() {
+	shutdownObservability := a.initializeObservability()
+	config := a.loadConfig()
+	kafkaConnection := a.loadKafkaConnectionConfig()
+	kafkaProducer := a.initializeKafka(kafkaConnection, shutdownObservability)
+	shutdownWorkers := a.initializeWorkers(config, kafkaConnection, kafkaProducer)
+	router := a.buildRouter()
+	return a.startHTTP(config, router, shutdownWorkers, kafkaProducer, shutdownObservability)
 }
+
+// make sure Application struct followed the ApplicationInterface implementations
+var _ ApplicationInterface = (*Application)(nil)

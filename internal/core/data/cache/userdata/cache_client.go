@@ -88,7 +88,7 @@ func (s *UserDataCacheClient) getRedisClient(identifier string) (*redis.Client, 
 	return redisClient, shardIndex, nil
 }
 
-func formatUserDataKey(identifier string) string {
+func (s *UserDataCacheClient) formatUserDataKey(identifier string) string {
 	return fmt.Sprintf("%s:%s", platformredis.CachePurpose_UserData.String(), identifier)
 }
 
@@ -100,7 +100,7 @@ func (s *UserDataCacheClient) Extend(identifier string) *exceptions.Exception {
 		return exception
 	}
 
-	updated, err := redisClient.Expire(formatUserDataKey(identifier), s.cacheExpiresIn).Result()
+	updated, err := redisClient.Expire(s.formatUserDataKey(identifier), s.cacheExpiresIn).Result()
 	if err != nil {
 		return exceptions.New(
 			"FailedToExtendTTL",
@@ -140,7 +140,7 @@ func (s *UserDataCacheClient) CheckAndUpdateQuota(
 		"FCALL",
 		redislibraries.CheckAndUpdateUserQuotaByFormattedKeyFunction,
 		1,
-		formatUserDataKey(identifier),
+		s.formatUserDataKey(identifier),
 		input.Field,
 		input.ChangeAmount,
 		input.MaxLimit,
@@ -185,7 +185,7 @@ func (s *UserDataCacheClient) BestEffortBatchCheckAndUpdateQuotas(
 		keys := make([]interface{}, 0, len(groupedInputs))
 		arguments := make([]interface{}, 0, len(groupedInputs)*s.batchCheckAndUpdateQuotasByFormattedKeysArgvPerKey)
 		for _, input := range groupedInputs {
-			keys = append(keys, formatUserDataKey(input.Identifier))
+			keys = append(keys, s.formatUserDataKey(input.Identifier))
 			arguments = append(arguments,
 				input.Input.Field,
 				input.Input.ChangeAmount,
@@ -243,7 +243,7 @@ func (s *UserDataCacheClient) BestEffortBatchCheckAndUpdateQuotasByIdentifier(
 		"FCALL",
 		redislibraries.BestEffortBatchCheckAndUpdateUserQuotasByFormattedKeyFunction,
 		1,
-		formatUserDataKey(identifier),
+		s.formatUserDataKey(identifier),
 	}
 	command = append(command, arguments...)
 	if _, err := redisClient.Do(command...).Result(); err != nil {
@@ -268,7 +268,7 @@ func (s *UserDataCacheClient) Get(identifier string) (*UserDataCache, *exception
 		return nil, exception
 	}
 
-	cacheString, err := redisClient.Get(formatUserDataKey(identifier)).Result()
+	cacheString, err := redisClient.Get(s.formatUserDataKey(identifier)).Result()
 	if err != nil {
 		return nil, exceptions.New(
 			"NotFound",
@@ -332,7 +332,7 @@ func (s *UserDataCacheClient) Set(identifier string, userDataCache UserDataCache
 		).WithOrigin(err)
 	}
 
-	if err := redisClient.Set(formatUserDataKey(identifier), string(value), s.cacheExpiresIn).Err(); err != nil {
+	if err := redisClient.Set(s.formatUserDataKey(identifier), string(value), s.cacheExpiresIn).Err(); err != nil {
 		return exceptions.New(
 			"FailedToCreate",
 			"Cache",
@@ -382,7 +382,7 @@ func (s *UserDataCacheClient) Update(identifier string, input cacheinputs.Update
 		).WithOrigin(err)
 	}
 
-	if err := redisClient.Set(formatUserDataKey(identifier), string(value), s.cacheExpiresIn).Err(); err != nil {
+	if err := redisClient.Set(s.formatUserDataKey(identifier), string(value), s.cacheExpiresIn).Err(); err != nil {
 		return exceptions.New(
 			"FailedToUpdate",
 			"Cache",
@@ -403,7 +403,7 @@ func (s *UserDataCacheClient) Delete(identifier string) *exceptions.Exception {
 		return exception
 	}
 
-	if err := redisClient.Del(formatUserDataKey(identifier)).Err(); err != nil {
+	if err := redisClient.Del(s.formatUserDataKey(identifier)).Err(); err != nil {
 		return exceptions.New(
 			"FailedToDelete",
 			"Cache",

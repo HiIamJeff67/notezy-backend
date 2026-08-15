@@ -6,10 +6,17 @@ import (
 
 	"github.com/spf13/cobra"
 
-	platformdatabase "github.com/HiIamJeff67/notezy-backend/shared/platform/database"
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
 
+	coreconfig "github.com/HiIamJeff67/notezy-backend/internal/core/configs"
 	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
+	constraints "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/constraints"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
+	triggers "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/triggers"
+	views "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/views"
+	seeds "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/seeds"
 )
 
 var viewAllAvailableDatabasesCommand = &cobra.Command{
@@ -29,14 +36,15 @@ var viewAllDatabaseEnumsCommand = &cobra.Command{
 	Short: "View all the nums of the database.",
 	Long:  "Use a simple select sql command to get all the enums of the database",
 	Run: func(_ *cobra.Command, _ []string) {
-		config, err := platformdatabase.LoadConfig()
+		config, err := coreconfig.LoadPostgresConfig()
 		if err != nil {
 			panic(err)
 		}
-		db := data.ConnectToDatabase(config)
-		defer data.DisconnectToDatabase(db)
+		db := data.Connect(config)
+		defer data.Disconnect(db)
 
-		if !data.ViewAllDatabaseEnums(db) {
+		if err := platformpostgres.ViewAllDatabaseEnums(db); err != nil {
+			logs.NotezyLogger.Error(context.Background(), err, "Failed to display database enums")
 			return
 		}
 	},
@@ -72,10 +80,12 @@ var truncateDatabaseCommand = &cobra.Command{
 		}
 
 		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Start the process of truncating database table: %s", tableNameString))
-		db = data.ConnectToDatabase(data.DatabaseInstanceToConfig[db])
-		defer data.DisconnectToDatabase(db)
+		db = data.Connect(data.DatabaseInstanceToConfig[db])
+		defer data.Disconnect(db)
 
-		data.TruncateTablesInDatabase(tableName, db)
+		if err := platformpostgres.TruncateTablesInDatabase(tableName, db); err != nil {
+			logs.NotezyLogger.Error(context.Background(), err, "Failed to truncate database table")
+		}
 	},
 }
 
@@ -84,20 +94,28 @@ var migrateDatabaseCommand = &cobra.Command{
 	Short: "Migrate enums, tables, and some triggers to the database.",
 	Long:  "Use some migration SQLs to migrate required enums, tables, and some triggers to the database.",
 	Run: func(_ *cobra.Command, _ []string) {
-		config, err := platformdatabase.LoadConfig()
+		config, err := coreconfig.LoadPostgresConfig()
 		if err != nil {
 			panic(err)
 		}
-		db := data.ConnectToDatabase(config)
-		defer data.DisconnectToDatabase(db)
+		db := data.Connect(config)
+		defer data.Disconnect(db)
 
 		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Start the process of migrating database schema to %v", config.Name))
 
-		if !data.MigrateEnumsToDatabase(db) ||
-			!data.MigrateTablesToDatabase(db) ||
-			!data.MigrateTriggersToDatabase(db) ||
-			!data.MigrateConstraintsToDatabase(db) {
-			return
+		for _, migrate := range []func() error{
+			func() error { return platformpostgres.MigrateEnumsToDatabase(db, enums.MigratingEnums) },
+			func() error { return platformpostgres.MigrateTablesToDatabase(db, schemas.MigratingTables) },
+			func() error { return platformpostgres.MigrateViewsToDatabase(db, views.MigratingViewSQLs) },
+			func() error { return platformpostgres.MigrateTriggersToDatabase(db, triggers.MigratingTriggerSQLs) },
+			func() error {
+				return platformpostgres.MigrateConstraintsToDatabase(db, constraints.MigratingConstraintSQLs)
+			},
+		} {
+			if err := migrate(); err != nil {
+				logs.NotezyLogger.Error(context.Background(), err, "Failed to migrate database schema")
+				return
+			}
 		}
 	},
 }
@@ -107,16 +125,17 @@ var seedDatabaseCommand = &cobra.Command{
 	Short: "Seed some default data for management or main business logic.",
 	Long:  "Use some seeding default data SQLs to seed data for management or main business logic.",
 	Run: func(_ *cobra.Command, _ []string) {
-		config, err := platformdatabase.LoadConfig()
+		config, err := coreconfig.LoadPostgresConfig()
 		if err != nil {
 			panic(err)
 		}
-		db := data.ConnectToDatabase(config)
-		defer data.DisconnectToDatabase(db)
+		db := data.Connect(config)
+		defer data.Disconnect(db)
 
 		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Start the process of seeding database default data to %v", config.Name))
 
-		if !data.SeedDefaultDataToDatabase(db) {
+		if err := platformpostgres.SeedDefaultDataToDatabase(db, seeds.SeedingDefaultDataSQLs); err != nil {
+			logs.NotezyLogger.Error(context.Background(), err, "Failed to seed database default data")
 			return
 		}
 	},

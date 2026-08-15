@@ -91,7 +91,7 @@ func NewAuthService(
 	authCodeGenerator *authcode.AuthCodeGenerator,
 ) AuthServiceInterface {
 	if db == nil {
-		db = data.NotezyDB
+		db = data.DB
 	}
 	if authCodeGenerator == nil {
 		authCodeGenerator = authcode.New()

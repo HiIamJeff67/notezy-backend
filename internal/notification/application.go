@@ -11,9 +11,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	validator "github.com/go-playground/validator/v10"
+	"gorm.io/gorm"
 
 	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
 	observability "github.com/HiIamJeff67/notezy-backend/shared/platform/observability"
+	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
 	sharedvalidations "github.com/HiIamJeff67/notezy-backend/shared/validations"
 
 	configs "github.com/HiIamJeff67/notezy-backend/internal/notification/configs"
@@ -33,6 +35,20 @@ type Application struct {
 	ready   atomic.Bool
 }
 
+type ApplicationInterface interface {
+	Start() func()
+	IsHealthy() bool
+	IsReady() bool
+	loadConfig() configs.Config
+	initializeObservability() func()
+	initializeDatabase(platformpostgres.Config, func()) *gorm.DB
+	initializeKafka(platformkafka.ConnectionConfig, *gorm.DB, func()) *platformkafka.Producer
+	initializeService(*gorm.DB) services.NotificationServiceInterface
+	initializeWorkers(configs.Config, services.NotificationServiceInterface, *gorm.DB, *platformkafka.Producer) func()
+	buildRouter(services.NotificationServiceInterface) *gin.Engine
+	startHTTP(configs.Config, *gin.Engine, func(), *gorm.DB, *platformkafka.Producer, func()) func()
+}
+
 func NewApplication() *Application {
 	return &Application{}
 }
@@ -45,25 +61,37 @@ func (a *Application) IsReady() bool {
 	return a.ready.Load()
 }
 
-func (a *Application) Start() func() {
-	application := a
+func (a *Application) loadConfig() configs.Config {
 	config, err := configs.LoadConfig()
 	if err != nil {
 		panic(err)
 	}
-	shutdownObservability := observability.Initialize(
+	return config
+}
+
+func (a *Application) initializeObservability() func() {
+	return observability.Initialize(
 		context.Background(),
 		observability.LoadConfig("notezy-notification"),
 	)
+}
 
-	// Initialize persistence and Kafka dependencies before starting notification workers.
-	db, err := database.Connect(config.Database)
+func (a *Application) initializeDatabase(config platformpostgres.Config, shutdownObservability func()) *gorm.DB {
+	db, err := database.Connect(config)
 	if err != nil {
 		shutdownObservability()
 		panic(err)
 	}
+	return db
+}
+
+func (a *Application) initializeKafka(
+	config platformkafka.ConnectionConfig,
+	db *gorm.DB,
+	shutdownObservability func(),
+) *platformkafka.Producer {
 	producer, err := platformkafka.NewProducer(platformkafka.ClientConfig{
-		ConnectionConfig: config.Kafka.Connection,
+		ConnectionConfig: config,
 		ClientId:         "notezy-notification-producer",
 	})
 	if err != nil {
@@ -71,6 +99,10 @@ func (a *Application) Start() func() {
 		shutdownObservability()
 		panic(err)
 	}
+	return producer
+}
+
+func (a *Application) initializeService(db *gorm.DB) services.NotificationServiceInterface {
 	repository := repositories.NewNotificationRepository(db)
 	notificationValidator := validator.New()
 	sharedvalidations.RegisterStringsValidation(notificationValidator)
@@ -79,11 +111,17 @@ func (a *Application) Start() func() {
 	validations.RegisterNewsValidation(notificationValidator)
 	validations.RegisterWarningValidation(notificationValidator)
 	validations.RegisterImportantValidation(notificationValidator)
-	service := services.NewNotificationService(repository, notificationValidator)
-	consumer := consumers.NewNotificationRequestConsumer(
-		service,
-		config.Kafka.ConsumerConfig(),
-	)
+	return services.NewNotificationService(repository, notificationValidator)
+}
+
+func (a *Application) initializeWorkers(
+	config configs.Config,
+	service services.NotificationServiceInterface,
+	db *gorm.DB,
+	producer *platformkafka.Producer,
+) func() {
+	repository := repositories.NewNotificationRepository(db)
+	consumer := consumers.NewNotificationRequestConsumer(service, config.Kafka.ConsumerConfig())
 	relay := notificationtransports.NewOutboxRelay(
 		repository,
 		producer,
@@ -103,18 +141,24 @@ func (a *Application) Start() func() {
 	shutdownConsumer := consumer.Start(context.Background())
 	shutdownRelay := relay.Start(context.Background())
 	shutdownCleanup := cleanup.Start(context.Background())
+	return func() {
+		shutdownCleanup()
+		shutdownRelay()
+		shutdownConsumer()
+	}
+}
 
-	// Start the internal HTTP transport after consumers and outbox workers are ready.
+func (a *Application) buildRouter(service services.NotificationServiceInterface) *gin.Engine {
 	router := gin.New()
 	router.GET("/healthz", func(ctx *gin.Context) {
-		if !application.IsReady() {
+		if !a.IsReady() {
 			ctx.Status(http.StatusServiceUnavailable)
 			return
 		}
 		ctx.Status(http.StatusNoContent)
 	})
 	router.GET("/startedz", func(ctx *gin.Context) {
-		if !application.IsHealthy() {
+		if !a.IsHealthy() {
 			ctx.Status(http.StatusServiceUnavailable)
 			return
 		}
@@ -122,19 +166,27 @@ func (a *Application) Start() func() {
 	})
 	endpoint := endpoints.NewNotificationEndpoint(service)
 	routers.ConfigureNotificationRoutes(router.Group("/internal/v1"), endpoint)
+	return router
+}
 
+func (a *Application) startHTTP(
+	config configs.Config,
+	router *gin.Engine,
+	shutdownWorkers func(),
+	db *gorm.DB,
+	producer *platformkafka.Producer,
+	shutdownObservability func(),
+) func() {
 	listener, err := net.Listen("tcp", config.ListenAddress)
 	if err != nil {
-		shutdownCleanup()
-		shutdownRelay()
-		shutdownConsumer()
+		shutdownWorkers()
 		producer.Close()
 		_ = database.Disconnect(db)
 		shutdownObservability()
 		panic(err)
 	}
-	application.healthy.Store(true)
-	application.ready.Store(true)
+	a.healthy.Store(true)
+	a.ready.Store(true)
 	server := &http.Server{Handler: router}
 	go func() {
 		if err := server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -144,11 +196,9 @@ func (a *Application) Start() func() {
 
 	return func() {
 		// Stop background workers before closing the HTTP, Kafka, and database resources.
-		application.ready.Store(false)
-		application.healthy.Store(false)
-		shutdownCleanup()
-		shutdownRelay()
-		shutdownConsumer()
+		a.ready.Store(false)
+		a.healthy.Store(false)
+		shutdownWorkers()
 		shutdownContext, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := server.Shutdown(shutdownContext); err != nil {
@@ -162,6 +212,16 @@ func (a *Application) Start() func() {
 	}
 }
 
-func Start() func() {
-	return NewApplication().Start()
+func (a *Application) Start() func() {
+	shutdownObservability := a.initializeObservability()
+	config := a.loadConfig()
+	db := a.initializeDatabase(config.Postgres, shutdownObservability)
+	producer := a.initializeKafka(config.Kafka.Connection, db, shutdownObservability)
+	service := a.initializeService(db)
+	shutdownWorkers := a.initializeWorkers(config, service, db, producer)
+	router := a.buildRouter(service)
+	return a.startHTTP(config, router, shutdownWorkers, db, producer, shutdownObservability)
 }
+
+// make sure Application struct followed the ApplicationInterface implementations
+var _ ApplicationInterface = (*Application)(nil)

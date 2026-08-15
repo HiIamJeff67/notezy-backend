@@ -28,7 +28,7 @@ type BadgeService struct {
 
 func NewBadgeService(db *gorm.DB) BadgeServiceInterface {
 	if db == nil {
-		db = data.NotezyDB
+		db = data.DB
 	}
 	return &BadgeService{db: db}
 }

@@ -60,7 +60,7 @@ func (s *RateLimitRecordCacheClient) getRedisClient(backendServerName platformre
 	return redisClient, shardIndex, nil
 }
 
-func formatRateLimitRecordKey(backendServerName platformredis.BackendServerName, identifier string) string {
+func (s *RateLimitRecordCacheClient) formatRateLimitRecordKey(backendServerName platformredis.BackendServerName, identifier string) string {
 	return fmt.Sprintf("%s:%s:%s", platformredis.CachePurpose_RateLimit.String(), backendServerName, identifier)
 }
 
@@ -88,7 +88,7 @@ func (s *RateLimitRecordCacheClient) Get(
 		return nil, err
 	}
 
-	cacheString, err := redisClient.Get(formatRateLimitRecordKey(backendServerName, identifier)).Result()
+	cacheString, err := redisClient.Get(s.formatRateLimitRecordKey(backendServerName, identifier)).Result()
 	if err != nil {
 		return nil, realtimeexceptions.
 			NewCacheException("RateLimitRecord").
@@ -122,7 +122,7 @@ func (s *RateLimitRecordCacheClient) Set(
 	}
 
 	expiresIn := s.calculateExpiration(identifier, rateLimitRecordCache.WindowStartTime, rateLimitRecordCache.WindowDuration)
-	if err := redisClient.Set(formatRateLimitRecordKey(backendServerName, identifier), string(value), expiresIn).Err(); err != nil {
+	if err := redisClient.Set(s.formatRateLimitRecordKey(backendServerName, identifier), string(value), expiresIn).Err(); err != nil {
 		return realtimeexceptions.NewCacheException("RateLimitRecord").CreateFailed(err)
 	}
 
@@ -162,7 +162,7 @@ func (s *RateLimitRecordCacheClient) Update(
 	}
 
 	expiresIn := s.calculateExpiration(identifier, rateLimitRecordCache.WindowStartTime, rateLimitRecordCache.WindowDuration)
-	if err := redisClient.Set(formatRateLimitRecordKey(backendServerName, identifier), string(value), expiresIn).Err(); err != nil {
+	if err := redisClient.Set(s.formatRateLimitRecordKey(backendServerName, identifier), string(value), expiresIn).Err(); err != nil {
 		return realtimeexceptions.NewCacheException("RateLimitRecord").UpdateFailed(err)
 	}
 
@@ -179,7 +179,7 @@ func (s *RateLimitRecordCacheClient) Delete(
 		return err
 	}
 
-	if err := redisClient.Del(formatRateLimitRecordKey(backendServerName, identifier)).Err(); err != nil {
+	if err := redisClient.Del(s.formatRateLimitRecordKey(backendServerName, identifier)).Err(); err != nil {
 		return realtimeexceptions.NewCacheException("RateLimitRecord").DeleteFailed(err)
 	}
 
@@ -205,7 +205,7 @@ func (s *RateLimitRecordCacheClient) BatchSynchronize(
 	keys := make([]interface{}, 0, len(inputs))
 	arguments := make([]interface{}, 0, len(inputs)*s.batchSynchronizeFunctionArgvPerKey)
 	for _, input := range inputs {
-		keys = append(keys, formatRateLimitRecordKey(backendServerName, input.Identifier))
+		keys = append(keys, s.formatRateLimitRecordKey(backendServerName, input.Identifier))
 		arguments = append(arguments, input.Input.NumOfChangingTokens, input.Input.IsAccumulated)
 	}
 
@@ -239,7 +239,7 @@ func (s *RateLimitRecordCacheClient) BatchDelete(
 
 	keys := make([]interface{}, 0, len(identifiers))
 	for _, identifier := range identifiers {
-		keys = append(keys, formatRateLimitRecordKey(backendServerName, identifier))
+		keys = append(keys, s.formatRateLimitRecordKey(backendServerName, identifier))
 	}
 
 	command := []interface{}{

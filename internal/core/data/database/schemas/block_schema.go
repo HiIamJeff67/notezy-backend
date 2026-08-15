@@ -9,7 +9,7 @@ import (
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 
-	platformdatabase "github.com/HiIamJeff67/notezy-backend/shared/platform/database"
+	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
 
 	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
 )
@@ -40,7 +40,7 @@ func (Block) TableName() string {
 }
 
 // Root Block Table Relations
-type BlockRelation platformdatabase.RelationName
+type BlockRelation platformpostgres.RelationName
 
 const (
 	BlockRelation_BlockPack BlockRelation = "BlockPack"

@@ -1,4 +1,4 @@
-package database
+package postgres
 
 type TableName string
 

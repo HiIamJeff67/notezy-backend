@@ -23,6 +23,17 @@ type Application struct {
 	ready   atomic.Bool
 }
 
+type ApplicationInterface interface {
+	Start() func()
+	IsHealthy() bool
+	IsReady() bool
+	loadConfig() emailconfig.Config
+	initializeObservability() func()
+	initializeWorkers(emailconfig.Config, func()) func()
+	buildRouter() *http.ServeMux
+	startHTTP(emailconfig.Config, *http.ServeMux, func(), func()) func()
+}
+
 func NewApplication() *Application {
 	return &Application{}
 }
@@ -35,17 +46,25 @@ func (a *Application) IsReady() bool {
 	return a.ready.Load()
 }
 
-func (a *Application) Start() func() {
-	application := a
+func (a *Application) loadConfig() emailconfig.Config {
 	config, err := emailconfig.LoadConfig()
 	if err != nil {
 		panic(err)
 	}
-	shutdownObservability := observability.Initialize(
+	return config
+}
+
+func (a *Application) initializeObservability() func() {
+	return observability.Initialize(
 		context.Background(),
 		observability.LoadConfig("notezy-email"),
 	)
+}
 
+func (a *Application) initializeWorkers(
+	config emailconfig.Config,
+	shutdownObservability func(),
+) func() {
 	// Initialize renderers, the bounded sender queue, and the Kafka consumer.
 	deliverySender := emailsenders.NewEmailSender(config.SMTP)
 	emailWorkerManager := NewEmailWorkerManager(16, deliverySender)
@@ -74,22 +93,36 @@ func (a *Application) Start() func() {
 	)
 	validation := validator.New()
 	emailRequestConsumer := coretransport.NewEmailRequestConsumer(sender, validation, config.KafkaConsumer)
-	shutdownEmailRequestConsumer := emailRequestConsumer.Start(context.Background())
+	shutdownRequestConsumer := emailRequestConsumer.Start(context.Background())
+	return func() {
+		shutdownRequestConsumer()
+		emailWorkerManager.Shutdown()
+	}
+}
 
+func (a *Application) buildRouter() *http.ServeMux {
+	mux := http.NewServeMux()
+	status.ConfigureStartedRouter(mux, a.IsHealthy)
+	status.ConfigureHealthRouter(mux, a.IsReady)
+	return mux
+}
+
+func (a *Application) startHTTP(
+	config emailconfig.Config,
+	mux *http.ServeMux,
+	shutdownWorkers func(),
+	shutdownObservability func(),
+) func() {
 	// Bind the health server after the email consumer is running.
 	listener, err := net.Listen("tcp", config.ListenAddress)
 	if err != nil {
-		shutdownEmailRequestConsumer()
+		shutdownWorkers()
 		shutdownObservability()
 		panic(err)
 	}
-
-	mux := http.NewServeMux()
-	status.ConfigureStartedRouter(mux, application.IsHealthy)
-	status.ConfigureHealthRouter(mux, application.IsReady)
 	server := &http.Server{Handler: mux}
-	application.healthy.Store(true)
-	application.ready.Store(true)
+	a.healthy.Store(true)
+	a.ready.Store(true)
 	go func() {
 		if err := server.Serve(listener); err != nil && err != http.ErrServerClosed {
 			panic(err)
@@ -98,19 +131,25 @@ func (a *Application) Start() func() {
 
 	return func() {
 		// Drain email work after HTTP traffic has stopped, then release observability.
-		application.ready.Store(false)
-		application.healthy.Store(false)
+		a.ready.Store(false)
+		a.healthy.Store(false)
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			panic(err)
 		}
-		shutdownEmailRequestConsumer()
-		emailWorkerManager.Shutdown()
+		shutdownWorkers()
 		shutdownObservability()
 	}
 }
 
-func Start() func() {
-	return NewApplication().Start()
+func (a *Application) Start() func() {
+	shutdownObservability := a.initializeObservability()
+	config := a.loadConfig()
+	shutdownWorkers := a.initializeWorkers(config, shutdownObservability)
+	router := a.buildRouter()
+	return a.startHTTP(config, router, shutdownWorkers, shutdownObservability)
 }
+
+// make sure Application struct followed the ApplicationInterface implementations
+var _ ApplicationInterface = (*Application)(nil)

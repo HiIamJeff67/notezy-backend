@@ -77,7 +77,7 @@ func NewRootShelfService(
 	blockPackRepository repositories.BlockPackRepositoryInterface,
 ) RootShelfServiceInterface {
 	if db == nil {
-		db = data.NotezyDB
+		db = data.DB
 	}
 	return &RootShelfService{
 		validator:                validator,

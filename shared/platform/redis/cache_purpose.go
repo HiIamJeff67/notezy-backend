@@ -4,6 +4,7 @@ type CachePurpose string
 
 const (
 	CachePurpose_UserData  CachePurpose = "UserData"
+	CachePurpose_APIKey    CachePurpose = "APIKey"
 	CachePurpose_RateLimit CachePurpose = "RateLimit"
 	CachePurpose_Realtime  CachePurpose = "Realtime"
 )

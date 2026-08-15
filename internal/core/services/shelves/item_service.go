@@ -38,7 +38,7 @@ func NewItemService(
 	itemScope scopes.ItemScopeInterface,
 ) ItemServiceInterface {
 	if db == nil {
-		db = data.NotezyDB
+		db = data.DB
 	}
 	return &ItemService{
 		db:        db,

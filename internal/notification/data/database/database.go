@@ -6,19 +6,19 @@ import (
 
 	"gorm.io/gorm"
 
-	platformdatabase "github.com/HiIamJeff67/notezy-backend/shared/platform/database"
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
 
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/notification/data/database/schemas"
 )
 
-func Connect(config platformdatabase.Config) (*gorm.DB, error) {
-	db, err := platformdatabase.Connect(config)
+func Connect(config platformpostgres.Config) (*gorm.DB, error) {
+	db, err := platformpostgres.Connect(config)
 	if err != nil {
 		return nil, err
 	}
-	if err := db.AutoMigrate(schemas.MigratingTables...); err != nil {
-		_ = platformdatabase.Disconnect(db)
+	if err := platformpostgres.MigrateTablesToDatabase(db, schemas.MigratingTables); err != nil {
+		_ = platformpostgres.Disconnect(db)
 		return nil, fmt.Errorf("migrate notification database: %w", err)
 	}
 
@@ -29,7 +29,7 @@ func Disconnect(db *gorm.DB) error {
 	if db == nil {
 		return nil
 	}
-	if err := platformdatabase.Disconnect(db); err != nil {
+	if err := platformpostgres.Disconnect(db); err != nil {
 		if logs.NotezyLogger != nil {
 			logs.NotezyLogger.Error(context.Background(), err, "Failed to close Notification database")
 		}

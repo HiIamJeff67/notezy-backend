@@ -8,7 +8,7 @@ import (
 
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 
-	platformdatabase "github.com/HiIamJeff67/notezy-backend/shared/platform/database"
+	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
 )
 
 type Theme struct {
@@ -34,7 +34,7 @@ func (Theme) TableName() string {
 }
 
 // Theme Table Relations
-type ThemeRelation platformdatabase.RelationName
+type ThemeRelation platformpostgres.RelationName
 
 const (
 	ThemeRelation_Author ThemeRelation = "Themes"

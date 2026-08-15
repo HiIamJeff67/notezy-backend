@@ -54,7 +54,7 @@ func NewRoutineTaskRecordService(
 	routineTaskRecordRepository repositories.RoutineTaskRecordRepositoryInterface,
 ) RoutineTaskRecordServiceInterface {
 	if db == nil {
-		db = data.NotezyDB
+		db = data.DB
 	}
 	if routineTaskRecordRepository == nil {
 		routineTaskRecordRepository = repositories.NewRoutineTaskRecordRepository(scopes.NewRoutineTaskRecordScope())

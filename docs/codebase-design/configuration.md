@@ -9,7 +9,8 @@ clients, workers, transports, and services.
 
 | Owner | Config file | Examples |
 | --- | --- | --- |
-| PostgreSQL connection | `shared/platform/database/config.go` | `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DOCKER_DB_PORT` |
+| Core PostgreSQL connection | `internal/core/configs/postgres.go` | `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DOCKER_DB_PORT` |
+| Notification PostgreSQL connection | `internal/notification/configs/postgres.go` | `NOTIFICATION_DB_HOST`, `NOTIFICATION_DB_USER`, `NOTIFICATION_DB_PASSWORD`, `NOTIFICATION_DB_NAME`, `NOTIFICATION_DB_PORT` |
 | Redis connection | `shared/platform/redis/config.go` | `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_INIT_DB` |
 | Kafka connection and TLS | `shared/platform/kafka/config.go` | `KAFKA_BROKERS`, `KAFKA_DIAL_TIMEOUT`, `KAFKA_TLS_*`, `KAFKA_SASL_*` |
 | OpenTelemetry SDK | `shared/platform/observability/config.go` | `OTEL_SERVICE_*`, `OTEL_EXPORTER_OTLP_GRPC_ENDPOINT` |

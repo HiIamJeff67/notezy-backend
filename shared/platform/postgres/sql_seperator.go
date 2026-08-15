@@ -1,3 +1,3 @@
-package database
+package postgres
 
 const SQLSeparator = "-- ============================== SQL Separator =============================="
