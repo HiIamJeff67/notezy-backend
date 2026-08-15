@@ -16,13 +16,18 @@ import (
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
 )
 
+type RoutineTaskRecordRouteDependencies struct {
+	CoreClient                *coreadapters.CoreAdapter
+	AccessTokenCookieHandler  *cookies.CookieHandler
+	RefreshTokenCookieHandler *cookies.CookieHandler
+	RateLimiters              RateLimiters
+}
+
 func configureDevelopmentRoutineTaskRecordRoutes(
 	router *gin.RouterGroup,
-	coreClient *coreadapters.CoreAdapter,
-	accessTokenCookieHandler *cookies.CookieHandler,
-	refreshTokenCookieHandler *cookies.CookieHandler,
-	rateLimiters RateLimiters,
+	deps RoutineTaskRecordRouteDependencies,
 ) {
+	coreClient, accessTokenCookieHandler, refreshTokenCookieHandler, rateLimiters := deps.CoreClient, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -43,7 +48,7 @@ func configureDevelopmentRoutineTaskRecordRoutes(
 	{
 		routineTaskRecordRouterGroup.GET(
 			"/routine-task/:routine-task-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getAllMyRoutineTaskRecordsByRoutineTaskId"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTaskRecord.getAllMyRoutineTaskRecordsByRoutineTaskId"),
@@ -72,7 +77,7 @@ func configureDevelopmentRoutineTaskRecordRoutes(
 	{
 		visualizationRoutes.GET(
 			"/status-count",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskRecordStatusCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordStatusCount"),
@@ -86,7 +91,7 @@ func configureDevelopmentRoutineTaskRecordRoutes(
 		)
 		visualizationRoutes.GET(
 			"/purpose-count",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskRecordPurposeCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordPurposeCount"),
@@ -100,7 +105,7 @@ func configureDevelopmentRoutineTaskRecordRoutes(
 		)
 		visualizationRoutes.GET(
 			"/scheduled-at-count",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskRecordScheduledAtCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordScheduledAtCount"),
@@ -114,7 +119,7 @@ func configureDevelopmentRoutineTaskRecordRoutes(
 		)
 		visualizationRoutes.GET(
 			"/actual-started-at-count",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskRecordActualStartedAtCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordActualStartedAtCount"),
@@ -128,7 +133,7 @@ func configureDevelopmentRoutineTaskRecordRoutes(
 		)
 		visualizationRoutes.GET(
 			"/actual-ended-at-count",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskRecordActualEndedAtCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordActualEndedAtCount"),

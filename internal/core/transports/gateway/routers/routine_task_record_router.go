@@ -5,15 +5,22 @@ import (
 
 	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-task-records"
 
+	routineservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/routines"
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
 )
 
+type RoutineTaskRecordRouterDependencies struct {
+	Service        routineservices.RoutineTaskRecordServiceInterface
+	AuthMiddleware gin.HandlerFunc
+}
+
 func configureRoutineTaskRecordRoutes(
 	router *gin.RouterGroup,
-	authMiddleware gin.HandlerFunc,
-	endpoint endpoints.RoutineTaskRecordEndpointInterface,
+	deps RoutineTaskRecordRouterDependencies,
 ) {
+	authMiddleware := deps.AuthMiddleware
+	endpoint := endpoints.NewRoutineTaskRecordEndpoint(deps.Service)
 	routineTaskRecordRoutes := router.Group("/routine-task-records")
 	{
 		routineTaskRecordRoutes.POST(

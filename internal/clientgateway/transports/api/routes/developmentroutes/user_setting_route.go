@@ -14,13 +14,18 @@ import (
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
 )
 
+type UserSettingRouteDependencies struct {
+	CoreClient                *coreadapters.CoreAdapter
+	AccessTokenCookieHandler  *cookies.CookieHandler
+	RefreshTokenCookieHandler *cookies.CookieHandler
+	RateLimiters              RateLimiters
+}
+
 func configureUserSettingRoutes(
 	router *gin.RouterGroup,
-	coreClient *coreadapters.CoreAdapter,
-	accessTokenCookieHandler *cookies.CookieHandler,
-	refreshTokenCookieHandler *cookies.CookieHandler,
-	rateLimiters RateLimiters,
+	deps UserSettingRouteDependencies,
 ) {
+	coreClient, accessTokenCookieHandler, refreshTokenCookieHandler, rateLimiters := deps.CoreClient, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -41,7 +46,7 @@ func configureUserSettingRoutes(
 	{
 		userSettingRoutes.GET(
 			"/",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMySetting"),
 					middlewares.ApplyMeterMiddleware("server.requests.userSetting.getMySetting"),
@@ -52,7 +57,7 @@ func configureUserSettingRoutes(
 		)
 		userSettingRoutes.PUT(
 			"/",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMySetting"),
 					middlewares.ApplyMeterMiddleware("server.requests.userSetting.updateMySetting"),

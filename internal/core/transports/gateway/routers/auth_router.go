@@ -7,14 +7,22 @@ import (
 
 	userdata "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/userdata"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
+	authservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/auth"
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
 )
 
+type AuthRouterDependencies struct {
+	Service             authservices.AuthServiceInterface
+	AuthMiddleware      gin.HandlerFunc
+	UserDataCacheClient *userdata.UserDataCacheClient
+}
+
 func configureAnonymousAuthRoutes(
 	router *gin.RouterGroup,
-	endpoint endpoints.AuthEndpointInterface,
+	deps AuthRouterDependencies,
 ) {
+	endpoint := endpoints.NewAuthEndpoint(deps.Service)
 	authRoutes := router.Group("/auth")
 	{
 		authRoutes.POST(
@@ -64,10 +72,11 @@ func configureAnonymousAuthRoutes(
 
 func configureAuthenticatedAuthRoutes(
 	router *gin.RouterGroup,
-	authMiddleware gin.HandlerFunc,
-	endpoint endpoints.AuthEndpointInterface,
-	userDataCacheClient *userdata.UserDataCacheClient,
+	deps AuthRouterDependencies,
 ) {
+	authMiddleware := deps.AuthMiddleware
+	endpoint := endpoints.NewAuthEndpoint(deps.Service)
+	userDataCacheClient := deps.UserDataCacheClient
 	authRoutes := router.Group("/auth")
 	{
 		authRoutes.POST(

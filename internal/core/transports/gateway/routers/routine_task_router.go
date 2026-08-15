@@ -5,15 +5,31 @@ import (
 
 	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tasks"
 
+	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
+	routineservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/routines"
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
 )
 
+type RoutineTaskRouterDependencies struct {
+	Service          routineservices.RoutineTaskServiceInterface
+	AuthMiddleware   gin.HandlerFunc
+	APIKeyMiddleware gin.HandlerFunc
+}
+
 func configureRoutineTaskRoutes(
 	router *gin.RouterGroup,
-	authMiddleware gin.HandlerFunc,
-	endpoint endpoints.RoutineTaskEndpointInterface,
+	deps RoutineTaskRouterDependencies,
 ) {
+	authMiddleware := deps.AuthMiddleware
+	apiKeyMiddleware := deps.APIKeyMiddleware
+	endpoint := endpoints.NewRoutineTaskEndpoint(deps.Service)
+	apiCompatibleAuthMiddleware := middlewares.EitherMiddleware(
+		[]gin.HandlerFunc{authMiddleware},
+		[]gin.HandlerFunc{apiKeyMiddleware},
+		func(ctx *gin.Context) bool { return contexts.IsClientGateway(ctx.Request.Context()) },
+	)[0]
+
 	routineTaskRoutes := router.Group("/routine-tasks")
 	{
 		routineTaskRoutes.POST(
@@ -21,7 +37,7 @@ func configureRoutineTaskRoutes(
 			middlewares.DelegationAuthenticatedMiddleware(
 				apicontract.GetMyRoutineTaskByIdOperation,
 			),
-			authMiddleware,
+			apiCompatibleAuthMiddleware,
 			endpoint.GetMyRoutineTaskById,
 		)
 		routineTaskRoutes.POST(
@@ -29,7 +45,7 @@ func configureRoutineTaskRoutes(
 			middlewares.DelegationAuthenticatedMiddleware(
 				apicontract.GetAllMyRoutineTasksByRoutineIdsOperation,
 			),
-			authMiddleware,
+			apiCompatibleAuthMiddleware,
 			endpoint.GetAllMyRoutineTasksByRoutineIds,
 		)
 		routineTaskRoutes.POST(
@@ -37,7 +53,7 @@ func configureRoutineTaskRoutes(
 			middlewares.DelegationAuthenticatedMiddleware(
 				apicontract.GetAllMyRoutineTasksOperation,
 			),
-			authMiddleware,
+			apiCompatibleAuthMiddleware,
 			endpoint.GetAllMyRoutineTasks,
 		)
 		routineTaskRoutes.POST(
@@ -45,7 +61,7 @@ func configureRoutineTaskRoutes(
 			middlewares.DelegationAuthenticatedMiddleware(
 				apicontract.CreateRoutineTaskByRoutineIdOperation,
 			),
-			authMiddleware,
+			apiCompatibleAuthMiddleware,
 			endpoint.CreateRoutineTaskByRoutineId,
 		)
 		routineTaskRoutes.POST(
@@ -53,7 +69,7 @@ func configureRoutineTaskRoutes(
 			middlewares.DelegationAuthenticatedMiddleware(
 				apicontract.UpdateMyRoutineTaskByIdOperation,
 			),
-			authMiddleware,
+			apiCompatibleAuthMiddleware,
 			endpoint.UpdateMyRoutineTaskById,
 		)
 		routineTaskRoutes.POST(
@@ -61,7 +77,7 @@ func configureRoutineTaskRoutes(
 			middlewares.DelegationAuthenticatedMiddleware(
 				apicontract.PauseMyRoutineTaskByIdOperation,
 			),
-			authMiddleware,
+			apiCompatibleAuthMiddleware,
 			endpoint.PauseMyRoutineTaskById,
 		)
 		routineTaskRoutes.POST(
@@ -69,7 +85,7 @@ func configureRoutineTaskRoutes(
 			middlewares.DelegationAuthenticatedMiddleware(
 				apicontract.ResumeMyRoutineTaskByIdOperation,
 			),
-			authMiddleware,
+			apiCompatibleAuthMiddleware,
 			endpoint.ResumeMyRoutineTaskById,
 		)
 		routineTaskRoutes.POST(
@@ -77,7 +93,7 @@ func configureRoutineTaskRoutes(
 			middlewares.DelegationAuthenticatedMiddleware(
 				apicontract.HardDeleteMyRoutineTaskByIdOperation,
 			),
-			authMiddleware,
+			apiCompatibleAuthMiddleware,
 			endpoint.HardDeleteMyRoutineTaskById,
 		)
 		routineTaskRoutes.POST(
@@ -85,7 +101,7 @@ func configureRoutineTaskRoutes(
 			middlewares.DelegationAuthenticatedMiddleware(
 				apicontract.HardDeleteMyRoutineTasksByIdsOperation,
 			),
-			authMiddleware,
+			apiCompatibleAuthMiddleware,
 			endpoint.HardDeleteMyRoutineTasksByIds,
 		)
 	}
@@ -96,7 +112,7 @@ func configureRoutineTaskRoutes(
 			middlewares.DelegationAuthenticatedMiddleware(
 				apicontract.VisualizeMyRoutineTaskStatusCountOperation,
 			),
-			authMiddleware,
+			apiCompatibleAuthMiddleware,
 			endpoint.VisualizeMyRoutineTaskStatusCount,
 		)
 		visualizationRoutes.POST(
@@ -104,7 +120,7 @@ func configureRoutineTaskRoutes(
 			middlewares.DelegationAuthenticatedMiddleware(
 				apicontract.VisualizeMyRoutineTaskPurposeCountOperation,
 			),
-			authMiddleware,
+			apiCompatibleAuthMiddleware,
 			endpoint.VisualizeMyRoutineTaskPurposeCount,
 		)
 		visualizationRoutes.POST(
@@ -112,7 +128,7 @@ func configureRoutineTaskRoutes(
 			middlewares.DelegationAuthenticatedMiddleware(
 				apicontract.VisualizeMyRoutineTaskScheduledAtCountOperation,
 			),
-			authMiddleware,
+			apiCompatibleAuthMiddleware,
 			endpoint.VisualizeMyRoutineTaskScheduledAtCount,
 		)
 		visualizationRoutes.POST(
@@ -120,7 +136,7 @@ func configureRoutineTaskRoutes(
 			middlewares.DelegationAuthenticatedMiddleware(
 				apicontract.VisualizeMyRoutineTaskActualStartedAtCountOperation,
 			),
-			authMiddleware,
+			apiCompatibleAuthMiddleware,
 			endpoint.VisualizeMyRoutineTaskActualStartedAtCount,
 		)
 		visualizationRoutes.POST(
@@ -128,7 +144,7 @@ func configureRoutineTaskRoutes(
 			middlewares.DelegationAuthenticatedMiddleware(
 				apicontract.VisualizeMyRoutineTaskActualEndedAtCountOperation,
 			),
-			authMiddleware,
+			apiCompatibleAuthMiddleware,
 			endpoint.VisualizeMyRoutineTaskActualEndedAtCount,
 		)
 	}
@@ -137,7 +153,7 @@ func configureRoutineTaskRoutes(
 		middlewares.DelegationAuthenticatedMiddleware(
 			apicontract.SearchRoutineTasksOperation,
 		),
-		authMiddleware,
+		apiCompatibleAuthMiddleware,
 		endpoint.SearchRoutineTasks,
 	)
 }

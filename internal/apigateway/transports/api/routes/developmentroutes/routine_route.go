@@ -14,11 +14,16 @@ import (
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/core/adapters"
 )
 
+type RoutineRouteDependencies struct {
+	CoreClient   *coreadapters.CoreAdapter
+	RateLimiters RateLimiters
+}
+
 func configureDevelopmentRoutineRoutes(
 	router *gin.RouterGroup,
-	coreClient *coreadapters.CoreAdapter,
-	rateLimiters RateLimiters,
+	deps RoutineRouteDependencies,
 ) {
+	coreClient, rateLimiters := deps.CoreClient, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -37,7 +42,7 @@ func configureDevelopmentRoutineRoutes(
 	{
 		routineRoutes.GET(
 			"/:routine-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyRoutineById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.getMyRoutineById"),
@@ -51,7 +56,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		routineRoutes.GET(
 			"/station/:station-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyRoutinesByStationId"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.getMyRoutinesByStationId"),
@@ -65,7 +70,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		routineRoutes.GET(
 			"/",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getAllMyRoutinesByTimeRange"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.getAllMyRoutinesByTimeRange"),
@@ -79,7 +84,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		routineRoutes.POST(
 			"/station/:station-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createRoutineByStationId"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.createRoutineByStationId"),
@@ -93,7 +98,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		routineRoutes.POST(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createRoutinesByStationIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.createRoutinesByStationIds"),
@@ -107,7 +112,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		routineRoutes.PUT(
 			"/:routine-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRoutineById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.updateMyRoutineById"),
@@ -121,7 +126,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		routineRoutes.PUT(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRoutinesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.updateMyRoutinesByIds"),
@@ -135,7 +140,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		routineRoutes.POST(
 			"/:routine-id/tags/:routine-tag-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("linkRoutineTagById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.linkRoutineTagById"),
@@ -149,7 +154,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		routineRoutes.POST(
 			"/tags",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("linkRoutineTagsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.linkRoutineTagsByIds"),
@@ -163,7 +168,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		routineRoutes.POST(
 			"/:routine-id/items/:item-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("linkRoutineItemById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.linkRoutineItemById"),
@@ -177,7 +182,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		routineRoutes.POST(
 			"/items",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("linkRoutineItemsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.linkRoutineItemsByIds"),
@@ -191,7 +196,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		routineRoutes.PATCH(
 			"/:routine-id/restore",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyRoutineById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.restoreMyRoutineById"),
@@ -205,7 +210,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		routineRoutes.PATCH(
 			"/batch/restore",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyRoutinesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.restoreMyRoutinesByIds"),
@@ -219,7 +224,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		routineRoutes.DELETE(
 			"/:routine-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyRoutineById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.deleteMyRoutineById"),
@@ -233,7 +238,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		routineRoutes.DELETE(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyRoutinesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.deleteMyRoutinesByIds"),
@@ -247,7 +252,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		routineRoutes.DELETE(
 			"/:routine-id/permanently",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutineById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.hardDeleteMyRoutineById"),
@@ -261,7 +266,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		routineRoutes.DELETE(
 			"/batch/permanently",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutinesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.hardDeleteMyRoutinesByIds"),
@@ -288,7 +293,7 @@ func configureDevelopmentRoutineRoutes(
 	{
 		visualizationRoutes.GET(
 			"/status-count",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineStatusCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.visualizeMyRoutineStatusCount"),
@@ -302,7 +307,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		visualizationRoutes.GET(
 			"/period-count",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutinePeriodCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.visualizeMyRoutinePeriodCount"),
@@ -316,7 +321,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		visualizationRoutes.GET(
 			"/scheduled-start-at-count",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineScheduledStartAtCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.visualizeMyRoutineScheduledStartAtCount"),
@@ -330,7 +335,7 @@ func configureDevelopmentRoutineRoutes(
 		)
 		visualizationRoutes.GET(
 			"/scheduled-end-at-count",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineScheduledEndAtCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.visualizeMyRoutineScheduledEndAtCount"),

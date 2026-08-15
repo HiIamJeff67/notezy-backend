@@ -14,13 +14,18 @@ import (
 	notificationadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/notification/adapters"
 )
 
+type NotificationRouteDependencies struct {
+	NotificationClient        *notificationadapters.NotificationAdapter
+	AccessTokenCookieHandler  *cookies.CookieHandler
+	RefreshTokenCookieHandler *cookies.CookieHandler
+	RateLimiters              RateLimiters
+}
+
 func configureDevelopmentNotificationRoutes(
 	router *gin.RouterGroup,
-	notificationClient *notificationadapters.NotificationAdapter,
-	accessTokenCookieHandler *cookies.CookieHandler,
-	refreshTokenCookieHandler *cookies.CookieHandler,
-	rateLimiters RateLimiters,
+	deps NotificationRouteDependencies,
 ) {
+	notificationClient, accessTokenCookieHandler, refreshTokenCookieHandler, rateLimiters := deps.NotificationClient, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -40,7 +45,7 @@ func configureDevelopmentNotificationRoutes(
 	{
 		notificationRoutes.GET(
 			"/",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("searchPrivateNotifications"),
 					middlewares.ApplyMeterMiddleware("server.requests.notifications.search"),
@@ -51,7 +56,7 @@ func configureDevelopmentNotificationRoutes(
 		)
 		notificationRoutes.GET(
 			"/unread-count",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("countMyUnreadNotifications"),
 					middlewares.ApplyMeterMiddleware("server.requests.notifications.unreadCount"),
@@ -62,7 +67,7 @@ func configureDevelopmentNotificationRoutes(
 		)
 		notificationRoutes.PATCH(
 			"/read",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("markMyNotificationsRead"),
 					middlewares.ApplyMeterMiddleware("server.requests.notifications.read"),
@@ -73,7 +78,7 @@ func configureDevelopmentNotificationRoutes(
 		)
 		notificationRoutes.DELETE(
 			"/",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyNotifications"),
 					middlewares.ApplyMeterMiddleware("server.requests.notifications.delete"),

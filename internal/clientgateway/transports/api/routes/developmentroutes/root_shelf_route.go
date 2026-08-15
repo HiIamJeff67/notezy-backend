@@ -16,13 +16,18 @@ import (
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
 )
 
+type RootShelfRouteDependencies struct {
+	CoreClient                *coreadapters.CoreAdapter
+	AccessTokenCookieHandler  *cookies.CookieHandler
+	RefreshTokenCookieHandler *cookies.CookieHandler
+	RateLimiters              RateLimiters
+}
+
 func configureDevelopmentRootShelfRoutes(
 	router *gin.RouterGroup,
-	coreClient *coreadapters.CoreAdapter,
-	accessTokenCookieHandler *cookies.CookieHandler,
-	refreshTokenCookieHandler *cookies.CookieHandler,
-	rateLimiters RateLimiters,
+	deps RootShelfRouteDependencies,
 ) {
+	coreClient, accessTokenCookieHandler, refreshTokenCookieHandler, rateLimiters := deps.CoreClient, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -43,7 +48,7 @@ func configureDevelopmentRootShelfRoutes(
 	{
 		rootShelfRoutes.GET(
 			"/:root-shelf-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyRootShelfById"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.getMyRootShelfById"),
@@ -57,7 +62,7 @@ func configureDevelopmentRootShelfRoutes(
 		)
 		rootShelfRoutes.POST(
 			"/",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createRootShelf"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.createRootShelf"),
@@ -71,7 +76,7 @@ func configureDevelopmentRootShelfRoutes(
 		)
 		rootShelfRoutes.POST(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createRootShelves"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.createRootShelves"),
@@ -85,7 +90,7 @@ func configureDevelopmentRootShelfRoutes(
 		)
 		rootShelfRoutes.PUT(
 			"/:root-shelf-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRootShelfById"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.updateMyRootShelfById"),
@@ -99,7 +104,7 @@ func configureDevelopmentRootShelfRoutes(
 		)
 		rootShelfRoutes.PUT(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRootShelvesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.updateMyRootShelvesByIds"),
@@ -113,7 +118,7 @@ func configureDevelopmentRootShelfRoutes(
 		)
 		rootShelfRoutes.PATCH(
 			"/:root-shelf-id/restore",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyRootShelfById"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.restoreMyRootShelfById"),
@@ -127,7 +132,7 @@ func configureDevelopmentRootShelfRoutes(
 		)
 		rootShelfRoutes.PATCH(
 			"/batch/restore",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyRootShelvesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.restoreMyRootShelvesByIds"),
@@ -141,7 +146,7 @@ func configureDevelopmentRootShelfRoutes(
 		)
 		rootShelfRoutes.DELETE(
 			"/:root-shelf-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyRootShelfById"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.deleteMyRootShelfById"),
@@ -155,7 +160,7 @@ func configureDevelopmentRootShelfRoutes(
 		)
 		rootShelfRoutes.DELETE(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyRootShelvesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.deleteMyRootShelvesByIds"),
@@ -169,7 +174,7 @@ func configureDevelopmentRootShelfRoutes(
 		)
 		rootShelfRoutes.GET(
 			"/:root-shelf-id/permissions/:user-public-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyRootShelfPermission"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.getMyRootShelfPermission"),
@@ -183,7 +188,7 @@ func configureDevelopmentRootShelfRoutes(
 		)
 		rootShelfRoutes.POST(
 			"/:root-shelf-id/permissions/:user-public-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createMyRootShelfPermission"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.createMyRootShelfPermission"),
@@ -197,7 +202,7 @@ func configureDevelopmentRootShelfRoutes(
 		)
 		rootShelfRoutes.PUT(
 			"/:root-shelf-id/permissions/:user-public-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("upsertMyRootShelfPermission"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.upsertMyRootShelfPermission"),
@@ -211,7 +216,7 @@ func configureDevelopmentRootShelfRoutes(
 		)
 		rootShelfRoutes.PUT(
 			"/:root-shelf-id/permissions",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("upsertMyRootShelfPermissions"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.upsertMyRootShelfPermissions"),
@@ -225,7 +230,7 @@ func configureDevelopmentRootShelfRoutes(
 		)
 		rootShelfRoutes.PATCH(
 			"/:root-shelf-id/permissions/:user-public-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRootShelfPermission"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.updateMyRootShelfPermission"),
@@ -239,7 +244,7 @@ func configureDevelopmentRootShelfRoutes(
 		)
 		rootShelfRoutes.POST(
 			"/:root-shelf-id/ownership",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("transferMyRootShelfOwnership"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.transferMyRootShelfOwnership"),
@@ -253,7 +258,7 @@ func configureDevelopmentRootShelfRoutes(
 		)
 		rootShelfRoutes.DELETE(
 			"/:root-shelf-id/permissions/:user-public-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyRootShelfPermission"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.deleteMyRootShelfPermission"),
@@ -267,7 +272,7 @@ func configureDevelopmentRootShelfRoutes(
 		)
 		rootShelfRoutes.DELETE(
 			"/:root-shelf-id/permissions",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyRootShelfPermissions"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.deleteMyRootShelfPermissions"),
@@ -281,7 +286,7 @@ func configureDevelopmentRootShelfRoutes(
 		)
 		rootShelfRoutes.DELETE(
 			"/:root-shelf-id/memberships/me",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("leaveMyRootShelf"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.leaveMyRootShelf"),
@@ -295,7 +300,7 @@ func configureDevelopmentRootShelfRoutes(
 		)
 		rootShelfRoutes.DELETE(
 			"/memberships/me",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("leaveMyRootShelves"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.leaveMyRootShelves"),

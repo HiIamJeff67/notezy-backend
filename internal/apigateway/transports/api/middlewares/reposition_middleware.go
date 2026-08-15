@@ -15,13 +15,3 @@ func Reposition(
 		), backs...,
 	)
 }
-
-// RepositionMiddleware is kept as a compatibility alias while route files
-// migrate to the shorter Reposition name.
-func RepositionMiddleware(
-	fronts []gin.HandlerFunc,
-	middles []gin.HandlerFunc,
-	backs ...gin.HandlerFunc,
-) []gin.HandlerFunc {
-	return Reposition(fronts, middles, backs...)
-}

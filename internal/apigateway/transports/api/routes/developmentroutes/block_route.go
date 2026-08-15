@@ -14,11 +14,16 @@ import (
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/core/adapters"
 )
 
+type BlockRouteDependencies struct {
+	CoreClient   *coreadapters.CoreAdapter
+	RateLimiters RateLimiters
+}
+
 func configureDevelopmentBlockRoutes(
 	router *gin.RouterGroup,
-	coreClient *coreadapters.CoreAdapter,
-	rateLimiters RateLimiters,
+	deps BlockRouteDependencies,
 ) {
+	coreClient, rateLimiters := deps.CoreClient, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -36,7 +41,7 @@ func configureDevelopmentBlockRoutes(
 	{
 		blockRoutes.GET(
 			"/:block-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyBlockById"),
 					middlewares.ApplyMeterMiddleware("server.requests.block.getMyBlockById"),
@@ -50,7 +55,7 @@ func configureDevelopmentBlockRoutes(
 		)
 		blockRoutes.GET(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyBlocksByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.block.getMyBlocksByIds"),
@@ -64,7 +69,7 @@ func configureDevelopmentBlockRoutes(
 		)
 		blockRoutes.GET(
 			"/block-pack/:block-pack-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyBlocksByBlockPackId"),
 					middlewares.ApplyMeterMiddleware("server.requests.block.getMyBlocksByBlockPackId"),

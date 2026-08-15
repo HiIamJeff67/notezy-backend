@@ -14,11 +14,16 @@ import (
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/core/adapters"
 )
 
+type MaterialRouteDependencies struct {
+	CoreClient   *coreadapters.CoreAdapter
+	RateLimiters RateLimiters
+}
+
 func configureDevelopmentMaterialRoutes(
 	router *gin.RouterGroup,
-	coreClient *coreadapters.CoreAdapter,
-	rateLimiters RateLimiters,
+	deps MaterialRouteDependencies,
 ) {
+	coreClient, rateLimiters := deps.CoreClient, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -37,7 +42,7 @@ func configureDevelopmentMaterialRoutes(
 	{
 		materialRoutes.GET(
 			"/:material-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyMaterialById"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.getMyMaterialById"),
@@ -51,7 +56,7 @@ func configureDevelopmentMaterialRoutes(
 		)
 		materialRoutes.GET(
 			"/:material-id/parent",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyMaterialAndItsParentById"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.getMyMaterialAndItsParentById"),
@@ -65,7 +70,7 @@ func configureDevelopmentMaterialRoutes(
 		)
 		materialRoutes.GET(
 			"/sub-shelf/:parent-sub-shelf-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyMaterialsByParentSubShelfId"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.getMyMaterialsByParentSubShelfId"),
@@ -79,7 +84,7 @@ func configureDevelopmentMaterialRoutes(
 		)
 		materialRoutes.GET(
 			"/root-shelf/:root-shelf-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getAllMyMaterialsByRootShelfId"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.getAllMyMaterialsByRootShelfId"),
@@ -93,7 +98,7 @@ func configureDevelopmentMaterialRoutes(
 		)
 		materialRoutes.POST(
 			"/sub-shelf/:parent-sub-shelf-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createMyMaterial"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.createMyMaterial"),
@@ -107,7 +112,7 @@ func configureDevelopmentMaterialRoutes(
 		)
 		materialRoutes.PUT(
 			"/:material-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyMaterialById"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.updateMyMaterialById"),
@@ -121,7 +126,7 @@ func configureDevelopmentMaterialRoutes(
 		)
 		materialRoutes.PUT(
 			"/:material-id/content",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("saveMyMaterialById"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.saveMyMaterialById"),
@@ -136,7 +141,7 @@ func configureDevelopmentMaterialRoutes(
 		)
 		materialRoutes.PUT(
 			"/:material-id/parent",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("moveMyMaterialById"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.moveMyMaterialById"),
@@ -150,7 +155,7 @@ func configureDevelopmentMaterialRoutes(
 		)
 		materialRoutes.PUT(
 			"/batch/parent",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("moveMyMaterialsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.moveMyMaterialsByIds"),
@@ -164,7 +169,7 @@ func configureDevelopmentMaterialRoutes(
 		)
 		materialRoutes.PATCH(
 			"/:material-id/restore",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyMaterialById"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.restoreMyMaterialById"),
@@ -178,7 +183,7 @@ func configureDevelopmentMaterialRoutes(
 		)
 		materialRoutes.PATCH(
 			"/batch/restore",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyMaterialsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.restoreMyMaterialsByIds"),
@@ -192,7 +197,7 @@ func configureDevelopmentMaterialRoutes(
 		)
 		materialRoutes.DELETE(
 			"/:material-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyMaterialById"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.deleteMyMaterialById"),
@@ -206,7 +211,7 @@ func configureDevelopmentMaterialRoutes(
 		)
 		materialRoutes.DELETE(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyMaterialsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.deleteMyMaterialsByIds"),

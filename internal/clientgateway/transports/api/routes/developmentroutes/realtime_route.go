@@ -16,13 +16,18 @@ import (
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
 )
 
+type RealtimeRouteDependencies struct {
+	CoreClient                *coreadapters.CoreAdapter
+	AccessTokenCookieHandler  *cookies.CookieHandler
+	RefreshTokenCookieHandler *cookies.CookieHandler
+	RateLimiters              RateLimiters
+}
+
 func configureDevelopmentRealtimeRoutes(
 	router *gin.RouterGroup,
-	coreClient *coreadapters.CoreAdapter,
-	accessTokenCookieHandler *cookies.CookieHandler,
-	refreshTokenCookieHandler *cookies.CookieHandler,
-	rateLimiters RateLimiters,
+	deps RealtimeRouteDependencies,
 ) {
+	coreClient, accessTokenCookieHandler, refreshTokenCookieHandler, rateLimiters := deps.CoreClient, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -43,7 +48,7 @@ func configureDevelopmentRealtimeRoutes(
 	{
 		connectionRouterGroup.POST(
 			"/ticket",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createMyRealtimeConnectionTicket"),
 					middlewares.ApplyMeterMiddleware("server.requests.realtime.createMyRealtimeConnectionTicket"),
@@ -70,7 +75,7 @@ func configureDevelopmentRealtimeRoutes(
 	{
 		channelRouterGroup.POST(
 			"/block-pack/ticket",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createMyBlockPackChannelTicket"),
 					middlewares.ApplyMeterMiddleware("server.requests.realtime.createMyBlockPackChannelTicket"),

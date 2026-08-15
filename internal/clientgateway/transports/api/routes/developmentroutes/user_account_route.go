@@ -14,13 +14,18 @@ import (
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
 )
 
+type UserAccountRouteDependencies struct {
+	CoreClient                *coreadapters.CoreAdapter
+	AccessTokenCookieHandler  *cookies.CookieHandler
+	RefreshTokenCookieHandler *cookies.CookieHandler
+	RateLimiters              RateLimiters
+}
+
 func configureDevelopmentUserAccountRoutes(
 	router *gin.RouterGroup,
-	coreClient *coreadapters.CoreAdapter,
-	accessTokenCookieHandler *cookies.CookieHandler,
-	refreshTokenCookieHandler *cookies.CookieHandler,
-	rateLimiters RateLimiters,
+	deps UserAccountRouteDependencies,
 ) {
+	coreClient, accessTokenCookieHandler, refreshTokenCookieHandler, rateLimiters := deps.CoreClient, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -41,7 +46,7 @@ func configureDevelopmentUserAccountRoutes(
 	{
 		userAccountRoutes.GET(
 			"/",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyAccount"),
 					middlewares.ApplyMeterMiddleware("server.requests.userAccount.getMyAccount"),
@@ -52,7 +57,7 @@ func configureDevelopmentUserAccountRoutes(
 		)
 		userAccountRoutes.PUT(
 			"/",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyAccount"),
 					middlewares.ApplyMeterMiddleware("server.requests.userAccount.updateMyAccount"),
@@ -63,7 +68,7 @@ func configureDevelopmentUserAccountRoutes(
 		)
 		userAccountRoutes.PUT(
 			"/google",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("bindGoogleAccount"),
 					middlewares.ApplyMeterMiddleware("server.requests.userAccount.bindGoogleAccount"),
@@ -74,7 +79,7 @@ func configureDevelopmentUserAccountRoutes(
 		)
 		userAccountRoutes.DELETE(
 			"/google",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("unbindGoogleAccount"),
 					middlewares.ApplyMeterMiddleware("server.requests.userAccount.unbindGoogleAccount"),

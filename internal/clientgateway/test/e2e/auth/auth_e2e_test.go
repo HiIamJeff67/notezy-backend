@@ -3,11 +3,13 @@ package authe2etest
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
 	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
-	platformdatabase "github.com/HiIamJeff67/notezy-backend/shared/platform/database"
+	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
 
 	testroutes "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/routes/testroutes"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
@@ -17,38 +19,46 @@ import (
 const testAuthRouteNamespace = "/testRoute/auth"
 
 func TestAuthE2E(t *testing.T) {
-	databaseConfig, err := platformdatabase.LoadConfig()
-	if err != nil {
-		t.Skipf("auth E2E test requires database configuration: %v", err)
+	databaseConfig := platformpostgres.Config{
+		Host:     strings.TrimSpace(os.Getenv("DB_HOST")),
+		User:     strings.TrimSpace(os.Getenv("DB_USER")),
+		Password: os.Getenv("DB_PASSWORD"),
+		Name:     strings.TrimSpace(os.Getenv("DB_NAME")),
+		Port:     strings.TrimSpace(os.Getenv("DOCKER_DB_PORT")),
 	}
-	db, err := platformdatabase.Connect(databaseConfig)
+	if databaseConfig.Host == "" || databaseConfig.User == "" || databaseConfig.Password == "" || databaseConfig.Name == "" || databaseConfig.Port == "" {
+		t.Skipf("auth E2E test requires DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, and DOCKER_DB_PORT")
+	}
+	db, err := platformpostgres.Connect(databaseConfig)
 	if err != nil {
 		t.Skipf("auth E2E test requires an available database: %v", err)
 	}
 	t.Cleanup(func() {
-		_ = platformdatabase.Disconnect(db)
+		_ = platformpostgres.Disconnect(db)
 	})
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 	testroutes.ConfigureTestAuthRoutes(
 		router.Group(testAuthRouteNamespace),
-		coreadapters.NewCoreAdapter("http://127.0.0.1:7778", 10*time.Second),
-		cookies.New(cookies.Config{
-			Name:     cookies.ValidCookieName_AccessToken,
-			Path:     "/",
-			Duration: 30 * time.Minute,
-			HTTPOnly: true,
-			SameSite: http.SameSiteLaxMode,
-		}),
-		cookies.New(cookies.Config{
-			Name:     cookies.ValidCookieName_RefreshToken,
-			Path:     "/",
-			Duration: 14 * 24 * time.Hour,
-			HTTPOnly: true,
-			SameSite: http.SameSiteStrictMode,
-		}),
-		nil,
+		testroutes.AuthRouteDependencies{
+			CoreClient: coreadapters.NewCoreAdapter("http://127.0.0.1:7778", 10*time.Second),
+			AccessTokenCookieHandler: cookies.New(cookies.Config{
+				Name:     cookies.ValidCookieName_AccessToken,
+				Path:     "/",
+				Duration: 30 * time.Minute,
+				HTTPOnly: true,
+				SameSite: http.SameSiteLaxMode,
+			}),
+			RefreshTokenCookieHandler: cookies.New(cookies.Config{
+				Name:     cookies.ValidCookieName_RefreshToken,
+				Path:     "/",
+				Duration: 14 * 24 * time.Hour,
+				HTTPOnly: true,
+				SameSite: http.SameSiteStrictMode,
+			}),
+			AuthorizedRateLimiter: nil,
+		},
 	)
 	server := httptest.NewServer(router)
 	t.Cleanup(server.Close)

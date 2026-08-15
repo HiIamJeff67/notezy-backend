@@ -14,11 +14,16 @@ import (
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/core/adapters"
 )
 
+type SubShelfRouteDependencies struct {
+	CoreClient   *coreadapters.CoreAdapter
+	RateLimiters RateLimiters
+}
+
 func configureDevelopmentSubShelfRoutes(
 	router *gin.RouterGroup,
-	coreClient *coreadapters.CoreAdapter,
-	rateLimiters RateLimiters,
+	deps SubShelfRouteDependencies,
 ) {
+	coreClient, rateLimiters := deps.CoreClient, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -37,7 +42,7 @@ func configureDevelopmentSubShelfRoutes(
 	{
 		subShelfRoutes.GET(
 			"/:sub-shelf-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMySubShelfById"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.getMySubShelfById"),
@@ -51,7 +56,7 @@ func configureDevelopmentSubShelfRoutes(
 		)
 		subShelfRoutes.GET(
 			"/prev-sub-shelf/:prev-sub-shelf-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMySubShelvesByPrevSubShelfId"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.getMySubShelvesByPrevSubShelfId"),
@@ -65,7 +70,7 @@ func configureDevelopmentSubShelfRoutes(
 		)
 		subShelfRoutes.GET(
 			"/root-shelf/:root-shelf-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getAllMySubShelvesByRootShelfId"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.getAllMySubShelvesByRootShelfId"),
@@ -79,7 +84,7 @@ func configureDevelopmentSubShelfRoutes(
 		)
 		subShelfRoutes.GET(
 			"/prev-sub-shelf/:prev-sub-shelf-id/items",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMySubShelvesAndItemsByPrevSubShelfId"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.getMySubShelvesAndItemsByPrevSubShelfId"),
@@ -93,7 +98,7 @@ func configureDevelopmentSubShelfRoutes(
 		)
 		subShelfRoutes.POST(
 			"/root-shelf/:root-shelf-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createSubShelfByRootShelfId"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.createSubShelfByRootShelfId"),
@@ -107,7 +112,7 @@ func configureDevelopmentSubShelfRoutes(
 		)
 		subShelfRoutes.POST(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createSubShelvesByRootShelfIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.CreateSubShelvesByRootShelfIds"),
@@ -121,7 +126,7 @@ func configureDevelopmentSubShelfRoutes(
 		)
 		subShelfRoutes.PUT(
 			"/:sub-shelf-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMySubShelfById"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.updateMySubShelfById"),
@@ -135,7 +140,7 @@ func configureDevelopmentSubShelfRoutes(
 		)
 		subShelfRoutes.PUT(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMySubShelvesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.UpdateMySubShelvesByIds"),
@@ -149,7 +154,7 @@ func configureDevelopmentSubShelfRoutes(
 		)
 		subShelfRoutes.PUT(
 			"/:sub-shelf-id/position",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("moveMySubShelf"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.moveMySubShelf"),
@@ -163,7 +168,7 @@ func configureDevelopmentSubShelfRoutes(
 		)
 		subShelfRoutes.PUT(
 			"/position",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("moveMySubShelvesByRootShelfId"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.moveMySubShelvesByRootShelfId"),
@@ -177,7 +182,7 @@ func configureDevelopmentSubShelfRoutes(
 		)
 		subShelfRoutes.PUT(
 			"/batch/position",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("moveMySubShelvesByRootShelfIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.moveMySubShelvesByRootShelfIds"),
@@ -191,7 +196,7 @@ func configureDevelopmentSubShelfRoutes(
 		)
 		subShelfRoutes.PATCH(
 			"/:sub-shelf-id/restore",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMySubShelfById"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.restoreMySubShelfById"),
@@ -205,7 +210,7 @@ func configureDevelopmentSubShelfRoutes(
 		)
 		subShelfRoutes.PATCH(
 			"/batch/restore",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMySubShelvesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.restoreMySubShelvesByIds"),
@@ -219,7 +224,7 @@ func configureDevelopmentSubShelfRoutes(
 		)
 		subShelfRoutes.DELETE(
 			"/:sub-shelf-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMySubShelfById"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.deleteMySubShelfById"),
@@ -233,7 +238,7 @@ func configureDevelopmentSubShelfRoutes(
 		)
 		subShelfRoutes.DELETE(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMySubShelvesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.deleteMySubShelvesByIds"),

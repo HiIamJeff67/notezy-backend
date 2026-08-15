@@ -5,11 +5,17 @@ import (
 
 	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/themes"
 
+	otherservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/other"
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
 )
 
-func configureThemeRoutes(router *gin.RouterGroup, endpoint endpoints.ThemeEndpointInterface) {
+type ThemeRouterDependencies struct {
+	Service otherservices.ThemeServiceInterface
+}
+
+func configureThemeRoutes(router *gin.RouterGroup, deps ThemeRouterDependencies) {
+	endpoint := endpoints.NewThemeEndpoint(deps.Service)
 	themeRoutes := router.Group("/themes")
 	{
 		themeRoutes.POST(

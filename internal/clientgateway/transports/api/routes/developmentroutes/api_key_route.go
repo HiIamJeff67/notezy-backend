@@ -14,29 +14,24 @@ import (
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
 )
 
-type UserInfoRouteDependencies struct {
+type APIKeyRouteDependencies struct {
 	CoreClient                *coreadapters.CoreAdapter
 	AccessTokenCookieHandler  *cookies.CookieHandler
 	RefreshTokenCookieHandler *cookies.CookieHandler
 	RateLimiters              RateLimiters
 }
 
-func configureDevelopmentUserInfoRoutes(
+func configureDevelopmentAPIKeyRoutes(
 	router *gin.RouterGroup,
-	deps UserInfoRouteDependencies,
+	deps APIKeyRouteDependencies,
 ) {
 	coreClient, accessTokenCookieHandler, refreshTokenCookieHandler, rateLimiters := deps.CoreClient, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.RateLimiters
-	if router == nil {
-		router = DevelopmentAPIRouterGroup
-	}
-
-	userInfoBinder := binders.NewUserInfoBinder()
-	userInfoController := controllers.NewUserInfoController(coreClient)
-
-	userInfoRoutes := router.Group("/me/info")
-	defaultsMiddlewares := []gin.HandlerFunc{
+	binder := binders.NewAPIKeyBinder()
+	controller := controllers.NewAPIKeyController(coreClient)
+	routes := router.Group("/me/api-keys")
+	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(rateLimiters.Unauthorized),
-		middlewares.TimeoutMiddleware(1 * time.Second),
+		middlewares.TimeoutMiddleware(3 * time.Second),
 		middlewares.GatewayAuthenticationMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 		interceptors.ShareableResponseWriterInterceptor(
 			interceptors.RefreshTokenInterceptor(accessTokenCookieHandler),
@@ -44,26 +39,37 @@ func configureDevelopmentUserInfoRoutes(
 		),
 	}
 	{
-		userInfoRoutes.GET(
-			"/",
+		routes.POST(
+			"/create",
 			middlewares.Reposition(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware("getMyInfo"),
-					middlewares.ApplyMeterMiddleware("server.requests.userInfo.getMyInfo"),
+					middlewares.ApplyTracerMiddleware("createMyAPIKey"),
+					middlewares.ApplyMeterMiddleware("server.requests.apiKey.create"),
 				},
-				defaultsMiddlewares,
-				userInfoBinder.BindGetMyInfo(userInfoController.GetMyInfo),
+				defaultMiddlewares,
+				binder.BindCreateMyAPIKey(controller.CreateMyAPIKey),
 			)...,
 		)
-		userInfoRoutes.PUT(
+		routes.GET(
 			"/",
 			middlewares.Reposition(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware("updateMyInfo"),
-					middlewares.ApplyMeterMiddleware("server.requests.userInfo.updateMyInfo"),
+					middlewares.ApplyTracerMiddleware("listMyAPIKeys"),
+					middlewares.ApplyMeterMiddleware("server.requests.apiKey.list"),
 				},
-				defaultsMiddlewares,
-				userInfoBinder.BindUpdateMyInfo(userInfoController.UpdateMyInfo),
+				defaultMiddlewares,
+				binder.BindListMyAPIKeys(controller.ListMyAPIKeys),
+			)...,
+		)
+		routes.DELETE(
+			"/:api-key-id",
+			middlewares.Reposition(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("revokeMyAPIKey"),
+					middlewares.ApplyMeterMiddleware("server.requests.apiKey.revoke"),
+				},
+				defaultMiddlewares,
+				binder.BindRevokeMyAPIKey(controller.RevokeMyAPIKey),
 			)...,
 		)
 	}

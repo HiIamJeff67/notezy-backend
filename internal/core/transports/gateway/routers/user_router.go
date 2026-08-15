@@ -5,15 +5,22 @@ import (
 
 	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
 
+	userservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/user"
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
 )
 
+type UserRouterDependencies struct {
+	Service        userservices.UserServiceInterface
+	AuthMiddleware gin.HandlerFunc
+}
+
 func configureUserRoutes(
 	router *gin.RouterGroup,
-	authMiddleware gin.HandlerFunc,
-	endpoint endpoints.UserEndpointInterface,
+	deps UserRouterDependencies,
 ) {
+	authMiddleware := deps.AuthMiddleware
+	endpoint := endpoints.NewUserEndpoint(deps.Service)
 	routes := router.Group("/users")
 	{
 		routes.POST(

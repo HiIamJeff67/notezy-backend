@@ -11,7 +11,12 @@ import (
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/middlewares"
 )
 
-func configureStaticRoutes(router *gin.RouterGroup, rateLimiters RateLimiters) {
+type StaticRouteDependencies struct {
+	RateLimiters RateLimiters
+}
+
+func configureStaticRoutes(router *gin.RouterGroup, deps StaticRouteDependencies) {
+	rateLimiters := deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}

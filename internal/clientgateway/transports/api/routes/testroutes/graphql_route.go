@@ -12,12 +12,17 @@ import (
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
 )
 
+type GraphQLRouteDependencies struct {
+	CoreClient                *coreadapters.CoreAdapter
+	AccessTokenCookieHandler  *cookies.CookieHandler
+	RefreshTokenCookieHandler *cookies.CookieHandler
+}
+
 func ConfigureTestGraphQLRoutes(
 	routerGroup *gin.RouterGroup,
-	coreClient *coreadapters.CoreAdapter,
-	accessTokenCookieHandler *cookies.CookieHandler,
-	refreshTokenCookieHandler *cookies.CookieHandler,
+	deps GraphQLRouteDependencies,
 ) {
+	coreClient, accessTokenCookieHandler, refreshTokenCookieHandler := deps.CoreClient, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler
 	graphqlRoutes := routerGroup.Group("/graphql")
 
 	graphqlRoutes.Use(

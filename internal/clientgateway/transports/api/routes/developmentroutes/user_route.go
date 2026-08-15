@@ -14,13 +14,18 @@ import (
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
 )
 
+type UserRouteDependencies struct {
+	CoreClient                *coreadapters.CoreAdapter
+	AccessTokenCookieHandler  *cookies.CookieHandler
+	RefreshTokenCookieHandler *cookies.CookieHandler
+	RateLimiters              RateLimiters
+}
+
 func configureDevelopmentUserRoutes(
 	router *gin.RouterGroup,
-	coreClient *coreadapters.CoreAdapter,
-	accessTokenCookieHandler *cookies.CookieHandler,
-	refreshTokenCookieHandler *cookies.CookieHandler,
-	rateLimiters RateLimiters,
+	deps UserRouteDependencies,
 ) {
+	coreClient, accessTokenCookieHandler, refreshTokenCookieHandler, rateLimiters := deps.CoreClient, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -41,7 +46,7 @@ func configureDevelopmentUserRoutes(
 	{
 		userRoutes.GET(
 			"/data",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getUserData"),
 					middlewares.ApplyMeterMiddleware("server.requests.user.getUserData"),
@@ -52,7 +57,7 @@ func configureDevelopmentUserRoutes(
 		)
 		userRoutes.GET(
 			"/me",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMe"),
 					middlewares.ApplyMeterMiddleware("server.requests.user.getMe"),
@@ -63,7 +68,7 @@ func configureDevelopmentUserRoutes(
 		)
 		userRoutes.PUT(
 			"/me",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMe"),
 					middlewares.ApplyMeterMiddleware("server.requests.user.updateMe"),

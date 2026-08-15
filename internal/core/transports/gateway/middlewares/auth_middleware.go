@@ -109,7 +109,7 @@ func AuthMiddleware(userRepository repositories.UserRepositoryInterface) gin.Han
 		user, exception := userRepository.GetOneByPublicId(
 			userPublicId,
 			nil,
-			options.WithDB(data.NotezyDB),
+			options.WithDB(data.DB),
 		)
 		if exception != nil || user.RefreshToken != refreshToken || user.UserAgent != userAgent {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
@@ -200,7 +200,7 @@ func setActorUserId(
 	user, exception := userRepository.GetOneByPublicId(
 		userPublicId,
 		nil,
-		options.WithDB(data.NotezyDB),
+		options.WithDB(data.DB),
 	)
 	if exception != nil {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{

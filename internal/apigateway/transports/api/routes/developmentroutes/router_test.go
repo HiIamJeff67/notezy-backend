@@ -10,17 +10,14 @@ import (
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/core/adapters"
 )
 
-func TestConfigureAPIRoutesAPIGatewayAllowlist(t *testing.T) {
+func TestNewRouterAPIGatewayAllowlist(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	DevelopmentRouter = gin.New()
+	router := NewRouter(APIRouteDependencies{
+		CoreClient:   coreadapters.NewCoreAdapter("http://core:7778", time.Second),
+		RateLimiters: RateLimiters{},
+	})
 
-	ConfigureAPIRoutes(
-		coreadapters.NewCoreAdapter("http://core:7778", time.Second),
-		nil,
-		RateLimiters{},
-	)
-
-	routes := DevelopmentRouter.Routes()
+	routes := router.Routes()
 	for _, domain := range []string{
 		"/stations",
 		"/routines",

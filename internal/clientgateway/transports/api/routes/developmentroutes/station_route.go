@@ -16,13 +16,18 @@ import (
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
 )
 
+type StationRouteDependencies struct {
+	CoreClient                *coreadapters.CoreAdapter
+	AccessTokenCookieHandler  *cookies.CookieHandler
+	RefreshTokenCookieHandler *cookies.CookieHandler
+	RateLimiters              RateLimiters
+}
+
 func configureDevelopmentStationRoutes(
 	router *gin.RouterGroup,
-	coreClient *coreadapters.CoreAdapter,
-	accessTokenCookieHandler *cookies.CookieHandler,
-	refreshTokenCookieHandler *cookies.CookieHandler,
-	rateLimiters RateLimiters,
+	deps StationRouteDependencies,
 ) {
+	coreClient, accessTokenCookieHandler, refreshTokenCookieHandler, rateLimiters := deps.CoreClient, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -43,7 +48,7 @@ func configureDevelopmentStationRoutes(
 	{
 		stationRoutes.GET(
 			"/:station-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyStationById"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.getMyStationById"),
@@ -57,7 +62,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.GET(
 			"/",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getAllMyStations"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.getAllMyStations"),
@@ -71,7 +76,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.POST(
 			"/",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createStation"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.createStation"),
@@ -85,7 +90,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.POST(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createStations"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.createStations"),
@@ -99,7 +104,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.PUT(
 			"/:station-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyStationById"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.updateMyStationById"),
@@ -113,7 +118,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.PUT(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyStationsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.updateMyStationsByIds"),
@@ -127,7 +132,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.PATCH(
 			"/:station-id/restore",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyStationById"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.restoreMyStationById"),
@@ -141,7 +146,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.PATCH(
 			"/batch/restore",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyStationsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.restoreMyStationsByIds"),
@@ -155,7 +160,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.DELETE(
 			"/:station-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyStationById"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.deleteMyStationById"),
@@ -169,7 +174,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.DELETE(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyStationsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.deleteMyStationsByIds"),
@@ -183,7 +188,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.DELETE(
 			"/:station-id/permanently",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("hardDeleteMyStationById"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.hardDeleteMyStationById"),
@@ -197,7 +202,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.DELETE(
 			"/batch/permanently",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("hardDeleteMyStationsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.hardDeleteMyStationsByIds"),
@@ -213,7 +218,7 @@ func configureDevelopmentStationRoutes(
 
 		stationRoutes.GET(
 			"/:station-id/permissions/:user-public-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyStationPermission"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.getMyStationPermission"),
@@ -227,7 +232,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.POST(
 			"/:station-id/permissions/:user-public-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createMyStationPermission"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.createMyStationPermission"),
@@ -241,7 +246,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.PUT(
 			"/:station-id/permissions/:user-public-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("upsertMyStationPermission"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.upsertMyStationPermission"),
@@ -255,7 +260,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.PUT(
 			"/:station-id/permissions",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("upsertMyStationPermissions"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.upsertMyStationPermissions"),
@@ -269,7 +274,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.PATCH(
 			"/:station-id/permissions/:user-public-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyStationPermission"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.updateMyStationPermission"),
@@ -283,7 +288,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.POST(
 			"/:station-id/ownership",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("transferMyStationOwnership"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.transferMyStationOwnership"),
@@ -297,7 +302,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.DELETE(
 			"/:station-id/permissions/:user-public-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyStationPermission"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.deleteMyStationPermission"),
@@ -311,7 +316,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.DELETE(
 			"/:station-id/permissions",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyStationPermissions"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.deleteMyStationPermissions"),
@@ -325,7 +330,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.DELETE(
 			"/:station-id/memberships/me",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("leaveMyStation"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.leaveMyStation"),
@@ -339,7 +344,7 @@ func configureDevelopmentStationRoutes(
 		)
 		stationRoutes.DELETE(
 			"/memberships/me",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("leaveMyStations"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.leaveMyStations"),
@@ -368,7 +373,7 @@ func configureDevelopmentStationRoutes(
 	{
 		visualizationRoutes.GET(
 			"/total-count",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("visualizeMyTotalCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.visualizeMyTotalCount"),

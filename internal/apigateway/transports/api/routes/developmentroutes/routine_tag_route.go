@@ -12,11 +12,16 @@ import (
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/core/adapters"
 )
 
+type RoutineTagRouteDependencies struct {
+	CoreClient   *coreadapters.CoreAdapter
+	RateLimiters RateLimiters
+}
+
 func configureDevelopmentRoutineTagRoutes(
 	router *gin.RouterGroup,
-	coreClient *coreadapters.CoreAdapter,
-	rateLimiters RateLimiters,
+	deps RoutineTagRouteDependencies,
 ) {
+	coreClient, rateLimiters := deps.CoreClient, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -35,7 +40,7 @@ func configureDevelopmentRoutineTagRoutes(
 	{
 		routineTagRoutes.GET(
 			"/:routine-tag-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyRoutineTagById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTag.getMyRoutineTagById"),
@@ -46,7 +51,7 @@ func configureDevelopmentRoutineTagRoutes(
 		)
 		routineTagRoutes.GET(
 			"/",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getAllMyRoutineTags"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTag.getAllMyRoutineTags"),
@@ -57,7 +62,7 @@ func configureDevelopmentRoutineTagRoutes(
 		)
 		routineTagRoutes.POST(
 			"/",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createRoutineTag"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTag.createRoutineTag"),
@@ -68,7 +73,7 @@ func configureDevelopmentRoutineTagRoutes(
 		)
 		routineTagRoutes.POST(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createRoutineTags"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTag.createRoutineTags"),
@@ -79,7 +84,7 @@ func configureDevelopmentRoutineTagRoutes(
 		)
 		routineTagRoutes.PUT(
 			"/:routine-tag-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRoutineTagById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTag.updateMyRoutineTagById"),
@@ -90,7 +95,7 @@ func configureDevelopmentRoutineTagRoutes(
 		)
 		routineTagRoutes.PUT(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRoutineTagsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTag.updateMyRoutineTagsByIds"),
@@ -101,7 +106,7 @@ func configureDevelopmentRoutineTagRoutes(
 		)
 		routineTagRoutes.DELETE(
 			"/:routine-tag-id/permanently",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutineTagById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTag.hardDeleteMyRoutineTagById"),
@@ -112,7 +117,7 @@ func configureDevelopmentRoutineTagRoutes(
 		)
 		routineTagRoutes.DELETE(
 			"/batch/permanently",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutineTagsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTag.hardDeleteMyRoutineTagsByIds"),

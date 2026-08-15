@@ -16,13 +16,18 @@ import (
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
 )
 
+type BlockPackRouteDependencies struct {
+	CoreClient                *coreadapters.CoreAdapter
+	AccessTokenCookieHandler  *cookies.CookieHandler
+	RefreshTokenCookieHandler *cookies.CookieHandler
+	RateLimiters              RateLimiters
+}
+
 func configureDevelopmentBlockPackRoutes(
 	router *gin.RouterGroup,
-	coreClient *coreadapters.CoreAdapter,
-	accessTokenCookieHandler *cookies.CookieHandler,
-	refreshTokenCookieHandler *cookies.CookieHandler,
-	rateLimiters RateLimiters,
+	deps BlockPackRouteDependencies,
 ) {
+	coreClient, accessTokenCookieHandler, refreshTokenCookieHandler, rateLimiters := deps.CoreClient, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -43,7 +48,7 @@ func configureDevelopmentBlockPackRoutes(
 	{
 		blockPackRoutes.GET(
 			"/:block-pack-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyBlockPackById"),
 					middlewares.ApplyMeterMiddleware("server.requests.blockPack.getMyBlockPackById"),
@@ -55,7 +60,7 @@ func configureDevelopmentBlockPackRoutes(
 		)
 		blockPackRoutes.GET(
 			"/:block-pack-id/parent",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyBlockPackAndItsParentById"),
 					middlewares.ApplyMeterMiddleware("server.requests.blockPack.getMyBlockPackAndItsParentById"),
@@ -67,7 +72,7 @@ func configureDevelopmentBlockPackRoutes(
 		)
 		blockPackRoutes.GET(
 			"/sub-shelf/:parent-sub-shelf-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyBlockPacksByParentSubShelfId"),
 					middlewares.ApplyMeterMiddleware("server.requests.blockPack.getMyBlockPacksByParentSubShelfId"),
@@ -79,7 +84,7 @@ func configureDevelopmentBlockPackRoutes(
 		)
 		blockPackRoutes.GET(
 			"/root-shelf/:root-shelf-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getAllMyBlockPacksByRootShelfId"),
 					middlewares.ApplyMeterMiddleware("server.requests.blockPack.getAllMyBlockPacksByRootShelfId"),
@@ -91,7 +96,7 @@ func configureDevelopmentBlockPackRoutes(
 		)
 		blockPackRoutes.POST(
 			"/sub-shelf/:parent-sub-shelf-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createBlockPack"),
 					middlewares.ApplyMeterMiddleware("server.requests.blockPack.createBlockPack"),
@@ -105,7 +110,7 @@ func configureDevelopmentBlockPackRoutes(
 		)
 		blockPackRoutes.POST(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createBlockPacks"),
 					middlewares.ApplyMeterMiddleware("server.requests.blockPack.CreateBlockPacks"),
@@ -119,7 +124,7 @@ func configureDevelopmentBlockPackRoutes(
 		)
 		blockPackRoutes.PUT(
 			"/:block-pack-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyBlockPackById"),
 					middlewares.ApplyMeterMiddleware("server.requests.blockPack.updateMyBlockPackById"),
@@ -133,7 +138,7 @@ func configureDevelopmentBlockPackRoutes(
 		)
 		blockPackRoutes.PUT(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyBlockPacksByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.blockPack.UpdateMyBlockPacksByIds"),
@@ -147,7 +152,7 @@ func configureDevelopmentBlockPackRoutes(
 		)
 		blockPackRoutes.PUT(
 			"/:block-pack-id/position",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("moveMyBlockPackById"),
 					middlewares.ApplyMeterMiddleware("server.requests.blockPack.moveMyBlockPackById"),
@@ -161,7 +166,7 @@ func configureDevelopmentBlockPackRoutes(
 		)
 		blockPackRoutes.PUT(
 			"/position",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("moveMyBlockPacksByParentSubShelfId"),
 					middlewares.ApplyMeterMiddleware("server.requests.blockPack.moveMyBlockPacksByParentSubShelfId"),
@@ -175,7 +180,7 @@ func configureDevelopmentBlockPackRoutes(
 		)
 		blockPackRoutes.PUT(
 			"/batch/position",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("moveMyBlockPacksByParentSubShelfIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.blockPack.moveMyBlockPacksByParentSubShelfIds"),
@@ -189,7 +194,7 @@ func configureDevelopmentBlockPackRoutes(
 		)
 		blockPackRoutes.PATCH(
 			"/:block-pack-id/restore",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyBlockPackById"),
 					middlewares.ApplyMeterMiddleware("server.requests.blockPack.restoreMyBlockPackById"),
@@ -203,7 +208,7 @@ func configureDevelopmentBlockPackRoutes(
 		)
 		blockPackRoutes.PATCH(
 			"/batch/restore",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyBlockPacksByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.blockPack.restoreMyBlockPacksByIds"),
@@ -217,7 +222,7 @@ func configureDevelopmentBlockPackRoutes(
 		)
 		blockPackRoutes.DELETE(
 			"/:block-pack-id",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyBlockPackById"),
 					middlewares.ApplyMeterMiddleware("server.requests.blockPack.deleteMyBlockPackById"),
@@ -231,7 +236,7 @@ func configureDevelopmentBlockPackRoutes(
 		)
 		blockPackRoutes.DELETE(
 			"/batch",
-			middlewares.RepositionMiddleware(
+			middlewares.Reposition(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyBlockPacksByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.blockPack.deleteMyBlockPacksByIds"),

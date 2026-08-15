@@ -12,6 +12,13 @@ import (
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
 )
 
+type AuthRouteDependencies struct {
+	CoreClient                *coreadapters.CoreAdapter
+	AccessTokenCookieHandler  *cookies.CookieHandler
+	RefreshTokenCookieHandler *cookies.CookieHandler
+	AuthorizedRateLimiter     *ratelimit.HybridRateLimiter
+}
+
 func testAuthorizedRateLimitMiddleware(rateLimiter *ratelimit.HybridRateLimiter) gin.HandlerFunc {
 	if rateLimiter == nil {
 		return func(ctx *gin.Context) { ctx.Next() }
@@ -24,11 +31,9 @@ func testAuthorizedRateLimitMiddleware(rateLimiter *ratelimit.HybridRateLimiter)
 // and its function name also start with the upper case letter
 func ConfigureTestAuthRoutes(
 	routerGroup *gin.RouterGroup,
-	coreClient *coreadapters.CoreAdapter,
-	accessTokenCookieHandler *cookies.CookieHandler,
-	refreshTokenCookieHandler *cookies.CookieHandler,
-	authorizedRateLimiter *ratelimit.HybridRateLimiter,
+	deps AuthRouteDependencies,
 ) {
+	coreClient, accessTokenCookieHandler, refreshTokenCookieHandler, authorizedRateLimiter := deps.CoreClient, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.AuthorizedRateLimiter
 	authBinder := binders.NewAuthBinder()
 	authController := controllers.NewAuthController(
 		coreClient,
