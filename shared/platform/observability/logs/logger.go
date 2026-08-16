@@ -12,7 +12,7 @@ import (
 	"os"
 	"time"
 
-	traces "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/traces"
+	traces "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/traces"
 )
 
 type LoggerInterface interface {
@@ -37,7 +37,7 @@ func NewLogger(emitOtel bool) LoggerInterface {
 }
 
 var (
-	NotezyLogger LoggerInterface
+	NotegicLogger LoggerInterface
 )
 
 func (l *Logger) Debug(ctx context.Context, message string, attributes ...attribute.KeyValue) {
@@ -142,7 +142,7 @@ func (l *Logger) write(
 	record.SetSeverityText(severity.String())
 	record.SetBody(otellog.StringValue(message))
 	record.AddAttributes(otelAttributes...)
-	logglobal.Logger("notezy").Emit(ctx, record)
+	logglobal.Logger("notegic").Emit(ctx, record)
 }
 
 func typeName(err error) string {

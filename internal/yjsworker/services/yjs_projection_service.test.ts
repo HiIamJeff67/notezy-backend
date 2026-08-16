@@ -9,7 +9,7 @@ import * as Y from "yjs";
 import { BlockPackProjector } from "./block_pack_projector.js";
 import { YjsProjectionService } from "./yjs_projection_service.js";
 import { Telemetry } from "../telemetry.js";
-import { notezyBlockNoteEditor } from "../types/blocknote_schema.js";
+import { notegicBlockNoteEditor } from "../types/blocknote_schema.js";
 import { convertUUIDStringToBytes } from "../util/uuid.js";
 
 const telemetry = Telemetry.initialize();
@@ -27,7 +27,7 @@ test("YjsProjectionService projects a snapshot without a durable update tail", a
   ) as Block[];
   const sourceDocument = new Y.Doc();
   blocksToYXmlFragment(
-    notezyBlockNoteEditor,
+    notegicBlockNoteEditor,
     sourceBlocks,
     sourceDocument.getXmlFragment("document-store")
   );
@@ -76,7 +76,7 @@ test("YjsProjectionService projects a snapshot without a durable update tail", a
     projectedSequence: number;
     blocks: Block[];
   };
-  assert.equal(projection.schemaId, "notezy.blocknote");
+  assert.equal(projection.schemaId, "notegic.blocknote");
   assert.equal(projection.schemaVersion, 1);
   assert.equal(projection.projectedSequence, 0);
   assert.deepEqual(projection.blocks, sourceBlocks);

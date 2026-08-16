@@ -7,11 +7,11 @@ import (
 
 	"github.com/google/uuid"
 
-	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/events"
-	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	durablejobeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1/events"
+	routinetasktypes "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1/types/routine-tasks"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
 )
 
 type RoutineTaskLifecycleProducer struct {

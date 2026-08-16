@@ -9,13 +9,13 @@ import (
 
 	"github.com/google/uuid"
 
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	coreeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/events"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	services "github.com/HiIamJeff67/notezy-backend/internal/notification/services"
+	services "github.com/HiIamJeff67/notegic-backend/internal/notification/services"
 )
 
 type NotificationRequestConsumer struct {
@@ -62,8 +62,8 @@ func (c *NotificationRequestConsumer) run(ctx context.Context) {
 		if ctx.Err() != nil {
 			return
 		}
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(ctx, err, "Notification request consumer stopped")
+		if logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(ctx, err, "Notification request consumer stopped")
 		}
 		select {
 		case <-ctx.Done():

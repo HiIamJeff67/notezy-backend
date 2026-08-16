@@ -14,10 +14,10 @@ import (
 	"github.com/google/uuid"
 	franzkgo "github.com/twmb/franz-go/pkg/kgo"
 
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
-	traces "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/traces"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
+	traces "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/traces"
 )
 
 type ErrorClassification string
@@ -212,9 +212,9 @@ func (c *Consumer) consumeRecord(
 			"tracestate":  envelope.Trace.TraceState,
 		})
 	}
-	if traces.NotezyTracer != nil {
-		consumerCtx, span := traces.NotezyTracer.Start(ctx, "kafka.consume")
-		defer traces.NotezyTracer.End(span, nil)
+	if traces.NotegicTracer != nil {
+		consumerCtx, span := traces.NotegicTracer.Start(ctx, "kafka.consume")
+		defer traces.NotegicTracer.End(span, nil)
 		ctx = consumerCtx
 	}
 
@@ -274,8 +274,8 @@ func (c *Consumer) deadLetter(
 	attempts int,
 	err error,
 ) bool {
-	if traces.NotezyTracer != nil {
-		traces.NotezyTracer.RecordError(ctx, err)
+	if traces.NotegicTracer != nil {
+		traces.NotegicTracer.RecordError(ctx, err)
 	}
 
 	deadLetter := DeadLetter{
@@ -311,9 +311,9 @@ func (c *Consumer) deadLetter(
 	}
 	RecordPublish(ctx, DeadLetterTopic(record.Topic), time.Since(startedAt), nil)
 	RecordDeadLetter(ctx, record.Topic, c.consumerGroup)
-	if logs.NotezyLogger != nil {
+	if logs.NotegicLogger != nil {
 		deadLetter.Value = nil
-		_ = logs.NotezyLogger.JSON(ctx, slog.LevelError, "Kafka event sent to dead-letter topic", deadLetter)
+		_ = logs.NotegicLogger.JSON(ctx, slog.LevelError, "Kafka event sent to dead-letter topic", deadLetter)
 	}
 
 	return true
@@ -327,11 +327,11 @@ func (c *Consumer) recordFailure(
 	message string,
 	err error,
 ) {
-	if traces.NotezyTracer != nil {
-		traces.NotezyTracer.RecordError(ctx, err)
+	if traces.NotegicTracer != nil {
+		traces.NotegicTracer.RecordError(ctx, err)
 	}
-	if logs.NotezyLogger != nil {
-		logs.NotezyLogger.Error(ctx, err, message,
+	if logs.NotegicLogger != nil {
+		logs.NotegicLogger.Error(ctx, err, message,
 			attribute.String("messaging.system", "kafka"),
 			attribute.String("messaging.destination.name", topic),
 			attribute.String("messaging.consumer.group.name", c.consumerGroup),

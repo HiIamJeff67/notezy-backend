@@ -7,13 +7,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/core/adapters"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/core/adapters"
 )
 
 func TestNewRouterAPIGatewayAllowlist(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := NewRouter(APIRouteDependencies{
-		CoreClient:   coreadapters.NewCoreAdapter("http://core:7778", time.Second),
+		CoreAdapter:  coreadapters.NewCoreAdapter("http://core:7778", time.Second),
 		RateLimiters: RateLimiters{},
 	})
 

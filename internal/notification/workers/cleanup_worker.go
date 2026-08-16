@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	services "github.com/HiIamJeff67/notezy-backend/internal/notification/services"
+	services "github.com/HiIamJeff67/notegic-backend/internal/notification/services"
 )
 
 type CleanupWorker struct {
@@ -37,8 +37,8 @@ func (w *CleanupWorker) Start(ctx context.Context) func() {
 		ticker := time.NewTicker(w.interval)
 		defer ticker.Stop()
 		for {
-			if _, err := w.service.HardDeleteExpiredNotifications(workerCtx, time.Now().UTC(), w.retention); err != nil && logs.NotezyLogger != nil {
-				logs.NotezyLogger.Error(workerCtx, err, "Failed to clean Notification records")
+			if _, err := w.service.HardDeleteExpiredNotifications(workerCtx, time.Now().UTC(), w.retention); err != nil && logs.NotegicLogger != nil {
+				logs.NotegicLogger.Error(workerCtx, err, "Failed to clean Notification records")
 			}
 			select {
 			case <-workerCtx.Done():

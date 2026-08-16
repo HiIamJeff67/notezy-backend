@@ -10,9 +10,9 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
-	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
+	platformredis "github.com/HiIamJeff67/notegic-backend/shared/platform/redis"
 )
 
 const defaultCacheExpiresIn = 5 * time.Minute
@@ -107,7 +107,7 @@ func (s *APIKeyCacheClient) Get(keyHash string) (*APIKeyCache, *exceptions.Excep
 		).WithOrigin(err)
 	}
 
-	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully got cached API key from Redis shard %d", shardIndex))
+	logs.NotegicLogger.Debug(context.Background(), fmt.Sprintf("Successfully got cached API key from Redis shard %d", shardIndex))
 	return &apiKeyCache, nil
 }
 
@@ -140,7 +140,7 @@ func (s *APIKeyCacheClient) Set(keyHash string, apiKeyCache APIKeyCache) *except
 		).WithOrigin(err)
 	}
 
-	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully set cached API key in Redis shard %d", shardIndex))
+	logs.NotegicLogger.Debug(context.Background(), fmt.Sprintf("Successfully set cached API key in Redis shard %d", shardIndex))
 	return nil
 }
 
@@ -161,6 +161,6 @@ func (s *APIKeyCacheClient) Delete(keyHash string) *exceptions.Exception {
 		).WithOrigin(err)
 	}
 
-	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully deleted cached API key from Redis shard %d", shardIndex))
+	logs.NotegicLogger.Debug(context.Background(), fmt.Sprintf("Successfully deleted cached API key from Redis shard %d", shardIndex))
 	return nil
 }

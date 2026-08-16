@@ -3,8 +3,8 @@ package tokens
 import "testing"
 
 func TestDelegationTokenRoundTrip(t *testing.T) {
-	t.Setenv("CORE_DELEGATION_AUDIENCE", "notezy-core-test")
-	t.Setenv("CORE_DELEGATION_ISSUER", "notezy-gateway-test")
+	t.Setenv("CORE_DELEGATION_AUDIENCE", "notegic-core-test")
+	t.Setenv("CORE_DELEGATION_ISSUER", "notegic-gateway-test")
 	t.Setenv("CORE_DELEGATION_SECRET", "test-delegation-secret")
 
 	token, err := GenerateDelegationToken(DelegationTokenClaims{
@@ -31,8 +31,8 @@ func TestDelegationTokenRoundTrip(t *testing.T) {
 }
 
 func TestDelegationTokenWithoutUserSubjectRoundTrip(t *testing.T) {
-	t.Setenv("CORE_DELEGATION_AUDIENCE", "notezy-core-test")
-	t.Setenv("CORE_DELEGATION_ISSUER", "notezy-gateway-test")
+	t.Setenv("CORE_DELEGATION_AUDIENCE", "notegic-core-test")
+	t.Setenv("CORE_DELEGATION_ISSUER", "notegic-gateway-test")
 	t.Setenv("CORE_DELEGATION_SECRET", "test-delegation-secret")
 
 	token, err := GenerateDelegationToken(DelegationTokenClaims{

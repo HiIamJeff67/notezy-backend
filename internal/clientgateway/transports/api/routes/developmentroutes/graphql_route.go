@@ -5,18 +5,18 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+	cookies "github.com/HiIamJeff67/notegic-backend/shared/cookies"
 
-	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	enumcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 
-	graphql "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/graphql"
-	interceptors "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/interceptors"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/middlewares"
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
+	graphql "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/graphql"
+	interceptors "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/interceptors"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/middlewares"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
 )
 
 type GraphQLRouteDependencies struct {
-	CoreClient                *coreadapters.CoreAdapter
+	CoreAdapter               *coreadapters.CoreAdapter
 	AccessTokenCookieHandler  *cookies.CookieHandler
 	RefreshTokenCookieHandler *cookies.CookieHandler
 	RateLimiters              RateLimiters
@@ -26,7 +26,7 @@ func configureDevelopmentGraphQLRoutes(
 	router *gin.RouterGroup,
 	deps GraphQLRouteDependencies,
 ) {
-	coreClient, accessTokenCookieHandler, refreshTokenCookieHandler, rateLimiters := deps.CoreClient, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.RateLimiters
+	coreAdapter, accessTokenCookieHandler, refreshTokenCookieHandler, rateLimiters := deps.CoreAdapter, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -44,7 +44,7 @@ func configureDevelopmentGraphQLRoutes(
 		),
 	)
 	{
-		graphqlRoutes.POST("/", graphql.GraphQLHandler(coreClient))
+		graphqlRoutes.POST("/", graphql.GraphQLHandler(coreAdapter))
 		if gin.Mode() == gin.DebugMode {
 			graphqlRoutes.GET("/", graphql.PlaygroundHandler())
 		}

@@ -14,9 +14,9 @@ import (
 	"github.com/google/uuid"
 )
 
-const realtimeConnectionTicketAudience string = "notezy-realtime-connection"
-const realtimeBlockPackTicketAudience string = "notezy-realtime-block-pack"
-const realtimeTicketIssuer string = "github.com/HiIamJeff67/notezy-backend"
+const realtimeConnectionTicketAudience string = "notegic-realtime-connection"
+const realtimeBlockPackTicketAudience string = "notegic-realtime-block-pack"
+const realtimeTicketIssuer string = "github.com/HiIamJeff67/notegic-backend"
 const realtimeConnectionTicketExpiresIn time.Duration = 5 * time.Minute
 const realtimeBlockPackTicketExpiresIn time.Duration = 5 * time.Minute
 const realtimeProtocolVersion int = 1

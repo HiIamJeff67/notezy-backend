@@ -10,11 +10,11 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	constants "github.com/HiIamJeff67/notegic-backend/shared/constants"
 
-	metrics "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/metrics"
+	metrics "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/metrics"
 
-	realtimetypes "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/types"
+	realtimetypes "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/types"
 )
 
 type outboundQueue struct {
@@ -105,10 +105,10 @@ func (q *outboundQueue) writeJSON(frame any) error {
 
 	q.controlQueue = append(q.controlQueue, payload)
 	q.controlQueuedBytes += int64(len(payload))
-	metrics.NotezyMeter.Value(context.Background(), "realtime.outbound.queue.depth", int64(len(q.controlQueue)),
+	metrics.NotegicMeter.Value(context.Background(), "realtime.outbound.queue.depth", int64(len(q.controlQueue)),
 		attribute.String("queueType", "control"),
 	)
-	metrics.NotezyMeter.Value(context.Background(), "realtime.outbound.queue.bytes", q.controlQueuedBytes,
+	metrics.NotegicMeter.Value(context.Background(), "realtime.outbound.queue.bytes", q.controlQueuedBytes,
 		attribute.String("queueType", "control"),
 	)
 	q.trySignalWriterLocked()
@@ -173,11 +173,11 @@ func (q *outboundQueue) writeBinary(frame realtimetypes.BinaryFrame) error {
 				frameType: frame.Type,
 			}
 			queue.queuedBytes = queuedBytesWithoutAwareness + int64(len(payload))
-			metrics.NotezyMeter.Value(context.Background(), "realtime.outbound.queue.depth", int64(len(queue.messages)),
+			metrics.NotegicMeter.Value(context.Background(), "realtime.outbound.queue.depth", int64(len(queue.messages)),
 				attribute.String("queueType", "channel"),
 				attribute.String("frameType", string(frame.Type)),
 			)
-			metrics.NotezyMeter.Value(context.Background(), "realtime.outbound.queue.bytes", queue.queuedBytes,
+			metrics.NotegicMeter.Value(context.Background(), "realtime.outbound.queue.bytes", queue.queuedBytes,
 				attribute.String("queueType", "channel"),
 				attribute.String("frameType", string(frame.Type)),
 			)
@@ -200,11 +200,11 @@ func (q *outboundQueue) writeBinary(frame realtimetypes.BinaryFrame) error {
 		frameType: frame.Type,
 	})
 	queue.queuedBytes += int64(len(payload))
-	metrics.NotezyMeter.Value(context.Background(), "realtime.outbound.queue.depth", int64(len(queue.messages)),
+	metrics.NotegicMeter.Value(context.Background(), "realtime.outbound.queue.depth", int64(len(queue.messages)),
 		attribute.String("queueType", "channel"),
 		attribute.String("frameType", string(frame.Type)),
 	)
-	metrics.NotezyMeter.Value(context.Background(), "realtime.outbound.queue.bytes", queue.queuedBytes,
+	metrics.NotegicMeter.Value(context.Background(), "realtime.outbound.queue.bytes", queue.queuedBytes,
 		attribute.String("queueType", "channel"),
 		attribute.String("frameType", string(frame.Type)),
 	)
@@ -218,10 +218,10 @@ func (q *outboundQueue) clearChannel(connectorChannelId uint32) {
 	defer q.mutex.Unlock()
 
 	delete(q.channelQueues, connectorChannelId)
-	metrics.NotezyMeter.Value(context.Background(), "realtime.outbound.queue.depth", 0,
+	metrics.NotegicMeter.Value(context.Background(), "realtime.outbound.queue.depth", 0,
 		attribute.String("queueType", "channel"),
 	)
-	metrics.NotezyMeter.Value(context.Background(), "realtime.outbound.queue.bytes", 0,
+	metrics.NotegicMeter.Value(context.Background(), "realtime.outbound.queue.bytes", 0,
 		attribute.String("queueType", "channel"),
 	)
 	for index, channelId := range q.channelOrder {
@@ -250,10 +250,10 @@ func (q *outboundQueue) runWriter() {
 			payload = q.controlQueue[0]
 			q.controlQueue = q.controlQueue[1:]
 			q.controlQueuedBytes -= int64(len(payload))
-			metrics.NotezyMeter.Value(context.Background(), "realtime.outbound.queue.depth", int64(len(q.controlQueue)),
+			metrics.NotegicMeter.Value(context.Background(), "realtime.outbound.queue.depth", int64(len(q.controlQueue)),
 				attribute.String("queueType", "control"),
 			)
-			metrics.NotezyMeter.Value(context.Background(), "realtime.outbound.queue.bytes", q.controlQueuedBytes,
+			metrics.NotegicMeter.Value(context.Background(), "realtime.outbound.queue.bytes", q.controlQueuedBytes,
 				attribute.String("queueType", "control"),
 			)
 		} else {
@@ -271,11 +271,11 @@ func (q *outboundQueue) runWriter() {
 				payload = message.payload
 				queue.messages = queue.messages[1:]
 				queue.queuedBytes -= int64(len(message.payload))
-				metrics.NotezyMeter.Value(context.Background(), "realtime.outbound.queue.depth", int64(len(queue.messages)),
+				metrics.NotegicMeter.Value(context.Background(), "realtime.outbound.queue.depth", int64(len(queue.messages)),
 					attribute.String("queueType", "channel"),
 					attribute.String("frameType", string(message.frameType)),
 				)
-				metrics.NotezyMeter.Value(context.Background(), "realtime.outbound.queue.bytes", queue.queuedBytes,
+				metrics.NotegicMeter.Value(context.Background(), "realtime.outbound.queue.bytes", queue.queuedBytes,
 					attribute.String("queueType", "channel"),
 					attribute.String("frameType", string(message.frameType)),
 				)

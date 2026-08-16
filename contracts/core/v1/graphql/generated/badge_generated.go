@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
-	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
+	"github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 	"github.com/google/uuid"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -190,7 +190,7 @@ func (ec *executionContext) _PublicBadge_type(ctx context.Context, field graphql
 	}
 	res := resTmp.(enums.BadgeType)
 	fc.Result = res
-	return ec.marshalNBadgeType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐBadgeType(ctx, field.Selections, res)
+	return ec.marshalNBadgeType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐBadgeType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PublicBadge_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -368,7 +368,7 @@ func (ec *executionContext) _PublicBadge(ctx context.Context, sel ast.SelectionS
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNPublicBadge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPublicBadge(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PublicBadge) graphql.Marshaler {
+func (ec *executionContext) marshalNPublicBadge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPublicBadge(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PublicBadge) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

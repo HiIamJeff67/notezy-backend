@@ -16,35 +16,35 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	stringutil "github.com/HiIamJeff67/notezy-backend/shared/lib/strings"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	constants "github.com/HiIamJeff67/notegic-backend/shared/constants"
+	stringutil "github.com/HiIamJeff67/notegic-backend/shared/lib/strings"
+	sharedtokens "github.com/HiIamJeff67/notegic-backend/shared/tokens"
 
-	authcode "github.com/HiIamJeff67/notezy-backend/shared/lib/authcode"
-	snowflake "github.com/HiIamJeff67/notezy-backend/shared/lib/snowflake"
+	authcode "github.com/HiIamJeff67/notegic-backend/shared/lib/authcode"
+	snowflake "github.com/HiIamJeff67/notegic-backend/shared/lib/snowflake"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/auth"
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	emaildto "github.com/HiIamJeff67/notezy-backend/contracts/email/v1/events"
-	notificationtypescontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/types"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/auth"
+	coreeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/events"
+	emaildto "github.com/HiIamJeff67/notegic-backend/contracts/email/v1/events"
+	notificationtypescontract "github.com/HiIamJeff67/notegic-backend/contracts/notification/v1/types"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
-	userdata "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/userdata"
-	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/userdata/inputs"
-	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
-	authsql "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/sqls/auth"
-	badgesql "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/sqls/badge"
-	usersql "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/sqls/user"
-	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/core/exceptions"
-	emailtransport "github.com/HiIamJeff67/notezy-backend/internal/core/transports/email"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
+	userdata "github.com/HiIamJeff67/notegic-backend/internal/core/data/cache/userdata"
+	cacheinputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/cache/userdata/inputs"
+	data "github.com/HiIamJeff67/notegic-backend/internal/core/data/database"
+	inputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
+	authsql "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/sqls/auth"
+	badgesql "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/sqls/badge"
+	usersql "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/sqls/user"
+	apiexceptions "github.com/HiIamJeff67/notegic-backend/internal/core/exceptions"
+	emailtransport "github.com/HiIamJeff67/notegic-backend/internal/core/transports/email"
 )
 
 type AuthServiceInterface interface {
@@ -232,8 +232,8 @@ func (s *AuthService) enqueueWelcomeNotification(
 	userPublicId uuid.UUID,
 ) *exceptions.Exception {
 	payload, err := json.Marshal(notificationtypescontract.NewsPayload{
-		Title:   "Welcome to Notezy",
-		Summary: "Your Notezy account is ready.",
+		Title:   "Welcome to Notegic",
+		Summary: "Your Notegic account is ready.",
 		Body:    "Start organizing your notes, shelves, and routines in one place.",
 	})
 	if err != nil {
@@ -427,7 +427,7 @@ func (s *AuthService) Register(
 		},
 	)
 	if exception != nil {
-		_ = logs.NotezyLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
+		_ = logs.NotegicLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
 	}
 
 	if exception = s.emailClient.SendWelcomeEmail(ctx, emaildto.SendWelcomeEmailRequestDto{
@@ -435,7 +435,7 @@ func (s *AuthService) Register(
 		UserName: newUser.Name,
 		Status:   newUser.Status.String(),
 	}); exception != nil {
-		_ = logs.NotezyLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
+		_ = logs.NotegicLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
 	}
 
 	return &apicontract.RegisterResponseDto{
@@ -662,7 +662,7 @@ func (s *AuthService) RegisterViaGoogle(
 		},
 	)
 	if exception != nil {
-		_ = logs.NotezyLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
+		_ = logs.NotegicLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
 	}
 
 	if exception = s.enqueueWelcomeNotification(tx, newUser.PublicId); exception != nil {
@@ -681,7 +681,7 @@ func (s *AuthService) RegisterViaGoogle(
 		UserName: newUser.Name,
 		Status:   newUser.Status.String(),
 	}); exception != nil {
-		_ = logs.NotezyLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
+		_ = logs.NotegicLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
 	}
 
 	return &apicontract.RegisterViaGoogleResponseDto{
@@ -788,7 +788,7 @@ func (s *AuthService) Login(
 			TimeOfOccurrence: time.Now(),
 			OtherDetails:     "",
 		}); exception != nil {
-			_ = logs.NotezyLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
+			_ = logs.NotegicLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
 		}
 	}
 
@@ -818,7 +818,7 @@ func (s *AuthService) Login(
 				CSRFToken:   newCSRFToken,
 			},
 		); exception != nil {
-			_ = logs.NotezyLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
+			_ = logs.NotegicLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
 		}
 	} else { // else if it does not exist
 		// then we have to first get the relative data from different tables
@@ -1022,7 +1022,7 @@ func (s *AuthService) loginViaGoogleUser(
 			TimeOfOccurrence: time.Now(),
 			OtherDetails:     "",
 		}); exception != nil {
-			_ = logs.NotezyLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
+			_ = logs.NotegicLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
 		}
 	}
 
@@ -1052,7 +1052,7 @@ func (s *AuthService) loginViaGoogleUser(
 				CSRFToken:   newCSRFToken,
 			},
 		); exception != nil {
-			_ = logs.NotezyLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
+			_ = logs.NotegicLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
 		}
 	} else { // else if it does not exist
 		// then we have to first get the relative data from different tables
@@ -1425,7 +1425,7 @@ func (s *AuthService) ForgetPassword(
 	// update the access token of the user
 	exception = s.userDataCacheClient.Update(user.Name, cacheinputs.UpdateUserDataCacheInput{AccessToken: newAccessToken})
 	if exception != nil {
-		_ = logs.NotezyLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
+		_ = logs.NotegicLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
 		// and also try to set the new user cache data
 		exception = s.userDataCacheClient.Set(user.Name, userdata.UserDataCache{
 			Id:                 user.Id,
@@ -1446,7 +1446,7 @@ func (s *AuthService) ForgetPassword(
 			UpdatedAt:          user.UpdatedAt,
 		})
 		if exception != nil {
-			_ = logs.NotezyLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
+			_ = logs.NotegicLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
 		}
 	}
 
@@ -1673,7 +1673,7 @@ func (s *AuthService) DeleteMe(
 
 	exception = s.userDataCacheClient.Delete(actorUserName)
 	if exception != nil {
-		_ = logs.NotezyLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
+		_ = logs.NotegicLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
 	}
 
 	return &apicontract.DeleteMeResponseDto{

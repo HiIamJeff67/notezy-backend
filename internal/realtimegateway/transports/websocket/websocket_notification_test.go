@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	realtimeleasecache "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
-	realtimetypes "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/types"
+	realtimeleasecache "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/data/cache/realtimelease"
+	realtimetypes "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/types"
 )
 
 func TestBroadcastNotificationTargetsOnlyTheRecipient(t *testing.T) {

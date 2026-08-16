@@ -11,7 +11,7 @@ import (
 
 var rootCommand = &cobra.Command{
 	Use:   "websocket",
-	Short: "Run the Notezy WebSocket Gateway.",
+	Short: "Run the Notegic WebSocket Gateway.",
 	Run: func(_ *cobra.Command, _ []string) {
 		ctx, stop := signal.NotifyContext(
 			context.Background(),

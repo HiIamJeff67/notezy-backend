@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
-	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
+	"github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 	"github.com/google/uuid"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -234,7 +234,7 @@ func (ec *executionContext) _PrivateRoutine_status(ctx context.Context, field gr
 	}
 	res := resTmp.(enums.RoutineStatus)
 	fc.Result = res
-	return ec.marshalNRoutineStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineStatus(ctx, field.Selections, res)
+	return ec.marshalNRoutineStatus2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateRoutine_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -407,7 +407,7 @@ func (ec *executionContext) _PrivateRoutine_period(ctx context.Context, field gr
 	}
 	res := resTmp.(*enums.RoutinePeriod)
 	fc.Result = res
-	return ec.marshalORoutinePeriod2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutinePeriod(ctx, field.Selections, res)
+	return ec.marshalORoutinePeriod2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutinePeriod(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateRoutine_period(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -888,7 +888,7 @@ func (ec *executionContext) _PrivateSearchableRoutine_status(ctx context.Context
 	}
 	res := resTmp.(enums.RoutineStatus)
 	fc.Result = res
-	return ec.marshalNRoutineStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineStatus(ctx, field.Selections, res)
+	return ec.marshalNRoutineStatus2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateSearchableRoutine_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1061,7 +1061,7 @@ func (ec *executionContext) _PrivateSearchableRoutine_period(ctx context.Context
 	}
 	res := resTmp.(*enums.RoutinePeriod)
 	fc.Result = res
-	return ec.marshalORoutinePeriod2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutinePeriod(ctx, field.Selections, res)
+	return ec.marshalORoutinePeriod2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutinePeriod(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateSearchableRoutine_period(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1609,7 +1609,7 @@ func (ec *executionContext) _PrivateSearchableRoutine(ctx context.Context, sel a
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNPrivateSearchableRoutine2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPrivateSearchableRoutine(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateSearchableRoutine) graphql.Marshaler {
+func (ec *executionContext) marshalNPrivateSearchableRoutine2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPrivateSearchableRoutine(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateSearchableRoutine) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

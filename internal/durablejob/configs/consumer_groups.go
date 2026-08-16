@@ -1,7 +1,7 @@
 package config
 
 const (
-	RoutineTaskConsumerGroup          = "notezy-durablejob-routine-task-v1"
-	YjsMaintenanceHintConsumerGroup   = "notezy-durablejob-yjs-maintenance-v1"
-	YjsMaintenanceResultConsumerGroup = "notezy-durablejob-yjs-maintenance-result-v1"
+	RoutineTaskConsumerGroup          = "notegic-durablejob-routine-task-v1"
+	YjsMaintenanceHintConsumerGroup   = "notegic-durablejob-yjs-maintenance-v1"
+	YjsMaintenanceResultConsumerGroup = "notegic-durablejob-yjs-maintenance-result-v1"
 )

@@ -18,8 +18,8 @@ production strategy is twelve partitions, replication factor three, and
 Start the broker and idempotent topic provisioner:
 
 ```bash
-docker compose up -d notezy-kafka notezy-kafka-init
-docker compose logs --follow notezy-kafka-init
+docker compose up -d notegic-kafka notegic-kafka-init
+docker compose logs --follow notegic-kafka-init
 ```
 
 The same provisioner can be run from the host with:
@@ -31,14 +31,14 @@ make kafka-topics
 Inspect a provisioned topic:
 
 ```bash
-docker compose exec notezy-kafka \
+docker compose exec notegic-kafka \
   /opt/kafka/bin/kafka-topics.sh \
   --bootstrap-server localhost:9092 \
   --describe \
-  --topic notezy.core.lifecycle.v1
+  --topic notegic.core.lifecycle.v1
 ```
 
-Containers connect to `notezy-kafka:9092`. A process started on the host uses
+Containers connect to `notegic-kafka:9092`. A process started on the host uses
 `127.0.0.1:9094` by default. The catalog in
 `shared/platform/kafka/topics` is the source of truth for Core, DurableJob,
 Email, Notification, and YjsWorker topics. Each catalog entry uses delete

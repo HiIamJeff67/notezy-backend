@@ -12,10 +12,10 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
 
-	blockpackscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
-	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1"
+	blockpackscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/block-packs"
+	yjsworkercontract "github.com/HiIamJeff67/notegic-backend/contracts/yjs-worker/v1"
 
-	coreconfig "github.com/HiIamJeff67/notezy-backend/internal/core/configs"
+	coreconfig "github.com/HiIamJeff67/notegic-backend/internal/core/configs"
 )
 
 type DocumentInitializationClient struct {

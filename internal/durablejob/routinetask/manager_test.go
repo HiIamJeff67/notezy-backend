@@ -3,7 +3,7 @@ package routinetask
 import (
 	"testing"
 
-	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	enums "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 )
 
 func TestNewHandlerManagerRegistersEveryPurposePolicy(t *testing.T) {

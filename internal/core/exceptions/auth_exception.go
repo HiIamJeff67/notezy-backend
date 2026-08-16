@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 )
 
 type AuthException struct {

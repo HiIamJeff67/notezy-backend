@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
-	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
+	"github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 	"github.com/google/uuid"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -102,7 +102,7 @@ func (ec *executionContext) _PrivateSearchableStation_permission(ctx context.Con
 	}
 	res := resTmp.(enums.AccessControlPermission)
 	fc.Result = res
-	return ec.marshalNAccessControlPermission2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐAccessControlPermission(ctx, field.Selections, res)
+	return ec.marshalNAccessControlPermission2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐAccessControlPermission(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateSearchableStation_permission(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -187,7 +187,7 @@ func (ec *executionContext) _PrivateSearchableStation_icon(ctx context.Context, 
 	}
 	res := resTmp.(*enums.SupportedIcon)
 	fc.Result = res
-	return ec.marshalOSupportedIcon2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐSupportedIcon(ctx, field.Selections, res)
+	return ec.marshalOSupportedIcon2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐSupportedIcon(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateSearchableStation_icon(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -489,7 +489,7 @@ func (ec *executionContext) _PrivateStation_permission(ctx context.Context, fiel
 	}
 	res := resTmp.(enums.AccessControlPermission)
 	fc.Result = res
-	return ec.marshalNAccessControlPermission2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐAccessControlPermission(ctx, field.Selections, res)
+	return ec.marshalNAccessControlPermission2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐAccessControlPermission(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateStation_permission(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -618,7 +618,7 @@ func (ec *executionContext) _PrivateStation_icon(ctx context.Context, field grap
 	}
 	res := resTmp.(*enums.SupportedIcon)
 	fc.Result = res
-	return ec.marshalOSupportedIcon2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐSupportedIcon(ctx, field.Selections, res)
+	return ec.marshalOSupportedIcon2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐSupportedIcon(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateStation_icon(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1009,7 +1009,7 @@ func (ec *executionContext) _PrivateStation(ctx context.Context, sel ast.Selecti
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNPrivateSearchableStation2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPrivateSearchableStation(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateSearchableStation) graphql.Marshaler {
+func (ec *executionContext) marshalNPrivateSearchableStation2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPrivateSearchableStation(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateSearchableStation) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

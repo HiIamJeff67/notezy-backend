@@ -3,11 +3,11 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	durablejobdto "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1"
+	durablejobdto "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1"
 
-	blockservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/blocks"
-	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/durablejob/endpoints"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
+	blockservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/blocks"
+	endpoints "github.com/HiIamJeff67/notegic-backend/internal/core/transports/durablejob/endpoints"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/core/transports/gateway/middlewares"
 )
 
 func ConfigureBlockProjectionRoutes(

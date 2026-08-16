@@ -1,10 +1,10 @@
 package triggers
 
 import (
-	accountingtriggersql "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/triggers/accounting_triggers"
-	blockpackyjstriggersql "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/triggers/block_pack_yjs_triggers"
-	itemprojectiontriggersql "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/triggers/item_projection_triggers"
-	shelfitemcascadingtriggersql "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/triggers/shelf_item_cascading_triggers"
+	accountingtriggersql "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/triggers/accounting_triggers"
+	blockpackyjstriggersql "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/triggers/block_pack_yjs_triggers"
+	itemprojectiontriggersql "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/triggers/item_projection_triggers"
+	shelfitemcascadingtriggersql "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/triggers/shelf_item_cascading_triggers"
 )
 
 var MigratingTriggerSQLs = []string{

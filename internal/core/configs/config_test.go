@@ -7,9 +7,9 @@ import (
 func TestLoadConfig(t *testing.T) {
 	t.Setenv("CORE_LISTEN_ADDRESS", "127.0.0.1:7778")
 	t.Setenv("DB_HOST", "database")
-	t.Setenv("DB_USER", "notezy")
+	t.Setenv("DB_USER", "notegic")
 	t.Setenv("DB_PASSWORD", "secret")
-	t.Setenv("DB_NAME", "notezy")
+	t.Setenv("DB_NAME", "notegic")
 	t.Setenv("DOCKER_DB_PORT", "5432")
 	t.Setenv("OAUTH_GOOGLE_CLIENT_ID", "client-id")
 	t.Setenv("OAUTH_GOOGLE_CLIENT_SECRET", "client-secret")
@@ -28,7 +28,7 @@ func TestLoadConfig(t *testing.T) {
 	t.Setenv("CORE_QUOTA_CYCLE_WORKER_INTERVAL", "24h")
 	t.Setenv("STORAGE_KEY_SALT", "salt")
 	t.Setenv("CORE_USER_DATA_CACHE_EXPIRES_IN", "1h")
-	t.Setenv("YJS_DOCUMENT_INITIALIZATION_WORKER_URL", "http://notezy-yjs-worker:8787/core/yjs-document-initialization/v1")
+	t.Setenv("YJS_DOCUMENT_INITIALIZATION_WORKER_URL", "http://notegic-yjs-worker:8787/core/yjs-document-initialization/v1")
 	t.Setenv("YJS_DOCUMENT_INITIALIZATION_WORKER_TIMEOUT", "30s")
 
 	config, err := LoadConfig()

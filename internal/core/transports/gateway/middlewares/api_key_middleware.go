@@ -8,13 +8,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
-	apikeycache "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/apikey"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
+	apikeycache "github.com/HiIamJeff67/notegic-backend/internal/core/data/cache/apikey"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
+	sharedtokens "github.com/HiIamJeff67/notegic-backend/shared/tokens"
 )
 
 const APIKeyHeader = "X-API-Key"

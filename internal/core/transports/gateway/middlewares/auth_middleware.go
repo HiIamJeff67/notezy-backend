@@ -8,17 +8,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
+	sharedtokens "github.com/HiIamJeff67/notegic-backend/shared/tokens"
 
-	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+	sharedcontexts "github.com/HiIamJeff67/notegic-backend/shared/lib/contexts"
 
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
-	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
+	data "github.com/HiIamJeff67/notegic-backend/internal/core/data/database"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
 )
 
 func AuthMiddleware(userRepository repositories.UserRepositoryInterface) gin.HandlerFunc {

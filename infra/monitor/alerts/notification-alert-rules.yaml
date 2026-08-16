@@ -1,15 +1,15 @@
 groups:
-  - name: notezy-notification
+  - name: notegic-notification
     rules:
-      - alert: NotezyKafkaDeadLetterRateHigh
-        expr: sum(rate(notezy_kafka_dlq_count_total{messaging_destination_name=~"notezy.core.notification.v1|notezy.core.lifecycle.v1|notezy.notification.v1"}[5m])) > 0
+      - alert: NotegicKafkaDeadLetterRateHigh
+        expr: sum(rate(notegic_kafka_dlq_count_total{messaging_destination_name=~"notegic.core.notification.v1|notegic.core.lifecycle.v1|notegic.notification.v1"}[5m])) > 0
         for: 5m
         labels:
           severity: critical
         annotations:
           summary: Notification-related Kafka events are being sent to a dead-letter topic.
-      - alert: NotezyKafkaConsumerLagHigh
-        expr: max(notezy_kafka_consumer_lag{messaging_destination_name=~"notezy.core.notification.v1|notezy.core.lifecycle.v1|notezy.notification.v1"}) > 1000
+      - alert: NotegicKafkaConsumerLagHigh
+        expr: max(notegic_kafka_consumer_lag{messaging_destination_name=~"notegic.core.notification.v1|notegic.core.lifecycle.v1|notegic.notification.v1"}) > 1000
         for: 10m
         labels:
           severity: warning

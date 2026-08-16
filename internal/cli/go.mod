@@ -1,18 +1,18 @@
-module github.com/HiIamJeff67/notezy-backend/internal/cli
+module github.com/HiIamJeff67/notegic-backend/internal/cli
 
 go 1.26.0
 
 require (
-	github.com/HiIamJeff67/notezy-backend/shared v0.0.0
+	github.com/HiIamJeff67/notegic-backend/shared v0.0.0
 	github.com/spf13/cobra v1.9.1
 )
 
-replace github.com/HiIamJeff67/notezy-backend/shared => ../../shared
+replace github.com/HiIamJeff67/notegic-backend/shared => ../../shared
 
-replace github.com/HiIamJeff67/notezy-backend/contracts => ../../contracts
+replace github.com/HiIamJeff67/notegic-backend/contracts => ../../contracts
 
 require (
-	github.com/HiIamJeff67/notezy-backend/contracts v0.0.0 // indirect
+	github.com/HiIamJeff67/notegic-backend/contracts v0.0.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/comail/colog v0.0.0-20160416085026-fba8e7b1f46c // indirect
 	github.com/go-logr/logr v1.4.3 // indirect

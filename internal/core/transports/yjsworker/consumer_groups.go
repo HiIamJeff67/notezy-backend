@@ -1,6 +1,6 @@
 package adapterstransport
 
 const (
-	CommandConsumerGroup           = "notezy-core-yjsworker-v1"
-	MaintenanceResultConsumerGroup = "notezy-core-yjs-maintenance-result-v1"
+	CommandConsumerGroup           = "notegic-core-yjsworker-v1"
+	MaintenanceResultConsumerGroup = "notegic-core-yjs-maintenance-result-v1"
 )

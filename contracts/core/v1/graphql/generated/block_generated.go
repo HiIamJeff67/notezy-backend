@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
-	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
+	"github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 	"github.com/google/uuid"
 	"github.com/vektah/gqlparser/v2/ast"
 	"gorm.io/datatypes"
@@ -270,7 +270,7 @@ func (ec *executionContext) _PrivateBlock_type(ctx context.Context, field graphq
 	}
 	res := resTmp.(enums.BlockType)
 	fc.Result = res
-	return ec.marshalNBlockType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐBlockType(ctx, field.Selections, res)
+	return ec.marshalNBlockType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐBlockType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateBlock_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -602,7 +602,7 @@ func (ec *executionContext) _PrivateBlock(ctx context.Context, sel ast.Selection
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNPrivateBlock2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPrivateBlock(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateBlock) graphql.Marshaler {
+func (ec *executionContext) marshalNPrivateBlock2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPrivateBlock(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateBlock) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

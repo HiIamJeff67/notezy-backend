@@ -14,7 +14,7 @@
     "body": [
       "package schemas",
       "import (",
-      "\tshared \"github.com/HiIamJeff67/notezy-backend/shared\"",
+      "\tshared \"github.com/HiIamJeff67/notegic-backend/shared\"",
       "\t\"time\"",
       "\t\"github.com/google/uuid\"",
       ")",

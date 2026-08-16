@@ -7,14 +7,14 @@ import (
 
 	"github.com/google/uuid"
 
-	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1"
-	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	durablejobcontract "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1"
+	durablejobeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1/events"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	routineservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/routines"
+	routineservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/routines"
 )
 
 type DurableJobRoutineTaskClaimConsumer struct {
@@ -38,8 +38,8 @@ func (c *DurableJobRoutineTaskClaimConsumer) Start(ctx context.Context) func() {
 		durablejobeventscontract.CoreDurableJobRoutineTaskTopic.String(),
 	)
 	if err != nil {
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(ctx, err, "Failed to create DurableJob routine task claim consumer")
+		if logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(ctx, err, "Failed to create DurableJob routine task claim consumer")
 		}
 
 		return func() {}
@@ -47,8 +47,8 @@ func (c *DurableJobRoutineTaskClaimConsumer) Start(ctx context.Context) func() {
 
 	workerCtx, cancel := context.WithCancel(ctx)
 	go func() {
-		if err := consumer.Run(workerCtx, c.consume); err != nil && workerCtx.Err() == nil && logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(workerCtx, err, "DurableJob routine task claim consumer stopped")
+		if err := consumer.Run(workerCtx, c.consume); err != nil && workerCtx.Err() == nil && logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(workerCtx, err, "DurableJob routine task claim consumer stopped")
 		}
 	}()
 

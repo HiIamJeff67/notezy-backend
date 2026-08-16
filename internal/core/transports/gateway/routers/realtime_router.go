@@ -3,11 +3,11 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/realtime"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/realtime"
 
-	realtimeservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/realtime"
-	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
+	realtimeservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/realtime"
+	endpoints "github.com/HiIamJeff67/notegic-backend/internal/core/transports/gateway/endpoints"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/core/transports/gateway/middlewares"
 )
 
 type RealtimeRouterDependencies struct {

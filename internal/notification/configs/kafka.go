@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
 )
 
 type KafkaConsumerConfig struct {
@@ -23,7 +23,7 @@ func (config KafkaConsumerConfig) ConsumerConfig() platformkafka.ConsumerConfig 
 	return platformkafka.ConsumerConfig{
 		ClientConfig: platformkafka.ClientConfig{
 			ConnectionConfig: config.Connection,
-			ClientId:         "notezy-notification-consumer",
+			ClientId:         "notegic-notification-consumer",
 		},
 		ConsumerGroup:       config.ConsumerGroup,
 		MaximumAttempts:     config.MaximumAttempts,

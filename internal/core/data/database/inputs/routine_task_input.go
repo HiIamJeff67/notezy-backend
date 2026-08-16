@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
 )
 
 type CreateRoutineTaskInput struct {

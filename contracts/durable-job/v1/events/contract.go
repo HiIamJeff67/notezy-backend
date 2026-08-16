@@ -1,15 +1,15 @@
 package durablejobeventscontract
 
-import eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+import eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 
 const (
-	CoreDurableJobRoutineTaskTopic                     eventcontract.Topic = "notezy.core.durablejob.routine-task.v1"
-	DurableJobRealtimeGatewayRoutineTaskLifecycleTopic eventcontract.Topic = "notezy.durablejob.realtime-gateway.routine-task-lifecycle.v1"
+	CoreDurableJobRoutineTaskTopic                     eventcontract.Topic = "notegic.core.durablejob.routine-task.v1"
+	DurableJobRealtimeGatewayRoutineTaskLifecycleTopic eventcontract.Topic = "notegic.durablejob.realtime-gateway.routine-task-lifecycle.v1"
 )
 
 const (
-	DurableJobCoreYjsMaintenanceRequestTopic eventcontract.Topic = "notezy.durablejob.core.yjs-maintenance-request.v1"
-	DurableJobCoreYjsMaintenanceResultTopic  eventcontract.Topic = "notezy.core.durablejob.yjs-maintenance-result.v1"
+	DurableJobCoreYjsMaintenanceRequestTopic eventcontract.Topic = "notegic.durablejob.core.yjs-maintenance-request.v1"
+	DurableJobCoreYjsMaintenanceResultTopic  eventcontract.Topic = "notegic.core.durablejob.yjs-maintenance-result.v1"
 )
 
 const (

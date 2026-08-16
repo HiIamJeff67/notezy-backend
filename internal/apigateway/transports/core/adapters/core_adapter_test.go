@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
 )
 
 func TestCoreAdapterForwardsVersionedEnvelopeAndMetadata(t *testing.T) {

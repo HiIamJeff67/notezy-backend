@@ -43,8 +43,8 @@
 ```JSON
 {
     "product_id": "PROD-22007905DJ014973Y",
-    "name": "Notezy Monthly Pro Plan",
-    "description": "Upgrade the user plan of Notezy to monthly pro plan",
+    "name": "Notegic Monthly Pro Plan",
+    "description": "Upgrade the user plan of Notegic to monthly pro plan",
     "status": "ACTIVE",
     "billing_cycles": [
         {
@@ -92,9 +92,9 @@
 {
     "id": "P-4LN51972TD528344JNHJX5NQ",
     "product_id": "PROD-22007905DJ014973Y",
-    "name": "Notezy Monthly Pro Plan",
+    "name": "Notegic Monthly Pro Plan",
     "status": "ACTIVE",
-    "description": "Upgrade the user plan of Notezy to monthly pro plan",
+    "description": "Upgrade the user plan of Notegic to monthly pro plan",
     "usage_type": "LICENSED",
     "create_time": "2026-04-06T09:36:54Z",
     "links": [
@@ -129,8 +129,8 @@
 ```JSON
 {
   "product_id": "PROD-22007905DJ014973Y",
-  "name": "Notezy Yearly Pro Plan",
-  "description": "Upgrade the user plan of Notezy to yearly pro plan",
+  "name": "Notegic Yearly Pro Plan",
+  "description": "Upgrade the user plan of Notegic to yearly pro plan",
   "status": "ACTIVE",
   "billing_cycles": [
     {
@@ -163,9 +163,9 @@
 {
     "id": "P-9MB559415V1980509NHJX7LY",
     "product_id": "PROD-22007905DJ014973Y",
-    "name": "Notezy Yearly Pro Plan",
+    "name": "Notegic Yearly Pro Plan",
     "status": "ACTIVE",
-    "description": "Upgrade the user plan of Notezy to yearly pro plan",
+    "description": "Upgrade the user plan of Notegic to yearly pro plan",
     "usage_type": "LICENSED",
     "create_time": "2026-04-06T09:41:03Z",
     "links": [
@@ -200,8 +200,8 @@
 ```JSON
 {
   "product_id": "PROD-22007905DJ014973Y",
-  "name": "Notezy Monthly Premium Plan",
-  "description": "Upgrade the user plan of Notezy to monthly premium plan",
+  "name": "Notegic Monthly Premium Plan",
+  "description": "Upgrade the user plan of Notegic to monthly premium plan",
   "status": "ACTIVE",
   "billing_cycles": [
     {
@@ -234,9 +234,9 @@
 {
     "id": "P-351611974A6912332NHJYECY",
     "product_id": "PROD-22007905DJ014973Y",
-    "name": "Notezy Monthly Premium Plan",
+    "name": "Notegic Monthly Premium Plan",
     "status": "ACTIVE",
-    "description": "Upgrade the user plan of Notezy to monthly premium plan",
+    "description": "Upgrade the user plan of Notegic to monthly premium plan",
     "usage_type": "LICENSED",
     "create_time": "2026-04-06T09:51:07Z",
     "links": [
@@ -271,8 +271,8 @@
 ```JSON
 {
   "product_id": "PROD-22007905DJ014973Y",
-  "name": "Notezy Yearly Premium Plan",
-  "description": "Upgrade the user plan of Notezy to yearly premium plan",
+  "name": "Notegic Yearly Premium Plan",
+  "description": "Upgrade the user plan of Notegic to yearly premium plan",
   "status": "ACTIVE",
   "billing_cycles": [
     {
@@ -305,9 +305,9 @@
 {
     "id": "P-84627481GN3337838NHJYEJA",
     "product_id": "PROD-22007905DJ014973Y",
-    "name": "Notezy Yearly Premium Plan",
+    "name": "Notegic Yearly Premium Plan",
     "status": "ACTIVE",
-    "description": "Upgrade the user plan of Notezy to yearly premium plan",
+    "description": "Upgrade the user plan of Notegic to yearly premium plan",
     "usage_type": "LICENSED",
     "create_time": "2026-04-06T09:51:32Z",
     "links": [
@@ -342,8 +342,8 @@
 ```JSON
 {
   "product_id": "PROD-22007905DJ014973Y",
-  "name": "Notezy Monthly Ultimate Plan",
-  "description": "Upgrade the user plan of Notezy to monthly ultimate plan",
+  "name": "Notegic Monthly Ultimate Plan",
+  "description": "Upgrade the user plan of Notegic to monthly ultimate plan",
   "status": "ACTIVE",
   "billing_cycles": [
     {
@@ -376,9 +376,9 @@
 {
     "id": "P-3B912255TH6394814NHJYEMA",
     "product_id": "PROD-22007905DJ014973Y",
-    "name": "Notezy Monthly Ultimate Plan",
+    "name": "Notegic Monthly Ultimate Plan",
     "status": "ACTIVE",
-    "description": "Upgrade the user plan of Notezy to monthly ultimate plan",
+    "description": "Upgrade the user plan of Notegic to monthly ultimate plan",
     "usage_type": "LICENSED",
     "create_time": "2026-04-06T09:51:44Z",
     "links": [
@@ -413,8 +413,8 @@
 ```JSON
 {
   "product_id": "PROD-22007905DJ014973Y",
-  "name": "Notezy Yearly Ultimate Plan",
-  "description": "Upgrade the user plan of Notezy to yearly ultimate plan",
+  "name": "Notegic Yearly Ultimate Plan",
+  "description": "Upgrade the user plan of Notegic to yearly ultimate plan",
   "status": "ACTIVE",
   "billing_cycles": [
     {
@@ -447,9 +447,9 @@
 {
     "id": "P-4WS50500MM359840MNHJYEOY",
     "product_id": "PROD-22007905DJ014973Y",
-    "name": "Notezy Yearly Ultimate Plan",
+    "name": "Notegic Yearly Ultimate Plan",
     "status": "ACTIVE",
-    "description": "Upgrade the user plan of Notezy to yearly ultimate plan",
+    "description": "Upgrade the user plan of Notegic to yearly ultimate plan",
     "usage_type": "LICENSED",
     "create_time": "2026-04-06T09:51:55Z",
     "links": [
@@ -484,8 +484,8 @@
 ```JSON
 {
   "product_id": "PROD-22007905DJ014973Y",
-  "name": "Notezy Monthly Enterprise Plan",
-  "description": "Upgrade the user plan of Notezy to monthly enterprise plan",
+  "name": "Notegic Monthly Enterprise Plan",
+  "description": "Upgrade the user plan of Notegic to monthly enterprise plan",
   "status": "ACTIVE",
   "billing_cycles": [
     {
@@ -518,9 +518,9 @@
 {
     "id": "P-9XP882067J683411BNHJYERI",
     "product_id": "PROD-22007905DJ014973Y",
-    "name": "Notezy Monthly Enterprise Plan",
+    "name": "Notegic Monthly Enterprise Plan",
     "status": "ACTIVE",
-    "description": "Upgrade the user plan of Notezy to monthly enterprise plan",
+    "description": "Upgrade the user plan of Notegic to monthly enterprise plan",
     "usage_type": "LICENSED",
     "create_time": "2026-04-06T09:52:05Z",
     "links": [
@@ -555,8 +555,8 @@
 ```JSON
 {
   "product_id": "PROD-22007905DJ014973Y",
-  "name": "Notezy Yearly Enterprise Plan",
-  "description": "Upgrade the user plan of Notezy to yearly enterprise plan",
+  "name": "Notegic Yearly Enterprise Plan",
+  "description": "Upgrade the user plan of Notegic to yearly enterprise plan",
   "status": "ACTIVE",
   "billing_cycles": [
     {
@@ -589,9 +589,9 @@
 {
     "id": "P-2PT73314S5217944VNHJYEYI",
     "product_id": "PROD-22007905DJ014973Y",
-    "name": "Notezy Yearly Enterprise Plan",
+    "name": "Notegic Yearly Enterprise Plan",
     "status": "ACTIVE",
-    "description": "Upgrade the user plan of Notezy to yearly enterprise plan",
+    "description": "Upgrade the user plan of Notegic to yearly enterprise plan",
     "usage_type": "LICENSED",
     "create_time": "2026-04-06T09:52:33Z",
     "links": [

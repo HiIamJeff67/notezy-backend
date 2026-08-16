@@ -7,16 +7,16 @@ import (
 	validator "github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-settings"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/user-settings"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
-	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
+	data "github.com/HiIamJeff67/notegic-backend/internal/core/data/database"
+	inputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
 )
 
 type UserSettingServiceInterface interface {

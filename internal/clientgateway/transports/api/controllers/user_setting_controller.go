@@ -3,11 +3,11 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-settings"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/user-settings"
 
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
 )
 
 type UserSettingControllerInterface interface {
@@ -16,12 +16,12 @@ type UserSettingControllerInterface interface {
 }
 
 type UserSettingController struct {
-	coreClient *coreadapters.CoreAdapter
+	coreAdapter *coreadapters.CoreAdapter
 }
 
-func NewUserSettingController(coreClient *coreadapters.CoreAdapter) UserSettingControllerInterface {
+func NewUserSettingController(coreAdapter *coreadapters.CoreAdapter) UserSettingControllerInterface {
 	return &UserSettingController{
-		coreClient: coreClient,
+		coreAdapter: coreAdapter,
 	}
 }
 
@@ -31,7 +31,7 @@ func (c *UserSettingController) GetMySetting(ctx *gin.Context, requestDto *apico
 		apicontract.GetMySettingResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetMySettingOperation,
 		"/core/v1/user-settings/get",
@@ -50,7 +50,7 @@ func (c *UserSettingController) UpdateMySetting(ctx *gin.Context, requestDto *ap
 		apicontract.UpdateMySettingResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.UpdateMySettingOperation,
 		"/core/v1/user-settings/update",

@@ -6,17 +6,17 @@ import (
 
 	"github.com/spf13/cobra"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
-	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
+	platformpostgres "github.com/HiIamJeff67/notegic-backend/shared/platform/postgres"
 
-	coreconfig "github.com/HiIamJeff67/notezy-backend/internal/core/configs"
-	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	constraints "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/constraints"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
-	triggers "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/triggers"
-	views "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/views"
-	seeds "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/seeds"
+	coreconfig "github.com/HiIamJeff67/notegic-backend/internal/core/configs"
+	data "github.com/HiIamJeff67/notegic-backend/internal/core/data/database"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	constraints "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/constraints"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
+	triggers "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/triggers"
+	views "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/views"
+	seeds "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/seeds"
 )
 
 var viewAllAvailableDatabasesCommand = &cobra.Command{
@@ -24,9 +24,9 @@ var viewAllAvailableDatabasesCommand = &cobra.Command{
 	Short: "View all the available databases.",
 	Long:  "Use some map to storing and printing the available databases in the project.",
 	Run: func(_ *cobra.Command, _ []string) {
-		logs.NotezyLogger.Info(context.Background(), "All available databases:")
+		logs.NotegicLogger.Info(context.Background(), "All available databases:")
 		for key, value := range data.DatabaseNameToInstance {
-			logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("database name: %v, instance: %v", key, value))
+			logs.NotegicLogger.Info(context.Background(), fmt.Sprintf("database name: %v, instance: %v", key, value))
 		}
 	},
 }
@@ -44,7 +44,7 @@ var viewAllDatabaseEnumsCommand = &cobra.Command{
 		defer data.Disconnect(db)
 
 		if err := platformpostgres.ViewAllDatabaseEnums(db); err != nil {
-			logs.NotezyLogger.Error(context.Background(), err, "Failed to display database enums")
+			logs.NotegicLogger.Error(context.Background(), err, "Failed to display database enums")
 			return
 		}
 	},
@@ -57,34 +57,34 @@ var truncateDatabaseCommand = &cobra.Command{
 	Run: func(command *cobra.Command, _ []string) {
 		databaseName, err := command.Flags().GetString("database")
 		if err != nil {
-			logs.NotezyLogger.Error(context.Background(), nil, "The --database flag must be specified")
+			logs.NotegicLogger.Error(context.Background(), nil, "The --database flag must be specified")
 			return
 		}
 
 		tableNameString, err := command.Flags().GetString("table")
 		if err != nil {
-			logs.NotezyLogger.Error(context.Background(), nil, "The --table flag must be specified")
+			logs.NotegicLogger.Error(context.Background(), nil, "The --table flag must be specified")
 			return
 		}
 
 		tableName, exists := data.ConvertToTableName(tableNameString)
 		if !exists {
-			logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("The table name of %s is not in the database %s", tableNameString, databaseName))
+			logs.NotegicLogger.Error(context.Background(), nil, fmt.Sprintf("The table name of %s is not in the database %s", tableNameString, databaseName))
 			return
 		}
 
 		db, exists := data.DatabaseNameToInstance[tableNameString]
 		if !exists {
-			logs.NotezyLogger.Error(context.Background(), nil, "The database instance is not exist")
+			logs.NotegicLogger.Error(context.Background(), nil, "The database instance is not exist")
 			return
 		}
 
-		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Start the process of truncating database table: %s", tableNameString))
+		logs.NotegicLogger.Info(context.Background(), fmt.Sprintf("Start the process of truncating database table: %s", tableNameString))
 		db = data.Connect(data.DatabaseInstanceToConfig[db])
 		defer data.Disconnect(db)
 
 		if err := platformpostgres.TruncateTablesInDatabase(tableName, db); err != nil {
-			logs.NotezyLogger.Error(context.Background(), err, "Failed to truncate database table")
+			logs.NotegicLogger.Error(context.Background(), err, "Failed to truncate database table")
 		}
 	},
 }
@@ -101,7 +101,7 @@ var migrateDatabaseCommand = &cobra.Command{
 		db := data.Connect(config)
 		defer data.Disconnect(db)
 
-		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Start the process of migrating database schema to %v", config.Name))
+		logs.NotegicLogger.Info(context.Background(), fmt.Sprintf("Start the process of migrating database schema to %v", config.Name))
 
 		for _, migrate := range []func() error{
 			func() error { return platformpostgres.MigrateEnumsToDatabase(db, enums.MigratingEnums) },
@@ -113,7 +113,7 @@ var migrateDatabaseCommand = &cobra.Command{
 			},
 		} {
 			if err := migrate(); err != nil {
-				logs.NotezyLogger.Error(context.Background(), err, "Failed to migrate database schema")
+				logs.NotegicLogger.Error(context.Background(), err, "Failed to migrate database schema")
 				return
 			}
 		}
@@ -132,10 +132,10 @@ var seedDatabaseCommand = &cobra.Command{
 		db := data.Connect(config)
 		defer data.Disconnect(db)
 
-		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Start the process of seeding database default data to %v", config.Name))
+		logs.NotegicLogger.Info(context.Background(), fmt.Sprintf("Start the process of seeding database default data to %v", config.Name))
 
 		if err := platformpostgres.SeedDefaultDataToDatabase(db, seeds.SeedingDefaultDataSQLs); err != nil {
-			logs.NotezyLogger.Error(context.Background(), err, "Failed to seed database default data")
+			logs.NotegicLogger.Error(context.Background(), err, "Failed to seed database default data")
 			return
 		}
 	},

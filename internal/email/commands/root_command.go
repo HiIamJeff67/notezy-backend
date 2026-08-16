@@ -11,7 +11,7 @@ import (
 
 var rootCommand = &cobra.Command{
 	Use:   "email",
-	Short: "Run the Notezy Email service.",
+	Short: "Run the Notegic Email service.",
 	Run: func(_ *cobra.Command, _ []string) {
 		ctx, stop := signal.NotifyContext(
 			context.Background(),

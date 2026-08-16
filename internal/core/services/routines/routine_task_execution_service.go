@@ -11,21 +11,21 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1"
-	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	coreeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/events"
+	durablejobcontract "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1"
+	routinetasktypes "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1/types/routine-tasks"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	coreenums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
-	handlers "github.com/HiIamJeff67/notezy-backend/internal/core/services/routines/handlers"
-	matchers "github.com/HiIamJeff67/notezy-backend/internal/core/services/routines/matchers"
-	parsers "github.com/HiIamJeff67/notezy-backend/internal/core/services/routines/parsers"
-	resolvers "github.com/HiIamJeff67/notezy-backend/internal/core/services/routines/resolvers"
-	durablejobeventbuilders "github.com/HiIamJeff67/notezy-backend/internal/core/transports/durablejob/eventbuilders"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	coreenums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
+	handlers "github.com/HiIamJeff67/notegic-backend/internal/core/services/routines/handlers"
+	matchers "github.com/HiIamJeff67/notegic-backend/internal/core/services/routines/matchers"
+	parsers "github.com/HiIamJeff67/notegic-backend/internal/core/services/routines/parsers"
+	resolvers "github.com/HiIamJeff67/notegic-backend/internal/core/services/routines/resolvers"
+	durablejobeventbuilders "github.com/HiIamJeff67/notegic-backend/internal/core/transports/durablejob/eventbuilders"
 )
 
 type RoutineTaskExecutionServiceInterface interface {

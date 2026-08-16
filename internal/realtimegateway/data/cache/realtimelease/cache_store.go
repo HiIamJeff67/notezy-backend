@@ -3,7 +3,7 @@ package realtimelease
 import (
 	"context"
 
-	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
+	platformredis "github.com/HiIamJeff67/notegic-backend/shared/platform/redis"
 )
 
 type RealtimeLeaseCacheStore struct {

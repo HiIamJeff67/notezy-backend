@@ -1,5 +1,5 @@
 route:
-  receiver: notezy-local
+  receiver: notegic-local
 
 receivers:
-  - name: notezy-local
+  - name: notegic-local

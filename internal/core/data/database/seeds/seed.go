@@ -3,8 +3,8 @@ package seeds
 import (
 	_ "embed"
 
-	billingplanseeds "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/seeds/billing_plan_seeds"
-	planlimitationseeds "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/seeds/plan_limitation_seeds"
+	billingplanseeds "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/seeds/billing_plan_seeds"
+	planlimitationseeds "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/seeds/plan_limitation_seeds"
 )
 
 var SeedingDefaultDataSQLs = []string{

@@ -8,10 +8,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	rootshelvescontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/root-shelves"
-	userscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
-	corerouters "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/routers"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
+	rootshelvescontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/root-shelves"
+	userscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/users"
+	corerouters "github.com/HiIamJeff67/notegic-backend/internal/core/transports/gateway/routers"
+	sharedtokens "github.com/HiIamJeff67/notegic-backend/shared/tokens"
 )
 
 func TestEitherMiddlewareAllowsAPIOnlyForPublishedResourceDomains(t *testing.T) {
@@ -43,8 +43,8 @@ func TestEitherMiddlewareAllowsAPIOnlyForPublishedResourceDomains(t *testing.T) 
 
 func configureDelegationTestEnvironment(t *testing.T) {
 	t.Helper()
-	t.Setenv("CORE_DELEGATION_AUDIENCE", "notezy-api-test")
-	t.Setenv("CORE_DELEGATION_ISSUER", "notezy-gateway-test")
+	t.Setenv("CORE_DELEGATION_AUDIENCE", "notegic-api-test")
+	t.Setenv("CORE_DELEGATION_ISSUER", "notegic-gateway-test")
 	t.Setenv("CORE_DELEGATION_SECRET", "test-delegation-secret")
 }
 

@@ -3,11 +3,11 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/materials"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/materials"
 
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
 )
 
 type MaterialControllerInterface interface {
@@ -27,12 +27,12 @@ type MaterialControllerInterface interface {
 }
 
 type MaterialController struct {
-	coreClient *coreadapters.CoreAdapter
+	coreAdapter *coreadapters.CoreAdapter
 }
 
-func NewMaterialController(coreClient *coreadapters.CoreAdapter) MaterialControllerInterface {
+func NewMaterialController(coreAdapter *coreadapters.CoreAdapter) MaterialControllerInterface {
 	return &MaterialController{
-		coreClient: coreClient,
+		coreAdapter: coreAdapter,
 	}
 }
 
@@ -42,7 +42,7 @@ func (c *MaterialController) GetMyMaterialById(ctx *gin.Context, requestDto *api
 		apicontract.GetMyMaterialByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetMyMaterialByIdOperation,
 		"/core/v1/materials/get-by-id",
@@ -61,7 +61,7 @@ func (c *MaterialController) GetMyMaterialAndItsParentById(ctx *gin.Context, req
 		apicontract.GetMyMaterialAndItsParentByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetMyMaterialAndItsParentByIdOperation,
 		"/core/v1/materials/get-and-parent-by-id",
@@ -80,7 +80,7 @@ func (c *MaterialController) GetMyMaterialsByParentSubShelfId(ctx *gin.Context, 
 		apicontract.GetMyMaterialsByParentSubShelfIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetMyMaterialsByParentSubShelfIdOperation,
 		"/core/v1/materials/get-by-parent-sub-shelf-id",
@@ -99,7 +99,7 @@ func (c *MaterialController) GetAllMyMaterialsByRootShelfId(ctx *gin.Context, re
 		apicontract.GetAllMyMaterialsByRootShelfIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetAllMyMaterialsByRootShelfIdOperation,
 		"/core/v1/materials/get-all-by-root-shelf-id",
@@ -118,7 +118,7 @@ func (c *MaterialController) CreateMyMaterial(ctx *gin.Context, requestDto *apic
 		apicontract.CreateMyMaterialResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.CreateMyMaterialOperation,
 		"/core/v1/materials/create",
@@ -137,7 +137,7 @@ func (c *MaterialController) UpdateMyMaterialById(ctx *gin.Context, requestDto *
 		apicontract.UpdateMyMaterialByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.UpdateMyMaterialByIdOperation,
 		"/core/v1/materials/update",
@@ -156,7 +156,7 @@ func (c *MaterialController) SaveMyMaterialById(ctx *gin.Context, requestDto *ap
 		apicontract.SaveMyMaterialByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.SaveMyMaterialByIdOperation,
 		"/core/v1/materials/save",
@@ -175,7 +175,7 @@ func (c *MaterialController) MoveMyMaterialById(ctx *gin.Context, requestDto *ap
 		apicontract.MoveMyMaterialByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.MoveMyMaterialByIdOperation,
 		"/core/v1/materials/move",
@@ -194,7 +194,7 @@ func (c *MaterialController) MoveMyMaterialsByIds(ctx *gin.Context, requestDto *
 		apicontract.MoveMyMaterialsByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.MoveMyMaterialsByIdsOperation,
 		"/core/v1/materials/move-many",
@@ -213,7 +213,7 @@ func (c *MaterialController) RestoreMyMaterialById(ctx *gin.Context, requestDto 
 		apicontract.RestoreMyMaterialByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.RestoreMyMaterialByIdOperation,
 		"/core/v1/materials/restore",
@@ -232,7 +232,7 @@ func (c *MaterialController) RestoreMyMaterialsByIds(ctx *gin.Context, requestDt
 		apicontract.RestoreMyMaterialsByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.RestoreMyMaterialsByIdsOperation,
 		"/core/v1/materials/restore-many",
@@ -251,7 +251,7 @@ func (c *MaterialController) DeleteMyMaterialById(ctx *gin.Context, requestDto *
 		apicontract.DeleteMyMaterialByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.DeleteMyMaterialByIdOperation,
 		"/core/v1/materials/delete",
@@ -270,7 +270,7 @@ func (c *MaterialController) DeleteMyMaterialsByIds(ctx *gin.Context, requestDto
 		apicontract.DeleteMyMaterialsByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.DeleteMyMaterialsByIdsOperation,
 		"/core/v1/materials/delete-many",

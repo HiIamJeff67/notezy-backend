@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	constants "github.com/HiIamJeff67/notegic-backend/shared/constants"
 )
 
 type InternalFrame struct {

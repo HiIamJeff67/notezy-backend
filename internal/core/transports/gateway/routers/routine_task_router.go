@@ -3,12 +3,12 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tasks"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/routine-tasks"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
-	routineservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/routines"
-	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
+	routineservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/routines"
+	endpoints "github.com/HiIamJeff67/notegic-backend/internal/core/transports/gateway/endpoints"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/core/transports/gateway/middlewares"
 )
 
 type RoutineTaskRouterDependencies struct {

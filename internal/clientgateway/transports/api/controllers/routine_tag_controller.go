@@ -3,11 +3,11 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tags"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/routine-tags"
 
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
 )
 
 type RoutineTagControllerInterface interface {
@@ -22,12 +22,12 @@ type RoutineTagControllerInterface interface {
 }
 
 type RoutineTagController struct {
-	coreClient *coreadapters.CoreAdapter
+	coreAdapter *coreadapters.CoreAdapter
 }
 
-func NewRoutineTagController(coreClient *coreadapters.CoreAdapter) RoutineTagControllerInterface {
+func NewRoutineTagController(coreAdapter *coreadapters.CoreAdapter) RoutineTagControllerInterface {
 	return &RoutineTagController{
-		coreClient: coreClient,
+		coreAdapter: coreAdapter,
 	}
 }
 
@@ -37,7 +37,7 @@ func (c *RoutineTagController) GetMyRoutineTagById(ctx *gin.Context, requestDto 
 		apicontract.GetMyRoutineTagByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetMyRoutineTagByIdOperation,
 		"/core/v1/routine-tags/get-by-id",
@@ -56,7 +56,7 @@ func (c *RoutineTagController) GetAllMyRoutineTags(ctx *gin.Context, requestDto 
 		apicontract.GetAllMyRoutineTagsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetAllMyRoutineTagsOperation,
 		"/core/v1/routine-tags/get-all",
@@ -75,7 +75,7 @@ func (c *RoutineTagController) CreateRoutineTag(ctx *gin.Context, requestDto *ap
 		apicontract.CreateRoutineTagResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.CreateRoutineTagOperation,
 		"/core/v1/routine-tags/create",
@@ -94,7 +94,7 @@ func (c *RoutineTagController) CreateRoutineTags(ctx *gin.Context, requestDto *a
 		apicontract.CreateRoutineTagsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.CreateRoutineTagsOperation,
 		"/core/v1/routine-tags/create-many",
@@ -113,7 +113,7 @@ func (c *RoutineTagController) UpdateMyRoutineTagById(ctx *gin.Context, requestD
 		apicontract.UpdateMyRoutineTagByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.UpdateMyRoutineTagByIdOperation,
 		"/core/v1/routine-tags/update",
@@ -132,7 +132,7 @@ func (c *RoutineTagController) UpdateMyRoutineTagsByIds(ctx *gin.Context, reques
 		apicontract.UpdateMyRoutineTagsByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.UpdateMyRoutineTagsByIdsOperation,
 		"/core/v1/routine-tags/update-many",
@@ -151,7 +151,7 @@ func (c *RoutineTagController) HardDeleteMyRoutineTagById(ctx *gin.Context, requ
 		apicontract.HardDeleteMyRoutineTagByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.HardDeleteMyRoutineTagByIdOperation,
 		"/core/v1/routine-tags/hard-delete",
@@ -170,7 +170,7 @@ func (c *RoutineTagController) HardDeleteMyRoutineTagsByIds(ctx *gin.Context, re
 		apicontract.HardDeleteMyRoutineTagsByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.HardDeleteMyRoutineTagsByIdsOperation,
 		"/core/v1/routine-tags/hard-delete-many",

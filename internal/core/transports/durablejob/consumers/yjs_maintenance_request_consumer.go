@@ -9,16 +9,16 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
-	yjsworkereventscontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1/events"
+	durablejobeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1/events"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
+	yjsworkereventscontract "github.com/HiIamJeff67/notegic-backend/contracts/yjs-worker/v1/events"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	durablejobproducers "github.com/HiIamJeff67/notezy-backend/internal/core/transports/durablejob/producers"
-	yjsworkerproducers "github.com/HiIamJeff67/notezy-backend/internal/core/transports/yjsworker/producers"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	durablejobproducers "github.com/HiIamJeff67/notegic-backend/internal/core/transports/durablejob/producers"
+	yjsworkerproducers "github.com/HiIamJeff67/notegic-backend/internal/core/transports/yjsworker/producers"
 )
 
 type YjsMaintenanceRequestConsumer struct {
@@ -48,8 +48,8 @@ func (c *YjsMaintenanceRequestConsumer) Start(ctx context.Context) func() {
 		durablejobeventscontract.DurableJobCoreYjsMaintenanceRequestTopic.String(),
 	)
 	if err != nil {
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(ctx, err, "failed to create Yjs maintenance request consumer")
+		if logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(ctx, err, "failed to create Yjs maintenance request consumer")
 		}
 
 		return func() {}
@@ -57,8 +57,8 @@ func (c *YjsMaintenanceRequestConsumer) Start(ctx context.Context) func() {
 
 	workerCtx, cancel := context.WithCancel(ctx)
 	go func() {
-		if err := consumer.Run(workerCtx, c.consume); err != nil && workerCtx.Err() == nil && logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(workerCtx, err, "Yjs maintenance request consumer stopped")
+		if err := consumer.Run(workerCtx, c.consume); err != nil && workerCtx.Err() == nil && logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(workerCtx, err, "Yjs maintenance request consumer stopped")
 		}
 	}()
 

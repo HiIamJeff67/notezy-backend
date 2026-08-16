@@ -32,7 +32,7 @@ export class YjsProjectionService {
 
       const result: YjsProjectionBatchResult = {
         blockPackId: input.blockPackId,
-        schemaId: "notezy.blocknote",
+        schemaId: "notegic.blocknote",
         schemaVersion: 1,
         projectedSequence: input.state.lastUpdateSequence,
         blocks: this.blockPackProjector.projectYjsDocument(document),

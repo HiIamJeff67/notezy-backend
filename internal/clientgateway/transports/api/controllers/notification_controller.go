@@ -3,13 +3,13 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 
-	notificationscontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/api"
-	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+	notificationscontract "github.com/HiIamJeff67/notegic-backend/contracts/notification/v1/api"
+	sharedcontexts "github.com/HiIamJeff67/notegic-backend/shared/lib/contexts"
 
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 
-	gatewaycontexts "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/contexts"
-	notificationadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/notification/adapters"
+	gatewaycontexts "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/contexts"
+	notificationadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/notification/adapters"
 )
 
 type NotificationControllerInterface interface {

@@ -1,10 +1,10 @@
 package emaileventscontract
 
-import eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+import eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 
 const (
-	CoreEmailRequestTopic  eventcontract.Topic = "notezy.core.email.request.v1"
-	CoreEmailConsumerGroup                     = "notezy-email-core-v1"
+	CoreEmailRequestTopic  eventcontract.Topic = "notegic.core.email.request.v1"
+	CoreEmailConsumerGroup                     = "notegic-email-core-v1"
 )
 
 const (

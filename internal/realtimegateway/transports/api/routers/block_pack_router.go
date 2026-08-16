@@ -5,12 +5,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+	cookies "github.com/HiIamJeff67/notegic-backend/shared/cookies"
 
-	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
-	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/ratelimit"
-	endpoints "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/api/endpoints"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/api/middlewares"
+	realtimelease "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/data/cache/realtimelease"
+	ratelimit "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/ratelimit"
+	endpoints "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/transports/api/endpoints"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/transports/api/middlewares"
 )
 
 func ConfigureBlockPackRoutes(

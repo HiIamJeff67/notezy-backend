@@ -35,7 +35,7 @@ export function parseYjsProjectionBatchInput(
 
 export type YjsProjectionBatchResult = {
   blockPackId: string;
-  schemaId: "notezy.blocknote";
+  schemaId: "notegic.blocknote";
   schemaVersion: 1;
   projectedSequence: number;
   blocks: Block[];

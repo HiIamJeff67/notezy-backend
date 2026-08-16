@@ -11966,7 +11966,7 @@
   },
   "info": {
     "description": "Complete machine-readable contract for routes exposed by APIGateway v1. Authenticated requests use user-owned API keys.",
-    "title": "Notezy APIGateway API",
+    "title": "Notegic APIGateway API",
     "version": "1.0.0"
   },
   "openapi": "3.1.0",
@@ -11976,7 +11976,7 @@
         "operationId": "deleteMyBlockPacksByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -12108,7 +12108,7 @@
         "operationId": "createBlockPacks",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -12246,7 +12246,7 @@
         "operationId": "updateMyBlockPacksByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -12388,7 +12388,7 @@
         "operationId": "moveMyBlockPacksByParentSubShelfIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -12527,7 +12527,7 @@
         "operationId": "restoreMyBlockPacksByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -12661,7 +12661,7 @@
         "operationId": "moveMyBlockPacksByParentSubShelfId",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -12796,7 +12796,7 @@
         "operationId": "getAllMyBlockPacksByRootShelfId",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -12937,7 +12937,7 @@
         "operationId": "getMyBlockPacksByParentSubShelfId",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -13076,7 +13076,7 @@
         "operationId": "createBlockPack",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -13222,7 +13222,7 @@
         "operationId": "deleteMyBlockPackById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -13349,7 +13349,7 @@
         "operationId": "getMyBlockPackById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -13488,7 +13488,7 @@
         "operationId": "updateMyBlockPackById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -13755,7 +13755,7 @@
         "operationId": "moveMyBlockPackByParentSubShelfId",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -13898,7 +13898,7 @@
         "operationId": "restoreMyBlockPackById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -14027,7 +14027,7 @@
         "operationId": "getMyBlocksByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -14163,7 +14163,7 @@
         "operationId": "getMyBlocksByBlockPackId",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -14292,7 +14292,7 @@
         "operationId": "getMyBlockById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -14421,7 +14421,7 @@
         "operationId": "deleteMyMaterialsByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -14555,7 +14555,7 @@
         "operationId": "moveMyMaterialsByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -14690,7 +14690,7 @@
         "operationId": "restoreMyMaterialsByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -14824,7 +14824,7 @@
         "operationId": "getAllMyMaterialsByRootShelfId",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -14965,7 +14965,7 @@
         "operationId": "getMyMaterialsByParentSubShelfId",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -15104,7 +15104,7 @@
         "operationId": "createMyMaterial",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -15247,7 +15247,7 @@
         "operationId": "deleteMyMaterialById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -15374,7 +15374,7 @@
         "operationId": "getMyMaterialById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -15513,7 +15513,7 @@
         "operationId": "updateMyMaterialById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -15658,7 +15658,7 @@
         "operationId": "saveMyMaterialById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -15920,7 +15920,7 @@
         "operationId": "moveMyMaterialById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -16063,7 +16063,7 @@
         "operationId": "restoreMyMaterialById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -16192,7 +16192,7 @@
         "operationId": "createRootShelf",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -16325,7 +16325,7 @@
         "operationId": "deleteMyRootShelvesByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -16457,7 +16457,7 @@
         "operationId": "createRootShelves",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -16592,7 +16592,7 @@
         "operationId": "updateMyRootShelvesByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -16732,7 +16732,7 @@
         "operationId": "restoreMyRootShelvesByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -16866,7 +16866,7 @@
         "operationId": "leaveMyRootShelves",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -17002,7 +17002,7 @@
         "operationId": "deleteMyRootShelfById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -17142,7 +17142,7 @@
         "operationId": "getMyRootShelfById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -17281,7 +17281,7 @@
         "operationId": "updateMyRootShelfById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -17426,7 +17426,7 @@
         "operationId": "leaveMyRootShelf",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -17555,7 +17555,7 @@
         "operationId": "transferMyRootShelfOwnership",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -17697,7 +17697,7 @@
         "operationId": "deleteMyRootShelfPermissions",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -17839,7 +17839,7 @@
         "operationId": "upsertMyRootShelfPermissions",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -18114,7 +18114,7 @@
         "operationId": "getMyRootShelfPermission",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -18379,7 +18379,7 @@
         "operationId": "createMyRootShelfPermission",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -18659,7 +18659,7 @@
         "operationId": "restoreMyRootShelfById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -18801,7 +18801,7 @@
         "operationId": "getAllMyRoutineTags",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -18930,7 +18930,7 @@
         "operationId": "createRoutineTag",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -19065,7 +19065,7 @@
         "operationId": "createRoutineTags",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -19202,7 +19202,7 @@
         "operationId": "updateMyRoutineTagsByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -19344,7 +19344,7 @@
         "operationId": "hardDeleteMyRoutineTagsByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -19478,7 +19478,7 @@
         "operationId": "getMyRoutineTagById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -19617,7 +19617,7 @@
         "operationId": "updateMyRoutineTagById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -19764,7 +19764,7 @@
         "operationId": "hardDeleteMyRoutineTagById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -19893,7 +19893,7 @@
         "operationId": "getAllMyRoutineTasks",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -20024,7 +20024,7 @@
         "operationId": "hardDeleteMyRoutineTasksByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -20158,7 +20158,7 @@
         "operationId": "createRoutineTaskByRoutineId",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -20307,7 +20307,7 @@
         "operationId": "getAllMyRoutineTasksByRoutineIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -20779,7 +20779,7 @@
         "operationId": "visualizeMyRoutineTaskScheduledAtCount",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -20944,7 +20944,7 @@
         "operationId": "visualizeMyRoutineTaskStatusCount",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -21078,7 +21078,7 @@
         "operationId": "getMyRoutineTaskById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -21217,7 +21217,7 @@
         "operationId": "updateMyRoutineTaskById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -21370,7 +21370,7 @@
         "operationId": "hardDeleteMyRoutineTaskById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -21512,7 +21512,7 @@
         "operationId": "resumeMyRoutineTaskById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -21652,7 +21652,7 @@
         "operationId": "pauseMyRoutineTaskById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -21794,7 +21794,7 @@
         "operationId": "getAllMyRoutinesByTimeRange",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -21962,7 +21962,7 @@
         "operationId": "deleteMyRoutinesByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -22094,7 +22094,7 @@
         "operationId": "createRoutinesByStationIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -22237,7 +22237,7 @@
         "operationId": "updateMyRoutinesByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -22493,7 +22493,7 @@
         "operationId": "restoreMyRoutinesByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -22627,7 +22627,7 @@
         "operationId": "linkRoutineItemsByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -22766,7 +22766,7 @@
         "operationId": "getMyRoutinesByStationId",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -22905,7 +22905,7 @@
         "operationId": "createRoutineByStationId",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -23056,7 +23056,7 @@
         "operationId": "linkRoutineTagsByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -23410,7 +23410,7 @@
         "operationId": "visualizeMyRoutineScheduledStartAtCount",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -23575,7 +23575,7 @@
         "operationId": "visualizeMyRoutineStatusCount",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -23709,7 +23709,7 @@
         "operationId": "deleteMyRoutineById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -23849,7 +23849,7 @@
         "operationId": "getMyRoutineById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -23988,7 +23988,7 @@
         "operationId": "updateMyRoutineById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -24142,7 +24142,7 @@
         "operationId": "linkRoutineItemById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -24417,7 +24417,7 @@
         "operationId": "restoreMyRoutineById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -24559,7 +24559,7 @@
         "operationId": "linkRoutineTagById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -24713,7 +24713,7 @@
         "operationId": "getAllMyStations",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -24842,7 +24842,7 @@
         "operationId": "createStation",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -24978,7 +24978,7 @@
         "operationId": "deleteMyStationsByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -25110,7 +25110,7 @@
         "operationId": "createStations",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -25248,7 +25248,7 @@
         "operationId": "updateMyStationsByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -25391,7 +25391,7 @@
         "operationId": "hardDeleteMyStationsByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -25525,7 +25525,7 @@
         "operationId": "restoreMyStationsByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -25659,7 +25659,7 @@
         "operationId": "leaveMyStations",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -25795,7 +25795,7 @@
         "operationId": "visualizeMyTotalCount",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -25929,7 +25929,7 @@
         "operationId": "deleteMyStationById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -26069,7 +26069,7 @@
         "operationId": "getMyStationById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -26208,7 +26208,7 @@
         "operationId": "updateMyStationById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -26356,7 +26356,7 @@
         "operationId": "leaveMyStation",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -26485,7 +26485,7 @@
         "operationId": "transferMyStationOwnership",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -26627,7 +26627,7 @@
         "operationId": "hardDeleteMyStationById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -26769,7 +26769,7 @@
         "operationId": "deleteMyStationPermissions",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -26911,7 +26911,7 @@
         "operationId": "upsertMyStationPermissions",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -27058,7 +27058,7 @@
         "operationId": "deleteMyStationPermission",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -27195,7 +27195,7 @@
         "operationId": "getMyStationPermission",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -27460,7 +27460,7 @@
         "operationId": "createMyStationPermission",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -27740,7 +27740,7 @@
         "operationId": "restoreMyStationById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -27882,7 +27882,7 @@
         "operationId": "deleteMySubShelvesByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -28014,7 +28014,7 @@
         "operationId": "createSubShelvesByRootShelfIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -28151,7 +28151,7 @@
         "operationId": "updateMySubShelvesByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -28291,7 +28291,7 @@
         "operationId": "moveMySubShelvesByRootShelfIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -28432,7 +28432,7 @@
         "operationId": "restoreMySubShelvesByIds",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -28566,7 +28566,7 @@
         "operationId": "moveMySubShelvesByRootShelfId",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -28703,7 +28703,7 @@
         "operationId": "getMySubShelvesByPrevSubShelfId",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -28844,7 +28844,7 @@
         "operationId": "getMySubShelvesAndItemsByPrevSubShelfId",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -28985,7 +28985,7 @@
         "operationId": "getAllMySubShelvesByRootShelfId",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -29124,7 +29124,7 @@
         "operationId": "createSubShelfByRootShelfId",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -29269,7 +29269,7 @@
         "operationId": "deleteMySubShelfById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -29396,7 +29396,7 @@
         "operationId": "getMySubShelfById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -29535,7 +29535,7 @@
         "operationId": "updateMySubShelfById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -29680,7 +29680,7 @@
         "operationId": "moveMySubShelfByRootShelfId",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -29825,7 +29825,7 @@
         "operationId": "restoreMySubShelfById",
         "parameters": [
           {
-            "example": "NotezyIntegration/1.0",
+            "example": "NotegicIntegration/1.0",
             "in": "header",
             "name": "User-Agent",
             "required": true,
@@ -29957,7 +29957,7 @@
     },
     {
       "description": "Hosted Beta",
-      "url": "https://api.notezy.app/api/development/v1"
+      "url": "https://api.notegic.app/api/development/v1"
     }
   ],
   "tags": [

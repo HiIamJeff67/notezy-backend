@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	durablejobstatus "github.com/HiIamJeff67/notezy-backend/internal/durablejob/transports/status"
+	durablejobstatus "github.com/HiIamJeff67/notegic-backend/internal/durablejob/transports/status"
 )
 
 func TestStatusRoutes(t *testing.T) {

@@ -9,7 +9,7 @@ ClientGateway v1 Beta integrations authenticate by calling register or login wit
 - Access and refresh tokens are never returned in the public JSON body.
 - The login/register response exposes a CSRF token. Required operations send it as `X-CSRF-Token`.
 - When refresh occurs, read the replacement from the `X-CSRF-Token` response header or `refreshableTokens.newCSRFToken`.
-- Do not collect Notezy passwords in an untrusted third-party browser application. The Beta flow is intended for a user's own client or trusted server-side integration.
+- Do not collect Notegic passwords in an untrusted third-party browser application. The Beta flow is intended for a user's own client or trusted server-side integration.
 - Do not log request bodies for login/register, Cookie headers, Set-Cookie headers, or CSRF values.
 
 The server may also accept a Bearer access token, but the public Beta contract is the cookie flow. API-key authentication is not part of v1.

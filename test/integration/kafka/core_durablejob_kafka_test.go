@@ -14,15 +14,15 @@ import (
 	"github.com/google/uuid"
 	franzkgo "github.com/twmb/franz-go/pkg/kgo"
 
-	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
-	kafkatopics "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka/topics"
+	durablejobeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1/events"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
+	kafkatopics "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka/topics"
 )
 
 func TestCoreDurableJobKafkaBrokerFlow(t *testing.T) {
-	if os.Getenv("NOTEZY_RUN_INTEGRATION") != "1" {
-		t.Skip("set NOTEZY_RUN_INTEGRATION=1 to run Kafka broker integration tests")
+	if os.Getenv("NOTEGIC_RUN_INTEGRATION") != "1" {
+		t.Skip("set NOTEGIC_RUN_INTEGRATION=1 to run Kafka broker integration tests")
 	}
 
 	brokers := configuredKafkaBrokers(t)
@@ -31,7 +31,7 @@ func TestCoreDurableJobKafkaBrokerFlow(t *testing.T) {
 			Brokers:     brokers,
 			DialTimeout: 10 * time.Second,
 		},
-		ClientId: "notezy-test-core-durablejob-producer",
+		ClientId: "notegic-test-core-durablejob-producer",
 	})
 	if err != nil {
 		t.Fatalf("create Kafka producer: %v", err)
@@ -51,9 +51,9 @@ func TestCoreDurableJobKafkaBrokerFlow(t *testing.T) {
 				Brokers:     brokers,
 				DialTimeout: 10 * time.Second,
 			},
-			ClientId: "notezy-test-core-durablejob-consumer",
+			ClientId: "notegic-test-core-durablejob-consumer",
 		},
-		ConsumerGroup:       "notezy-test-core-durablejob-" + uuid.NewString(),
+		ConsumerGroup:       "notegic-test-core-durablejob-" + uuid.NewString(),
 		MaximumAttempts:     3,
 		InitialRetryBackoff: 10 * time.Millisecond,
 		MaximumRetryBackoff: 25 * time.Millisecond,
@@ -135,8 +135,8 @@ func TestCoreDurableJobKafkaBrokerFlow(t *testing.T) {
 }
 
 func TestCoreDurableJobKafkaSchemaIncompatibleEventGoesToDLQ(t *testing.T) {
-	if os.Getenv("NOTEZY_RUN_INTEGRATION") != "1" {
-		t.Skip("set NOTEZY_RUN_INTEGRATION=1 to run Kafka broker integration tests")
+	if os.Getenv("NOTEGIC_RUN_INTEGRATION") != "1" {
+		t.Skip("set NOTEGIC_RUN_INTEGRATION=1 to run Kafka broker integration tests")
 	}
 
 	brokers := configuredKafkaBrokers(t)
@@ -145,7 +145,7 @@ func TestCoreDurableJobKafkaSchemaIncompatibleEventGoesToDLQ(t *testing.T) {
 			Brokers:     brokers,
 			DialTimeout: 10 * time.Second,
 		},
-		ClientId: "notezy-test-schema-producer",
+		ClientId: "notegic-test-schema-producer",
 	})
 	if err != nil {
 		t.Fatalf("create Kafka producer: %v", err)
@@ -166,9 +166,9 @@ func TestCoreDurableJobKafkaSchemaIncompatibleEventGoesToDLQ(t *testing.T) {
 				Brokers:     brokers,
 				DialTimeout: 10 * time.Second,
 			},
-			ClientId: "notezy-test-schema-source-consumer",
+			ClientId: "notegic-test-schema-source-consumer",
 		},
-		ConsumerGroup:       "notezy-test-schema-source-" + uuid.NewString(),
+		ConsumerGroup:       "notegic-test-schema-source-" + uuid.NewString(),
 		MaximumAttempts:     1,
 		InitialRetryBackoff: time.Millisecond,
 		MaximumRetryBackoff: time.Millisecond,
@@ -181,8 +181,8 @@ func TestCoreDurableJobKafkaSchemaIncompatibleEventGoesToDLQ(t *testing.T) {
 
 	dlqConsumer, err := franzkgo.NewClient(
 		franzkgo.SeedBrokers(brokers...),
-		franzkgo.ClientID("notezy-test-schema-dlq-consumer"),
-		franzkgo.ConsumerGroup("notezy-test-schema-dlq-"+uuid.NewString()),
+		franzkgo.ClientID("notegic-test-schema-dlq-consumer"),
+		franzkgo.ConsumerGroup("notegic-test-schema-dlq-"+uuid.NewString()),
 		franzkgo.ConsumeTopics(deadLetterTopic),
 		franzkgo.DialTimeout(10*time.Second),
 	)
@@ -279,7 +279,7 @@ func ensureKafkaTopics(t *testing.T, brokers []string) {
 			Brokers:     brokers,
 			DialTimeout: 10 * time.Second,
 		},
-		ClientId: "notezy-test-kafka-topic-bootstrap",
+		ClientId: "notegic-test-kafka-topic-bootstrap",
 	})
 	if err != nil {
 		t.Fatalf("create Kafka topic provisioner: %v", err)

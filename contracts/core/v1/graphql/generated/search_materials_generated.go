@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -57,7 +57,7 @@ func (ec *executionContext) _SearchMaterialConnection_searchEdges(ctx context.Co
 	}
 	res := resTmp.([]*gqlmodels.SearchMaterialEdge)
 	fc.Result = res
-	return ec.marshalNSearchMaterialEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialEdgeᚄ(ctx, field.Selections, res)
+	return ec.marshalNSearchMaterialEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialEdgeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SearchMaterialConnection_searchEdges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -107,7 +107,7 @@ func (ec *executionContext) _SearchMaterialConnection_searchPageInfo(ctx context
 	}
 	res := resTmp.(*gqlmodels.SearchPageInfo)
 	fc.Result = res
-	return ec.marshalNSearchPageInfo2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchPageInfo(ctx, field.Selections, res)
+	return ec.marshalNSearchPageInfo2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchPageInfo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SearchMaterialConnection_searchPageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -293,7 +293,7 @@ func (ec *executionContext) _SearchMaterialEdge_node(ctx context.Context, field 
 	}
 	res := resTmp.(*gqlmodels.PrivateMaterial)
 	fc.Result = res
-	return ec.marshalNPrivateMaterial2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPrivateMaterial(ctx, field.Selections, res)
+	return ec.marshalNPrivateMaterial2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPrivateMaterial(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SearchMaterialEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -428,14 +428,14 @@ func (ec *executionContext) unmarshalInputSearchMaterialInput(ctx context.Contex
 			it.First = data
 		case "sortBy":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortBy"))
-			data, err := ec.unmarshalOSearchMaterialSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialSortBy(ctx, v)
+			data, err := ec.unmarshalOSearchMaterialSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialSortBy(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.SortBy = data
 		case "sortOrder":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortOrder"))
-			data, err := ec.unmarshalOSearchSortOrder2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx, v)
+			data, err := ec.unmarshalOSearchSortOrder2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -556,11 +556,11 @@ func (ec *executionContext) _SearchMaterialEdge(ctx context.Context, sel ast.Sel
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNSearchMaterialConnection2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialConnection(ctx context.Context, sel ast.SelectionSet, v gqlmodels.SearchMaterialConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchMaterialConnection2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialConnection(ctx context.Context, sel ast.SelectionSet, v gqlmodels.SearchMaterialConnection) graphql.Marshaler {
 	return ec._SearchMaterialConnection(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSearchMaterialConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialConnection(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchMaterialConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchMaterialConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialConnection(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchMaterialConnection) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -570,7 +570,7 @@ func (ec *executionContext) marshalNSearchMaterialConnection2ᚖgithubᚗcomᚋH
 	return ec._SearchMaterialConnection(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSearchMaterialEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.SearchMaterialEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchMaterialEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.SearchMaterialEdge) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -594,7 +594,7 @@ func (ec *executionContext) marshalNSearchMaterialEdge2ᚕᚖgithubᚗcomᚋHiIa
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSearchMaterialEdge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialEdge(ctx, sel, v[i])
+			ret[i] = ec.marshalNSearchMaterialEdge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialEdge(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -614,7 +614,7 @@ func (ec *executionContext) marshalNSearchMaterialEdge2ᚕᚖgithubᚗcomᚋHiIa
 	return ret
 }
 
-func (ec *executionContext) marshalNSearchMaterialEdge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialEdge(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchMaterialEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchMaterialEdge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialEdge(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchMaterialEdge) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -624,12 +624,12 @@ func (ec *executionContext) marshalNSearchMaterialEdge2ᚖgithubᚗcomᚋHiIamJe
 	return ec._SearchMaterialEdge(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNSearchMaterialInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialInput(ctx context.Context, v any) (gqlmodels.SearchMaterialInput, error) {
+func (ec *executionContext) unmarshalNSearchMaterialInput2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialInput(ctx context.Context, v any) (gqlmodels.SearchMaterialInput, error) {
 	res, err := ec.unmarshalInputSearchMaterialInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOSearchMaterialSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialSortBy(ctx context.Context, v any) (*gqlmodels.SearchMaterialSortBy, error) {
+func (ec *executionContext) unmarshalOSearchMaterialSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialSortBy(ctx context.Context, v any) (*gqlmodels.SearchMaterialSortBy, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -638,7 +638,7 @@ func (ec *executionContext) unmarshalOSearchMaterialSortBy2ᚖgithubᚗcomᚋHiI
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOSearchMaterialSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialSortBy(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchMaterialSortBy) graphql.Marshaler {
+func (ec *executionContext) marshalOSearchMaterialSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialSortBy(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchMaterialSortBy) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

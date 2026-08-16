@@ -12,23 +12,23 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	constants "github.com/HiIamJeff67/notegic-backend/shared/constants"
+	types "github.com/HiIamJeff67/notegic-backend/shared/types"
 
-	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
+	searchcursor "github.com/HiIamJeff67/notegic-backend/shared/lib/searchcursor"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/stations"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/stations"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
-	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
-	scopes "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/scopes"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
+	data "github.com/HiIamJeff67/notegic-backend/internal/core/data/database"
+	inputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
+	scopes "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/scopes"
 )
 
 type StationServiceInterface interface {

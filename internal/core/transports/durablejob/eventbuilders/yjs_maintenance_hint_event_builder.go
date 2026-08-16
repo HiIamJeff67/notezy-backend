@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	coreeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/events"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 )
 
 type YjsMaintenanceHintEventBuilder struct{}

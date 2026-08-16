@@ -5,18 +5,18 @@ import {
   defaultBlockSpecs,
 } from "@blocknote/core";
 
-const { divider: _, ...notezyBlockSpecs } = defaultBlockSpecs;
+const { divider: _, ...notegicBlockSpecs } = defaultBlockSpecs;
 
-export const notezyBlockNoteSchema = BlockNoteSchema.create({
-  blockSpecs: notezyBlockSpecs,
+export const notegicBlockNoteSchema = BlockNoteSchema.create({
+  blockSpecs: notegicBlockSpecs,
 });
 
-export const notezyBlockNoteEditor = BlockNoteEditor.create({
-  schema: notezyBlockNoteSchema,
+export const notegicBlockNoteEditor = BlockNoteEditor.create({
+  schema: notegicBlockNoteSchema,
 });
 
-export type NotezyBlock = Block<
-  typeof notezyBlockNoteSchema.blockSchema,
-  typeof notezyBlockNoteSchema.inlineContentSchema,
-  typeof notezyBlockNoteSchema.styleSchema
+export type NotegicBlock = Block<
+  typeof notegicBlockNoteSchema.blockSchema,
+  typeof notegicBlockNoteSchema.inlineContentSchema,
+  typeof notegicBlockNoteSchema.styleSchema
 >;

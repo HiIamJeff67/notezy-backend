@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
-	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
+	cookies "github.com/HiIamJeff67/notegic-backend/shared/cookies"
+	platformpostgres "github.com/HiIamJeff67/notegic-backend/shared/platform/postgres"
 
-	testroutes "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/routes/testroutes"
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
+	testroutes "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/routes/testroutes"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
 	"github.com/gin-gonic/gin"
 )
 
@@ -42,7 +42,7 @@ func TestAuthE2E(t *testing.T) {
 	testroutes.ConfigureTestAuthRoutes(
 		router.Group(testAuthRouteNamespace),
 		testroutes.AuthRouteDependencies{
-			CoreClient: coreadapters.NewCoreAdapter("http://127.0.0.1:7778", 10*time.Second),
+			CoreAdapter: coreadapters.NewCoreAdapter("http://127.0.0.1:7778", 10*time.Second),
 			AccessTokenCookieHandler: cookies.New(cookies.Config{
 				Name:     cookies.ValidCookieName_AccessToken,
 				Path:     "/",

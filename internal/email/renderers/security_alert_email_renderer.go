@@ -1,7 +1,7 @@
 package renderers
 
 import (
-	emailconfig "github.com/HiIamJeff67/notezy-backend/internal/email/configs"
+	emailconfig "github.com/HiIamJeff67/notegic-backend/internal/email/configs"
 )
 
 type MarkdownEmailRenderer struct {

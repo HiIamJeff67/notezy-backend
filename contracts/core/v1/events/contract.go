@@ -1,10 +1,10 @@
 package eventscontract
 
-import eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+import eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 
-const CoreLifecycleTopic eventcontract.Topic = "notezy.core.lifecycle.v1"
+const CoreLifecycleTopic eventcontract.Topic = "notegic.core.lifecycle.v1"
 
-const CoreDurableJobYjsMaintenanceHintTopic eventcontract.Topic = "notezy.core.durablejob.yjs-maintenance-hint.v1"
+const CoreDurableJobYjsMaintenanceHintTopic eventcontract.Topic = "notegic.core.durablejob.yjs-maintenance-hint.v1"
 
 const (
 	AggregateType_RootShelf   eventcontract.AggregateType = "RootShelf"

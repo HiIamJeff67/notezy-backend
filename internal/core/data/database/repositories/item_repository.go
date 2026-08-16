@@ -3,16 +3,16 @@ package repositories
 import (
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	types "github.com/HiIamJeff67/notegic-backend/shared/types"
 
-	array "github.com/HiIamJeff67/notezy-backend/shared/lib/array"
+	array "github.com/HiIamJeff67/notegic-backend/shared/lib/array"
 
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
-	scopes "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/scopes"
-	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/core/exceptions"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
+	scopes "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/scopes"
+	apiexceptions "github.com/HiIamJeff67/notegic-backend/internal/core/exceptions"
 )
 
 type ItemRepositoryInterface interface {

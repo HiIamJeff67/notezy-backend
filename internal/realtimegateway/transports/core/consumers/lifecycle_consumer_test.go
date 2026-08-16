@@ -10,14 +10,14 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/google/uuid"
 
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	coreeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/events"
+	enums "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
-	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
+	platformredis "github.com/HiIamJeff67/notegic-backend/shared/platform/redis"
 
-	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
+	realtimelease "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/data/cache/realtimelease"
 )
 
 func TestLifecycleConsumerPublishesCompletedRoutineTaskToRealtimeGateway(t *testing.T) {

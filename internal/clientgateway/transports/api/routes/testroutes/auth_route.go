@@ -3,17 +3,17 @@ package testroutes
 import (
 	"github.com/gin-gonic/gin"
 
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+	cookies "github.com/HiIamJeff67/notegic-backend/shared/cookies"
 
-	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/ratelimit"
-	binders "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/binders"
-	controllers "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/controllers"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/middlewares"
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
+	ratelimit "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/ratelimit"
+	binders "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/binders"
+	controllers "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/controllers"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/middlewares"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
 )
 
 type AuthRouteDependencies struct {
-	CoreClient                *coreadapters.CoreAdapter
+	CoreAdapter               *coreadapters.CoreAdapter
 	AccessTokenCookieHandler  *cookies.CookieHandler
 	RefreshTokenCookieHandler *cookies.CookieHandler
 	AuthorizedRateLimiter     *ratelimit.HybridRateLimiter
@@ -33,10 +33,10 @@ func ConfigureTestAuthRoutes(
 	routerGroup *gin.RouterGroup,
 	deps AuthRouteDependencies,
 ) {
-	coreClient, accessTokenCookieHandler, refreshTokenCookieHandler, authorizedRateLimiter := deps.CoreClient, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.AuthorizedRateLimiter
+	coreAdapter, accessTokenCookieHandler, refreshTokenCookieHandler, authorizedRateLimiter := deps.CoreAdapter, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.AuthorizedRateLimiter
 	authBinder := binders.NewAuthBinder()
 	authController := controllers.NewAuthController(
-		coreClient,
+		coreAdapter,
 		accessTokenCookieHandler,
 		refreshTokenCookieHandler,
 	)

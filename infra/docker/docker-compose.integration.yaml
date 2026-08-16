@@ -1,33 +1,33 @@
 services:
-  notezy-integration-db:
+  notegic-integration-db:
     image: postgres:16
     environment:
-      POSTGRES_DB: notezy_integration
-      POSTGRES_USER: notezy
-      POSTGRES_PASSWORD: notezy
+      POSTGRES_DB: notegic_integration
+      POSTGRES_USER: notegic
+      POSTGRES_PASSWORD: notegic
     ports:
       - "15432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U notezy -d notezy_integration"]
+      test: ["CMD-SHELL", "pg_isready -U notegic -d notegic_integration"]
       interval: 5s
       timeout: 5s
       retries: 12
 
-  notezy-integration-notification-db:
+  notegic-integration-notification-db:
     image: postgres:16
     environment:
-      POSTGRES_DB: notezy_notification_integration
-      POSTGRES_USER: notezy
-      POSTGRES_PASSWORD: notezy
+      POSTGRES_DB: notegic_notification_integration
+      POSTGRES_USER: notegic
+      POSTGRES_PASSWORD: notegic
     ports:
       - "15433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U notezy -d notezy_notification_integration"]
+      test: ["CMD-SHELL", "pg_isready -U notegic -d notegic_notification_integration"]
       interval: 5s
       timeout: 5s
       retries: 12
 
-  notezy-integration-redis:
+  notegic-integration-redis:
     image: redis:7.2.3-alpine
     ports:
       - "16379:6379"
@@ -37,7 +37,7 @@ services:
       timeout: 5s
       retries: 12
 
-  notezy-integration-kafka:
+  notegic-integration-kafka:
     image: apache/kafka:4.0.0
     environment:
       KAFKA_CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk

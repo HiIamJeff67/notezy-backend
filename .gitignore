@@ -13,7 +13,7 @@ tmp/
 /.pnpm-store/
 
 # Project-wide generated secrets and documentation exports.
-/backup-codes-thenotezy.*
+/backup-codes-thenotegic.*
 /docs/general_designs/
 
 # Project-wide operating-system and credential artifacts.

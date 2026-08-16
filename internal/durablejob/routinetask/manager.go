@@ -9,15 +9,15 @@ import (
 
 	"github.com/google/uuid"
 
-	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1"
-	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
-	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	durablejobcontract "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1"
+	durablejobroutinetasktypes "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1/types/routine-tasks"
+	enums "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	handlers "github.com/HiIamJeff67/notezy-backend/internal/durablejob/routinetask/handlers"
-	validation "github.com/HiIamJeff67/notezy-backend/internal/durablejob/validations"
+	handlers "github.com/HiIamJeff67/notegic-backend/internal/durablejob/routinetask/handlers"
+	validation "github.com/HiIamJeff67/notegic-backend/internal/durablejob/validations"
 )
 
 type HandlerManager struct {
@@ -155,8 +155,8 @@ func (hm *HandlerManager) Manage(
 			}()
 
 			if hm.runningPublisher != nil {
-				if err := hm.runningPublisher(ctx, assignment); err != nil && logs.NotezyLogger != nil {
-					logs.NotezyLogger.Error(
+				if err := hm.runningPublisher(ctx, assignment); err != nil && logs.NotegicLogger != nil {
+					logs.NotegicLogger.Error(
 						ctx,
 						err,
 						"Failed to publish RoutineTask running lifecycle event",

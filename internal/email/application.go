@@ -9,13 +9,13 @@ import (
 
 	"github.com/go-playground/validator/v10"
 
-	observability "github.com/HiIamJeff67/notezy-backend/shared/platform/observability"
+	observability "github.com/HiIamJeff67/notegic-backend/shared/platform/observability"
 
-	emailconfig "github.com/HiIamJeff67/notezy-backend/internal/email/configs"
-	renderers "github.com/HiIamJeff67/notezy-backend/internal/email/renderers"
-	emailsenders "github.com/HiIamJeff67/notezy-backend/internal/email/senders"
-	coretransport "github.com/HiIamJeff67/notezy-backend/internal/email/transports/core"
-	status "github.com/HiIamJeff67/notezy-backend/internal/email/transports/status"
+	emailconfig "github.com/HiIamJeff67/notegic-backend/internal/email/configs"
+	renderers "github.com/HiIamJeff67/notegic-backend/internal/email/renderers"
+	emailsenders "github.com/HiIamJeff67/notegic-backend/internal/email/senders"
+	coretransport "github.com/HiIamJeff67/notegic-backend/internal/email/transports/core"
+	status "github.com/HiIamJeff67/notegic-backend/internal/email/transports/status"
 )
 
 type Application struct {
@@ -57,7 +57,7 @@ func (a *Application) loadConfig() emailconfig.Config {
 func (a *Application) initializeObservability() func() {
 	return observability.Initialize(
 		context.Background(),
-		observability.LoadConfig("notezy-email"),
+		observability.LoadConfig("notegic-email"),
 	)
 }
 

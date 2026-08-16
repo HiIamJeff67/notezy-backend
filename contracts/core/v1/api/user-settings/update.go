@@ -3,8 +3,8 @@ package apicontract
 import (
 	"time"
 
-	coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
-	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	coreapicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api"
+	enumcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 )
 
 type UpdateMySettingRequestDto struct {

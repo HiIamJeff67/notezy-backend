@@ -8,7 +8,7 @@ import (
 
 func TestSignAndParseJWT(t *testing.T) {
 	token, err := SignJWT("test-secret", jwt.MapClaims{
-		"name": "notezy",
+		"name": "notegic",
 	})
 	if err != nil {
 		t.Fatalf("sign JWT: %v", err)
@@ -18,7 +18,7 @@ func TestSignAndParseJWT(t *testing.T) {
 	if err := ParseJWT("test-secret", token, claims); err != nil {
 		t.Fatalf("parse JWT: %v", err)
 	}
-	if claims["name"] != "notezy" {
+	if claims["name"] != "notegic" {
 		t.Fatalf("unexpected JWT claims: %#v", claims)
 	}
 }

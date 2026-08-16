@@ -8,8 +8,8 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
 )
 
 func TestRootShelfPermissionPolicy(t *testing.T) {

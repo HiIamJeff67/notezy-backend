@@ -11,7 +11,7 @@ import (
 
 var rootCommand = &cobra.Command{
 	Use:   "notification",
-	Short: "Run the Notezy Notification runtime.",
+	Short: "Run the Notegic Notification runtime.",
 	Run: func(_ *cobra.Command, _ []string) {
 		ctx, stop := signal.NotifyContext(
 			context.Background(),

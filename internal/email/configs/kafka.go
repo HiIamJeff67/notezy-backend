@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
 )
 
 type KafkaConnectionConfig = platformkafka.ConnectionConfig
@@ -38,9 +38,9 @@ func loadKafkaConfig() (KafkaConnectionConfig, KafkaConsumerConfig, error) {
 	return kafka, platformkafka.ConsumerConfig{
 		ClientConfig: platformkafka.ClientConfig{
 			ConnectionConfig: kafka,
-			ClientId:         "notezy-email",
+			ClientId:         "notegic-email",
 		},
-		ConsumerGroup:       "notezy-email-core-v1",
+		ConsumerGroup:       "notegic-email-core-v1",
 		MaximumAttempts:     maximumAttempts,
 		InitialRetryBackoff: initialRetryBackoff,
 		MaximumRetryBackoff: maximumRetryBackoff,

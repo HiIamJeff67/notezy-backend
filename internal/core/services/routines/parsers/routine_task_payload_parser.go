@@ -8,18 +8,18 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	concurrency "github.com/HiIamJeff67/notezy-backend/shared/lib/concurrency"
-	jsonpayload "github.com/HiIamJeff67/notezy-backend/shared/lib/jsonpayload"
+	concurrency "github.com/HiIamJeff67/notegic-backend/shared/lib/concurrency"
+	jsonpayload "github.com/HiIamJeff67/notegic-backend/shared/lib/jsonpayload"
 
-	editableblock "github.com/HiIamJeff67/notezy-backend/shared/util/editableblock"
+	editableblock "github.com/HiIamJeff67/notegic-backend/shared/util/editableblock"
 
-	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
-	blocknote "github.com/HiIamJeff67/notezy-backend/contracts/types/blocknote"
+	routinetasktypes "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1/types/routine-tasks"
+	blocknote "github.com/HiIamJeff67/notegic-backend/contracts/types/blocknote"
 
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
 )
 
 type RoutineTaskPayloadParserInterface interface {

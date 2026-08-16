@@ -3,7 +3,7 @@ package scopes
 import (
 	"gorm.io/gorm"
 
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
 )
 
 type RoutineTagScopeInterface interface {

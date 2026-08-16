@@ -8,12 +8,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	constants "github.com/HiIamJeff67/notegic-backend/shared/constants"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	emailexceptions "github.com/HiIamJeff67/notezy-backend/internal/email/exceptions"
-	emailsenders "github.com/HiIamJeff67/notezy-backend/internal/email/senders"
-	emailtypes "github.com/HiIamJeff67/notezy-backend/internal/email/types"
+	emailexceptions "github.com/HiIamJeff67/notegic-backend/internal/email/exceptions"
+	emailsenders "github.com/HiIamJeff67/notegic-backend/internal/email/senders"
+	emailtypes "github.com/HiIamJeff67/notegic-backend/internal/email/types"
 )
 
 type EmailWorkerManager struct {
@@ -53,8 +53,8 @@ func (ewm *EmailWorkerManager) generateTaskID() string {
 func (ewm *EmailWorkerManager) processTask(task *emailtypes.EmailTask, workerID int) {
 	err := ewm.emailSender.Send(context.Background(), task.Object)
 	if err != nil {
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(
+		if logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(
 				context.Background(),
 				err,
 				fmt.Sprintf(
@@ -78,8 +78,8 @@ func (ewm *EmailWorkerManager) processTask(task *emailtypes.EmailTask, workerID 
 		return
 	}
 
-	if logs.NotezyLogger != nil {
-		logs.NotezyLogger.Debug(
+	if logs.NotegicLogger != nil {
+		logs.NotegicLogger.Debug(
 			context.Background(),
 			fmt.Sprintf("Worker %d successfully sent email task Id is %s", workerID, task.ID),
 		)
@@ -146,8 +146,8 @@ func (ewm *EmailWorkerManager) enqueueTask(task *emailtypes.EmailTask) error {
 	bufferSize := ewm.buffer.Len()
 	ewm.bufferMutex.Unlock()
 
-	if logs.NotezyLogger != nil {
-		logs.NotezyLogger.Debug(
+	if logs.NotegicLogger != nil {
+		logs.NotegicLogger.Debug(
 			context.Background(),
 			fmt.Sprintf("Enqueued email task: ID=%s, Type=%s, Priority=%d, Queue size: %d", task.ID, task.Type, task.Priority, bufferSize),
 		)

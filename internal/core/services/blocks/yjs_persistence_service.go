@@ -8,15 +8,15 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1"
+	yjsworkercontract "github.com/HiIamJeff67/notegic-backend/contracts/yjs-worker/v1"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
-	metrics "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/metrics"
-	traces "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/traces"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
+	metrics "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/metrics"
+	traces "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/traces"
 
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
+	inputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
 )
 
 type YjsPersistenceServiceInterface interface {
@@ -42,8 +42,8 @@ func (s *YjsPersistenceService) LoadDocument(
 	ctx context.Context, blockPackId uuid.UUID,
 ) (state *yjsworkercontract.YjsDocumentState, err error) {
 	start := time.Now()
-	ctx, span := traces.NotezyTracer.Start(ctx, "yjs.document.load")
-	defer func() { traces.NotezyTracer.End(span, err) }()
+	ctx, span := traces.NotegicTracer.Start(ctx, "yjs.document.load")
+	defer func() { traces.NotegicTracer.End(span, err) }()
 
 	db := s.db.WithContext(ctx)
 
@@ -52,15 +52,15 @@ func (s *YjsPersistenceService) LoadDocument(
 		options.WithDB(db),
 	)
 	if err != nil {
-		metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+		metrics.NotegicMeter.Count(ctx, "yjs.operation.count", 1,
 			attribute.String("operation", "document.load"),
 			attribute.String("outcome", "error"),
 		)
-		metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+		metrics.NotegicMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
 			attribute.String("operation", "document.load"),
 			attribute.String("outcome", "error"),
 		)
-		logs.NotezyLogger.Error(ctx, err, "failed to load Yjs document", attribute.String("operation", "document.load"))
+		logs.NotegicLogger.Error(ctx, err, "failed to load Yjs document", attribute.String("operation", "document.load"))
 
 		return nil, err
 	}
@@ -81,11 +81,11 @@ func (s *YjsPersistenceService) LoadDocument(
 	}
 
 	span.SetAttributes(attribute.Int("yjs.update_count", len(updates)))
-	metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+	metrics.NotegicMeter.Count(ctx, "yjs.operation.count", 1,
 		attribute.String("operation", "document.load"),
 		attribute.String("outcome", "success"),
 	)
-	metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+	metrics.NotegicMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
 		attribute.String("operation", "document.load"),
 		attribute.String("outcome", "success"),
 	)
@@ -101,8 +101,8 @@ func (s *YjsPersistenceService) AppendUpdate(
 	payload []byte,
 ) (updateSequence int64, err error) {
 	start := time.Now()
-	ctx, span := traces.NotezyTracer.Start(ctx, "yjs.update.append")
-	defer func() { traces.NotezyTracer.End(span, err) }()
+	ctx, span := traces.NotegicTracer.Start(ctx, "yjs.update.append")
+	defer func() { traces.NotegicTracer.End(span, err) }()
 
 	db := s.db.WithContext(ctx)
 
@@ -116,30 +116,30 @@ func (s *YjsPersistenceService) AppendUpdate(
 		options.WithDB(db),
 	)
 	if err != nil {
-		metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+		metrics.NotegicMeter.Count(ctx, "yjs.operation.count", 1,
 			attribute.String("operation", "update.append"),
 			attribute.String("outcome", "error"),
 		)
-		metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+		metrics.NotegicMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
 			attribute.String("operation", "update.append"),
 			attribute.String("outcome", "error"),
 		)
-		metrics.NotezyMeter.Bytes(ctx, "yjs.payload.bytes", int64(len(payload)), attribute.String("operation", "update.append"))
-		logs.NotezyLogger.Error(ctx, err, "failed to append Yjs update", attribute.String("operation", "update.append"))
+		metrics.NotegicMeter.Bytes(ctx, "yjs.payload.bytes", int64(len(payload)), attribute.String("operation", "update.append"))
+		logs.NotegicLogger.Error(ctx, err, "failed to append Yjs update", attribute.String("operation", "update.append"))
 
 		return 0, err
 	}
 
 	span.SetAttributes(attribute.Int("yjs.payload_bytes", len(payload)))
-	metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+	metrics.NotegicMeter.Count(ctx, "yjs.operation.count", 1,
 		attribute.String("operation", "update.append"),
 		attribute.String("outcome", "success"),
 	)
-	metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+	metrics.NotegicMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
 		attribute.String("operation", "update.append"),
 		attribute.String("outcome", "success"),
 	)
-	metrics.NotezyMeter.Bytes(ctx, "yjs.payload.bytes", int64(len(payload)), attribute.String("operation", "update.append"))
+	metrics.NotegicMeter.Bytes(ctx, "yjs.payload.bytes", int64(len(payload)), attribute.String("operation", "update.append"))
 
 	return updateSequence, nil
 }
@@ -148,8 +148,8 @@ func (s *YjsPersistenceService) GetCompactableYjsDocumentWithUpdates(
 	ctx context.Context, blockPackId uuid.UUID,
 ) (input *yjsworkercontract.YjsCompactionInput, err error) {
 	start := time.Now()
-	ctx, span := traces.NotezyTracer.Start(ctx, "yjs.compaction.load")
-	defer func() { traces.NotezyTracer.End(span, err) }()
+	ctx, span := traces.NotegicTracer.Start(ctx, "yjs.compaction.load")
+	defer func() { traces.NotegicTracer.End(span, err) }()
 
 	db := s.db.WithContext(ctx)
 
@@ -159,13 +159,13 @@ func (s *YjsPersistenceService) GetCompactableYjsDocumentWithUpdates(
 	)
 	if err != nil || document == nil {
 		if err != nil {
-			logs.NotezyLogger.Error(ctx, err, "failed to load compactable Yjs document", attribute.String("operation", "compaction.load"))
+			logs.NotegicLogger.Error(ctx, err, "failed to load compactable Yjs document", attribute.String("operation", "compaction.load"))
 		}
-		metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+		metrics.NotegicMeter.Count(ctx, "yjs.operation.count", 1,
 			attribute.String("operation", "compaction.load"),
 			attribute.String("outcome", "error"),
 		)
-		metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+		metrics.NotegicMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
 			attribute.String("operation", "compaction.load"),
 			attribute.String("outcome", "error"),
 		)
@@ -188,11 +188,11 @@ func (s *YjsPersistenceService) GetCompactableYjsDocumentWithUpdates(
 	}
 
 	span.SetAttributes(attribute.Int("yjs.update_count", len(updates)))
-	metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+	metrics.NotegicMeter.Count(ctx, "yjs.operation.count", 1,
 		attribute.String("operation", "compaction.load"),
 		attribute.String("outcome", "success"),
 	)
-	metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+	metrics.NotegicMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
 		attribute.String("operation", "compaction.load"),
 		attribute.String("outcome", "success"),
 	)
@@ -204,8 +204,8 @@ func (s *YjsPersistenceService) ApplyCompactedYjsDocument(
 	ctx context.Context, blockPackId uuid.UUID, result yjsworkercontract.YjsCompactionResult,
 ) (applied bool, err error) {
 	start := time.Now()
-	ctx, span := traces.NotezyTracer.Start(ctx, "yjs.compaction.apply")
-	defer func() { traces.NotezyTracer.End(span, err) }()
+	ctx, span := traces.NotegicTracer.Start(ctx, "yjs.compaction.apply")
+	defer func() { traces.NotegicTracer.End(span, err) }()
 
 	db := s.db.WithContext(ctx)
 
@@ -220,30 +220,30 @@ func (s *YjsPersistenceService) ApplyCompactedYjsDocument(
 		options.WithDB(db),
 	)
 	if err != nil {
-		metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+		metrics.NotegicMeter.Count(ctx, "yjs.operation.count", 1,
 			attribute.String("operation", "compaction.apply"),
 			attribute.String("outcome", "error"),
 		)
-		metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+		metrics.NotegicMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
 			attribute.String("operation", "compaction.apply"),
 			attribute.String("outcome", "error"),
 		)
-		metrics.NotezyMeter.Bytes(ctx, "yjs.payload.bytes", int64(len(result.Snapshot)), attribute.String("operation", "compaction.apply"))
-		logs.NotezyLogger.Error(ctx, err, "failed to apply compacted Yjs document", attribute.String("operation", "compaction.apply"))
+		metrics.NotegicMeter.Bytes(ctx, "yjs.payload.bytes", int64(len(result.Snapshot)), attribute.String("operation", "compaction.apply"))
+		logs.NotegicLogger.Error(ctx, err, "failed to apply compacted Yjs document", attribute.String("operation", "compaction.apply"))
 
 		return false, err
 	}
 
 	span.SetAttributes(attribute.Bool("yjs.applied", applied))
-	metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+	metrics.NotegicMeter.Count(ctx, "yjs.operation.count", 1,
 		attribute.String("operation", "compaction.apply"),
 		attribute.String("outcome", "success"),
 	)
-	metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+	metrics.NotegicMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
 		attribute.String("operation", "compaction.apply"),
 		attribute.String("outcome", "success"),
 	)
-	metrics.NotezyMeter.Bytes(ctx, "yjs.payload.bytes", int64(len(result.Snapshot)), attribute.String("operation", "compaction.apply"))
+	metrics.NotegicMeter.Bytes(ctx, "yjs.payload.bytes", int64(len(result.Snapshot)), attribute.String("operation", "compaction.apply"))
 
 	return applied, nil
 }

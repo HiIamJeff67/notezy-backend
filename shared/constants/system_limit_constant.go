@@ -3,7 +3,7 @@ package constants
 import (
 	"time"
 
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	types "github.com/HiIamJeff67/notegic-backend/shared/types"
 )
 
 /* ============================== Realtime Gateway limitations ============================== */

@@ -3,9 +3,9 @@ package core
 import (
 	"context"
 
-	emaileventscontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1/events"
+	emaileventscontract "github.com/HiIamJeff67/notegic-backend/contracts/email/v1/events"
 
-	emailsenders "github.com/HiIamJeff67/notezy-backend/internal/email/senders"
+	emailsenders "github.com/HiIamJeff67/notegic-backend/internal/email/senders"
 )
 
 type SenderInterface interface {

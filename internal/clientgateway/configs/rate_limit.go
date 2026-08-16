@@ -5,9 +5,9 @@ import (
 
 	rate "golang.org/x/time/rate"
 
-	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
+	platformredis "github.com/HiIamJeff67/notegic-backend/shared/platform/redis"
 
-	ratelimitrecord "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/data/cache/ratelimitrecord"
+	ratelimitrecord "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/data/cache/ratelimitrecord"
 )
 
 type RateLimitConfig struct {

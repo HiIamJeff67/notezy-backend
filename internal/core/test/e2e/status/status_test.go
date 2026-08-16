@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	corestatus "github.com/HiIamJeff67/notezy-backend/internal/core/transports/status"
+	corestatus "github.com/HiIamJeff67/notegic-backend/internal/core/transports/status"
 	gin "github.com/gin-gonic/gin"
 )
 

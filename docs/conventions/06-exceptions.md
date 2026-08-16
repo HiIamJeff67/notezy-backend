@@ -44,7 +44,7 @@
   explanation. Use `WithOrigin(err)` for the underlying Go error and
   `WithDetails()` only for in-process diagnostics.
 - `Exception` never imports observability and has no `Log()` method. At an
-  owning runtime boundary, use `logs.NotezyLogger.JSON(ctx, slog.LevelError,
+  owning runtime boundary, use `logs.NotegicLogger.JSON(ctx, slog.LevelError,
   exception.String(), exception)` to serialize and record the exception. The
   logger accepts `any`, owns JSON marshaling, and returns its marshal error;
   callers that can safely continue may explicitly discard that logging error.

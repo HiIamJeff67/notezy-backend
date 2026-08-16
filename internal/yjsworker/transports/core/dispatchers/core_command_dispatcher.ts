@@ -77,7 +77,7 @@ function newKafka(): Kafka {
     .filter(Boolean);
 
   return new Kafka({
-    clientId: process.env.KAFKA_CLIENT_ID ?? "notezy-yjs-worker",
+    clientId: process.env.KAFKA_CLIENT_ID ?? "notegic-yjs-worker",
     brokers,
     logLevel: logLevel.NOTHING,
   });
@@ -158,7 +158,7 @@ export class CoreReplyConsumer {
   constructor(kafka: Kafka) {
     const instanceId = process.env.HOSTNAME ?? randomUUID();
     this.consumer = kafka.consumer({
-      groupId: `notezy-yjsworker-replies-${instanceId}`,
+      groupId: `notegic-yjsworker-replies-${instanceId}`,
     });
   }
 

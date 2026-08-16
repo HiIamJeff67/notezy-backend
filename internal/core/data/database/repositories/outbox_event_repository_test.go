@@ -8,10 +8,10 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	coreeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/events"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
 )
 
 func TestConvertEnvelopeToCreateOutboxEventInputAndSerializePreserveEventContract(t *testing.T) {

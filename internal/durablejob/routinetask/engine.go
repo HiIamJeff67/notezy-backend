@@ -9,14 +9,14 @@ import (
 
 	"github.com/google/uuid"
 
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	constants "github.com/HiIamJeff67/notegic-backend/shared/constants"
 
-	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1"
-	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
+	durablejobcontract "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1"
+	durablejobroutinetasktypes "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1/types/routine-tasks"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	durablejobconfig "github.com/HiIamJeff67/notezy-backend/internal/durablejob/configs"
+	durablejobconfig "github.com/HiIamJeff67/notegic-backend/internal/durablejob/configs"
 )
 
 type Engine struct {
@@ -107,8 +107,8 @@ func (e *Engine) Start(
 		if shouldRequest {
 			if err := requestRoutineTasks(workerCtx, request); err != nil {
 				e.isHealthy.Store(false)
-				if logs.NotezyLogger != nil {
-					logs.NotezyLogger.Error(workerCtx, err, "Failed to publish routine task claim request")
+				if logs.NotegicLogger != nil {
+					logs.NotegicLogger.Error(workerCtx, err, "Failed to publish routine task claim request")
 				}
 			}
 		}
@@ -123,8 +123,8 @@ func (e *Engine) Start(
 				}
 				if err := requestRoutineTasks(workerCtx, request); err != nil {
 					e.isHealthy.Store(false)
-					if logs.NotezyLogger != nil {
-						logs.NotezyLogger.Error(workerCtx, err, "Failed to publish routine task claim request")
+					if logs.NotegicLogger != nil {
+						logs.NotegicLogger.Error(workerCtx, err, "Failed to publish routine task claim request")
 					}
 					continue
 				}

@@ -16,9 +16,9 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 	"time"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
-	metrics "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/metrics"
-	traces "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/traces"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
+	metrics "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/metrics"
+	traces "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/traces"
 )
 
 func Initialize(ctx context.Context, config Config) func() {
@@ -91,9 +91,9 @@ func Initialize(ctx context.Context, config Config) func() {
 
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 
-	logs.NotezyLogger = logs.NewLogger(true)
-	metrics.NotezyMeter = metrics.NewMeter(otel.Meter(config.ServiceName))
-	traces.NotezyTracer = traces.NewTracer(otel.Tracer(config.ServiceName))
+	logs.NotegicLogger = logs.NewLogger(true)
+	metrics.NotegicMeter = metrics.NewMeter(otel.Meter(config.ServiceName))
+	traces.NotegicTracer = traces.NewTracer(otel.Tracer(config.ServiceName))
 
 	return func() {
 		if err := traceProvider.Shutdown(ctx); err != nil {

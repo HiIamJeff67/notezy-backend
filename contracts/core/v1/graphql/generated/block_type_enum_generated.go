@@ -6,7 +6,7 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	"github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -40,15 +40,15 @@ import (
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNBlockType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐBlockType(ctx context.Context, v any) (enums.BlockType, error) {
+func (ec *executionContext) unmarshalNBlockType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐBlockType(ctx context.Context, v any) (enums.BlockType, error) {
 	tmp, err := graphql.UnmarshalString(v)
-	res := unmarshalNBlockType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐBlockType[tmp]
+	res := unmarshalNBlockType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐBlockType[tmp]
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNBlockType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐBlockType(ctx context.Context, sel ast.SelectionSet, v enums.BlockType) graphql.Marshaler {
+func (ec *executionContext) marshalNBlockType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐBlockType(ctx context.Context, sel ast.SelectionSet, v enums.BlockType) graphql.Marshaler {
 	_ = sel
-	res := graphql.MarshalString(marshalNBlockType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐBlockType[v])
+	res := graphql.MarshalString(marshalNBlockType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐBlockType[v])
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -58,7 +58,7 @@ func (ec *executionContext) marshalNBlockType2githubᚗcomᚋHiIamJeff67ᚋnotez
 }
 
 var (
-	unmarshalNBlockType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐBlockType = map[string]enums.BlockType{
+	unmarshalNBlockType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐBlockType = map[string]enums.BlockType{
 		"BlockType_Paragraph":        enums.BlockType_Paragraph,
 		"BlockType_Heading":          enums.BlockType_Heading,
 		"BlockType_Quote":            enums.BlockType_Quote,
@@ -73,7 +73,7 @@ var (
 		"BlockType_Table":            enums.BlockType_Table,
 		"BlockType_CodeBlock":        enums.BlockType_CodeBlock,
 	}
-	marshalNBlockType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐBlockType = map[enums.BlockType]string{
+	marshalNBlockType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐBlockType = map[enums.BlockType]string{
 		enums.BlockType_Paragraph:        "BlockType_Paragraph",
 		enums.BlockType_Heading:          "BlockType_Heading",
 		enums.BlockType_Quote:            "BlockType_Quote",

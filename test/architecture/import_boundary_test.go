@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-const internalImportPrefix = "github.com/HiIamJeff67/notezy-backend/internal/"
+const internalImportPrefix = "github.com/HiIamJeff67/notegic-backend/internal/"
 
 func TestNoCrossServiceSourceImports(t *testing.T) {
 	_, currentFilePath, _, ok := runtime.Caller(0)

@@ -3,7 +3,7 @@ package adapterscontract
 const (
 	YjsBlockPackRoomPrefix                    = "block-pack"
 	YjsBlockPackFragmentName                  = "document-store"
-	YjsBlockPackSchemaId                      = "notezy.blocknote"
+	YjsBlockPackSchemaId                      = "notegic.blocknote"
 	YjsBlockPackSchemaVersion                 = 1
 	BlockPackDocumentQuotaPolicyVersion       = 1
 	YjsCompactionUpdateThreshold        int64 = 500

@@ -3,12 +3,12 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/materials"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/materials"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
-	materialservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/material"
-	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
+	materialservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/material"
+	endpoints "github.com/HiIamJeff67/notegic-backend/internal/core/transports/gateway/endpoints"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/core/transports/gateway/middlewares"
 )
 
 type MaterialRouterDependencies struct {

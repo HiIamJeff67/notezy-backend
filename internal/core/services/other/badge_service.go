@@ -7,12 +7,12 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
 
-	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
+	data "github.com/HiIamJeff67/notegic-backend/internal/core/data/database"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
 )
 
 type BadgeServiceInterface interface {

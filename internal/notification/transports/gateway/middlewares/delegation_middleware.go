@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
+	sharedcontexts "github.com/HiIamJeff67/notegic-backend/shared/lib/contexts"
+	sharedtokens "github.com/HiIamJeff67/notegic-backend/shared/tokens"
 )
 
 func DelegationAuthenticatedMiddleware(operation string) gin.HandlerFunc {

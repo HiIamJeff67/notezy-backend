@@ -3,7 +3,7 @@ package durablejobcontract
 import (
 	"github.com/google/uuid"
 
-	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
+	routinetasktypes "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1/types/routine-tasks"
 )
 
 type ClaimRoutineTasksRequestDto struct {

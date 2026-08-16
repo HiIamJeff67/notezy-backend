@@ -2,7 +2,7 @@
 
 Cross-runtime helpers live here, beside `internal/` and `contracts/`.
 
-- `lib/` is portable and must not import Notezy code.
+- `lib/` is portable and must not import Notegic code.
 - `util/` contains reusable application-facing utilities such as EditableBlock
   flattening and shared response/exception writers.
 - `cookies/`, `exceptions/`, and `tokens/` remain semantic shared boundaries

@@ -7,10 +7,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	gatewaycontexts "github.com/HiIamJeff67/notezy-backend/internal/apigateway/contexts"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	gatewaycontexts "github.com/HiIamJeff67/notegic-backend/internal/apigateway/contexts"
+	sharedtokens "github.com/HiIamJeff67/notegic-backend/shared/tokens"
 )
 
 // KeyMiddleware is the APIGateway edge check. It intentionally verifies only

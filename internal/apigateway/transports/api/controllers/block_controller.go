@@ -3,11 +3,11 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/blocks"
 
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/core/adapters"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/core/adapters"
 )
 
 type BlockControllerInterface interface {
@@ -17,12 +17,12 @@ type BlockControllerInterface interface {
 }
 
 type BlockController struct {
-	coreClient *coreadapters.CoreAdapter
+	coreAdapter *coreadapters.CoreAdapter
 }
 
-func NewBlockController(coreClient *coreadapters.CoreAdapter) BlockControllerInterface {
+func NewBlockController(coreAdapter *coreadapters.CoreAdapter) BlockControllerInterface {
 	return &BlockController{
-		coreClient: coreClient,
+		coreAdapter: coreAdapter,
 	}
 }
 
@@ -32,7 +32,7 @@ func (c *BlockController) GetMyBlockById(ctx *gin.Context, requestDto *apicontra
 		apicontract.GetMyBlockByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetMyBlockByIdOperation,
 		"/core/v1/blocks/get-by-id",
@@ -51,7 +51,7 @@ func (c *BlockController) GetMyBlocksByIds(ctx *gin.Context, requestDto *apicont
 		apicontract.GetMyBlocksByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetMyBlocksByIdsOperation,
 		"/core/v1/blocks/get-by-ids",
@@ -70,7 +70,7 @@ func (c *BlockController) GetMyBlocksByBlockPackId(ctx *gin.Context, requestDto 
 		apicontract.GetMyBlocksByBlockPackIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetMyBlocksByBlockPackIdOperation,
 		"/core/v1/blocks/get-by-block-pack-id",

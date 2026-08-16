@@ -7,16 +7,16 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
 
-	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+	sharedcontexts "github.com/HiIamJeff67/notegic-backend/shared/lib/contexts"
 
-	generated "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/generated"
+	generated "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/generated"
 
-	resolvers "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/graphql/resolvers"
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
+	resolvers "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/graphql/resolvers"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
 )
 
-func GraphQLHandler(coreClient *coreadapters.CoreAdapter) gin.HandlerFunc {
-	resolver := resolvers.NewResolver(coreClient)
+func GraphQLHandler(coreAdapter *coreadapters.CoreAdapter) gin.HandlerFunc {
+	resolver := resolvers.NewResolver(coreAdapter)
 	server := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{
 		Resolvers: resolver,
 	}))

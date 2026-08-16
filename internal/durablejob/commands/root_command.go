@@ -11,7 +11,7 @@ import (
 
 var rootCommand = &cobra.Command{
 	Use:   "durablejob",
-	Short: "Run the Notezy DurableJob service.",
+	Short: "Run the Notegic DurableJob service.",
 	Run: func(_ *cobra.Command, _ []string) {
 		ctx, stop := signal.NotifyContext(
 			context.Background(),

@@ -6,9 +6,9 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
 
-	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
+	platformpostgres "github.com/HiIamJeff67/notegic-backend/shared/platform/postgres"
 )
 
 type Theme struct {

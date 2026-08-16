@@ -3,17 +3,17 @@ package testroutes
 import (
 	"github.com/gin-gonic/gin"
 
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+	cookies "github.com/HiIamJeff67/notegic-backend/shared/cookies"
 
-	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	enumcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 
-	graphql "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/graphql"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/middlewares"
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
+	graphql "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/graphql"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/middlewares"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
 )
 
 type GraphQLRouteDependencies struct {
-	CoreClient                *coreadapters.CoreAdapter
+	CoreAdapter               *coreadapters.CoreAdapter
 	AccessTokenCookieHandler  *cookies.CookieHandler
 	RefreshTokenCookieHandler *cookies.CookieHandler
 }
@@ -22,7 +22,7 @@ func ConfigureTestGraphQLRoutes(
 	routerGroup *gin.RouterGroup,
 	deps GraphQLRouteDependencies,
 ) {
-	coreClient, accessTokenCookieHandler, refreshTokenCookieHandler := deps.CoreClient, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler
+	coreAdapter, accessTokenCookieHandler, refreshTokenCookieHandler := deps.CoreAdapter, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler
 	graphqlRoutes := routerGroup.Group("/graphql")
 
 	graphqlRoutes.Use(
@@ -30,7 +30,7 @@ func ConfigureTestGraphQLRoutes(
 		middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 	)
 	{
-		graphqlRoutes.POST("/", graphql.GraphQLHandler(coreClient))
+		graphqlRoutes.POST("/", graphql.GraphQLHandler(coreAdapter))
 		if gin.Mode() == gin.DebugMode {
 			graphqlRoutes.GET("/", graphql.PlaygroundHandler())
 		}

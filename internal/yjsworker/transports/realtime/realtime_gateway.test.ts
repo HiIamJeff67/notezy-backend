@@ -15,7 +15,7 @@ import * as Y from "yjs";
 import { BlockPackProjector } from "../../services/block_pack_projector.js";
 import { YjsCompactionService } from "../../services/yjs_compaction_service.js";
 import { Telemetry } from "../../telemetry.js";
-import { notezyBlockNoteEditor } from "../../types/blocknote_schema.js";
+import { notegicBlockNoteEditor } from "../../types/blocknote_schema.js";
 import {
   createInternalFrame,
   parseInternalFrame,
@@ -205,7 +205,7 @@ test("RealtimeGateway rejects an entire update before it exceeds the BlockPack q
   ) as Block[];
   const sourceDocument = new Y.Doc();
   blocksToYXmlFragment(
-    notezyBlockNoteEditor,
+    notegicBlockNoteEditor,
     sourceBlocks.slice(0, 2),
     sourceDocument.getXmlFragment("document-store")
   );

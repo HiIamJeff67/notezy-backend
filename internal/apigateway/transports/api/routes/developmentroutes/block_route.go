@@ -5,17 +5,17 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	enumcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 
-	binders "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/api/binders"
-	controllers "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/api/controllers"
-	interceptors "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/api/interceptors"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/api/middlewares"
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/core/adapters"
+	binders "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/api/binders"
+	controllers "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/api/controllers"
+	interceptors "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/api/interceptors"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/api/middlewares"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/core/adapters"
 )
 
 type BlockRouteDependencies struct {
-	CoreClient   *coreadapters.CoreAdapter
+	CoreAdapter  *coreadapters.CoreAdapter
 	RateLimiters RateLimiters
 }
 
@@ -23,13 +23,13 @@ func configureDevelopmentBlockRoutes(
 	router *gin.RouterGroup,
 	deps BlockRouteDependencies,
 ) {
-	coreClient, rateLimiters := deps.CoreClient, deps.RateLimiters
+	coreAdapter, rateLimiters := deps.CoreAdapter, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
 
 	blockBinder := binders.NewBlockBinder()
-	blockController := controllers.NewBlockController(coreClient)
+	blockController := controllers.NewBlockController(coreAdapter)
 	blockRoutes := router.Group("/blocks")
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(rateLimiters.Unauthorized),

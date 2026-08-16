@@ -1,6 +1,6 @@
 package database
 
-import types "github.com/HiIamJeff67/notezy-backend/shared/types"
+import types "github.com/HiIamJeff67/notegic-backend/shared/types"
 
 const (
 	MaxSubShelvesOfRootShelf int32 = 1e+2

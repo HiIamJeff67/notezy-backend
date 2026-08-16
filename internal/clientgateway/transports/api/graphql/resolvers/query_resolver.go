@@ -7,24 +7,24 @@ package resolvers
 import (
 	"context"
 
-	blockpackscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
-	blockscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
-	itemscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/items"
-	materialscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/materials"
-	rootshelvescontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/root-shelves"
-	routinetagscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tags"
-	routinetaskrecordscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-task-records"
-	routinetaskscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tasks"
-	routinescontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routines"
-	stationscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/stations"
-	subshelvescontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/sub-shelves"
-	themescontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/themes"
-	userscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
-	"github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/generated"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
-	gatewaycontexts "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/contexts"
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
-	"github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	blockpackscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/block-packs"
+	blockscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/blocks"
+	itemscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/items"
+	materialscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/materials"
+	rootshelvescontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/root-shelves"
+	routinetagscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/routine-tags"
+	routinetaskrecordscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/routine-task-records"
+	routinetaskscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/routine-tasks"
+	routinescontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/routines"
+	stationscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/stations"
+	subshelvescontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/sub-shelves"
+	themescontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/themes"
+	userscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/users"
+	"github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/generated"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
+	gatewaycontexts "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/contexts"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
+	"github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 )
 
 // SearchUsers is the resolver for the searchUsers field.
@@ -39,7 +39,7 @@ func (r *queryResolver) SearchUsers(ctx context.Context, input gqlmodels.SearchU
 		userscontract.SearchUsersResponseDto,
 	](
 		ginContext,
-		r.coreClient,
+		r.coreAdapter,
 		&input,
 		userscontract.SearchUsersOperation,
 		"/core/v1/users/graphql/search",
@@ -63,7 +63,7 @@ func (r *queryResolver) SearchThemes(ctx context.Context, input gqlmodels.Search
 		themescontract.SearchThemesResponseDto,
 	](
 		ginContext,
-		r.coreClient,
+		r.coreAdapter,
 		&input,
 		themescontract.SearchThemesOperation,
 		"/core/v1/themes/graphql/search",
@@ -87,7 +87,7 @@ func (r *queryResolver) SearchRootShelves(ctx context.Context, input gqlmodels.S
 		rootshelvescontract.SearchRootShelvesResponseDto,
 	](
 		ginContext,
-		r.coreClient,
+		r.coreAdapter,
 		&input,
 		rootshelvescontract.SearchRootShelvesOperation,
 		"/core/v1/root-shelves/graphql/search",
@@ -111,7 +111,7 @@ func (r *queryResolver) SearchSubShelves(ctx context.Context, input gqlmodels.Se
 		subshelvescontract.SearchSubShelvesResponseDto,
 	](
 		ginContext,
-		r.coreClient,
+		r.coreAdapter,
 		&input,
 		subshelvescontract.SearchSubShelvesOperation,
 		"/core/v1/sub-shelves/graphql/search",
@@ -135,7 +135,7 @@ func (r *queryResolver) SearchItems(ctx context.Context, input gqlmodels.SearchI
 		itemscontract.SearchItemsResponseDto,
 	](
 		ginContext,
-		r.coreClient,
+		r.coreAdapter,
 		&input,
 		itemscontract.SearchItemsOperation,
 		"/core/v1/items/graphql/search",
@@ -159,7 +159,7 @@ func (r *queryResolver) SearchMaterials(ctx context.Context, input gqlmodels.Sea
 		materialscontract.SearchMaterialsResponseDto,
 	](
 		ginContext,
-		r.coreClient,
+		r.coreAdapter,
 		&input,
 		materialscontract.SearchMaterialsOperation,
 		"/core/v1/materials/graphql/search",
@@ -183,7 +183,7 @@ func (r *queryResolver) SearchBlockPacks(ctx context.Context, input gqlmodels.Se
 		blockpackscontract.SearchBlockPacksResponseDto,
 	](
 		ginContext,
-		r.coreClient,
+		r.coreAdapter,
 		&input,
 		blockpackscontract.SearchBlockPacksOperation,
 		"/core/v1/block-packs/graphql/search",
@@ -207,7 +207,7 @@ func (r *queryResolver) SearchBlocks(ctx context.Context, input gqlmodels.Search
 		blockscontract.SearchBlocksResponseDto,
 	](
 		ginContext,
-		r.coreClient,
+		r.coreAdapter,
 		&input,
 		blockscontract.SearchBlocksOperation,
 		"/core/v1/blocks/graphql/search",
@@ -231,7 +231,7 @@ func (r *queryResolver) SearchStations(ctx context.Context, input gqlmodels.Sear
 		stationscontract.SearchStationsResponseDto,
 	](
 		ginContext,
-		r.coreClient,
+		r.coreAdapter,
 		&input,
 		stationscontract.SearchStationsOperation,
 		"/core/v1/stations/graphql/search",
@@ -255,7 +255,7 @@ func (r *queryResolver) SearchRoutines(ctx context.Context, input gqlmodels.Sear
 		routinescontract.SearchRoutinesResponseDto,
 	](
 		ginContext,
-		r.coreClient,
+		r.coreAdapter,
 		&input,
 		routinescontract.SearchRoutinesOperation,
 		"/core/v1/routines/graphql/search",
@@ -279,7 +279,7 @@ func (r *queryResolver) SearchRoutineTags(ctx context.Context, input gqlmodels.S
 		routinetagscontract.SearchRoutineTagsResponseDto,
 	](
 		ginContext,
-		r.coreClient,
+		r.coreAdapter,
 		&input,
 		routinetagscontract.SearchRoutineTagsOperation,
 		"/core/v1/routine-tags/graphql/search",
@@ -303,7 +303,7 @@ func (r *queryResolver) SearchRoutineTasks(ctx context.Context, input gqlmodels.
 		routinetaskscontract.SearchRoutineTasksResponseDto,
 	](
 		ginContext,
-		r.coreClient,
+		r.coreAdapter,
 		&input,
 		routinetaskscontract.SearchRoutineTasksOperation,
 		"/core/v1/routine-tasks/graphql/search",
@@ -327,7 +327,7 @@ func (r *queryResolver) SearchRoutineTaskRecords(ctx context.Context, input gqlm
 		routinetaskrecordscontract.SearchRoutineTaskRecordsResponseDto,
 	](
 		ginContext,
-		r.coreClient,
+		r.coreAdapter,
 		&input,
 		routinetaskrecordscontract.SearchRoutineTaskRecordsOperation,
 		"/core/v1/routine-task-records/graphql/search",

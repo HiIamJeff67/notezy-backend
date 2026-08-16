@@ -10,21 +10,21 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	constants "github.com/HiIamJeff67/notegic-backend/shared/constants"
+	sharedtokens "github.com/HiIamJeff67/notegic-backend/shared/tokens"
+	types "github.com/HiIamJeff67/notegic-backend/shared/types"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/realtime"
-	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
-	enumscontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
-	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/realtime"
+	realtimegatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/realtime-gateway/v1"
+	enumscontract "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
+	yjsworkercontract "github.com/HiIamJeff67/notegic-backend/contracts/yjs-worker/v1"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
 )
 
 type RealtimeServiceInterface interface {

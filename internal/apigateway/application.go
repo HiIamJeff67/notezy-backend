@@ -11,16 +11,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	observability "github.com/HiIamJeff67/notezy-backend/shared/platform/observability"
-	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
+	observability "github.com/HiIamJeff67/notegic-backend/shared/platform/observability"
+	platformredis "github.com/HiIamJeff67/notegic-backend/shared/platform/redis"
 
-	gatewayconfig "github.com/HiIamJeff67/notezy-backend/internal/apigateway/configs"
-	ratelimitrecord "github.com/HiIamJeff67/notezy-backend/internal/apigateway/data/cache/ratelimitrecord"
-	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/apigateway/ratelimit"
-	ratelimitmiddlewares "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/api/middlewares"
-	developmentroutes "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/api/routes/developmentroutes"
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/core/adapters"
-	status "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/status"
+	gatewayconfig "github.com/HiIamJeff67/notegic-backend/internal/apigateway/configs"
+	ratelimitrecord "github.com/HiIamJeff67/notegic-backend/internal/apigateway/data/cache/ratelimitrecord"
+	ratelimit "github.com/HiIamJeff67/notegic-backend/internal/apigateway/ratelimit"
+	ratelimitmiddlewares "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/api/middlewares"
+	developmentroutes "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/api/routes/developmentroutes"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/core/adapters"
+	status "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/status"
 )
 
 type Application struct {
@@ -71,7 +71,7 @@ func (a *Application) loadRedisConfig() platformredis.Config {
 func (a *Application) initializeObservability() func() {
 	return observability.Initialize(
 		context.Background(),
-		observability.LoadConfig("notezy-api-gateway"),
+		observability.LoadConfig("notegic-api-gateway"),
 	)
 
 }
@@ -100,7 +100,7 @@ func (a *Application) buildRouter(
 	shutdownObservability func(),
 ) *gin.Engine {
 	router := developmentroutes.NewRouter(developmentroutes.APIRouteDependencies{
-		CoreClient:     coreadapters.NewCoreAdapter(config.CoreBaseUrl, config.CoreAdapterTimeout),
+		CoreAdapter:    coreadapters.NewCoreAdapter(config.CoreBaseUrl, config.CoreAdapterTimeout),
 		AllowedDomains: config.AllowedDomains,
 		RateLimiters:   developmentroutes.RateLimiters{Unauthorized: unauthorizedRateLimiter},
 	})

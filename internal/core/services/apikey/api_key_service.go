@@ -9,16 +9,16 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/api-keys"
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/api-keys"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
-	apikeycache "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/apikey"
-	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
+	apikeycache "github.com/HiIamJeff67/notegic-backend/internal/core/data/cache/apikey"
+	data "github.com/HiIamJeff67/notegic-backend/internal/core/data/database"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	sharedtokens "github.com/HiIamJeff67/notegic-backend/shared/tokens"
 )
 
 type APIKeyServiceInterface interface {

@@ -6,11 +6,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/api-keys"
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/api-keys"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	apikeyservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/apikey"
+	apikeyservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/apikey"
 )
 
 type APIKeyEndpointInterface interface {

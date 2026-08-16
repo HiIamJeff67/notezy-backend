@@ -12,23 +12,23 @@ import (
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	constants "github.com/HiIamJeff67/notegic-backend/shared/constants"
+	types "github.com/HiIamJeff67/notegic-backend/shared/types"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
-	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
-	blocknote "github.com/HiIamJeff67/notezy-backend/contracts/types/blocknote"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/block-packs"
+	routinetasktypes "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1/types/routine-tasks"
+	blocknote "github.com/HiIamJeff67/notegic-backend/contracts/types/blocknote"
 
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	coreenums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
-	scopes "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/scopes"
-	matchers "github.com/HiIamJeff67/notezy-backend/internal/core/services/routines/matchers"
-	parsers "github.com/HiIamJeff67/notezy-backend/internal/core/services/routines/parsers"
-	resolvers "github.com/HiIamJeff67/notezy-backend/internal/core/services/routines/resolvers"
+	inputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	coreenums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
+	scopes "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/scopes"
+	matchers "github.com/HiIamJeff67/notegic-backend/internal/core/services/routines/matchers"
+	parsers "github.com/HiIamJeff67/notegic-backend/internal/core/services/routines/parsers"
+	resolvers "github.com/HiIamJeff67/notegic-backend/internal/core/services/routines/resolvers"
 )
 
 type YjsDocumentInitializer interface {

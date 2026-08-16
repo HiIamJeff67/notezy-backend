@@ -10,7 +10,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -75,7 +75,7 @@ func (ec *executionContext) field_Query_searchBlockPacks_argsInput(
 ) (gqlmodels.SearchBlockPackInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSearchBlockPackInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBlockPackInput(ctx, tmp)
+		return ec.unmarshalNSearchBlockPackInput2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBlockPackInput(ctx, tmp)
 	}
 
 	var zeroVal gqlmodels.SearchBlockPackInput
@@ -98,7 +98,7 @@ func (ec *executionContext) field_Query_searchBlocks_argsInput(
 ) (gqlmodels.SearchBlockInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSearchBlockInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBlockInput(ctx, tmp)
+		return ec.unmarshalNSearchBlockInput2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBlockInput(ctx, tmp)
 	}
 
 	var zeroVal gqlmodels.SearchBlockInput
@@ -121,7 +121,7 @@ func (ec *executionContext) field_Query_searchItems_argsInput(
 ) (gqlmodels.SearchItemInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSearchItemInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchItemInput(ctx, tmp)
+		return ec.unmarshalNSearchItemInput2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchItemInput(ctx, tmp)
 	}
 
 	var zeroVal gqlmodels.SearchItemInput
@@ -144,7 +144,7 @@ func (ec *executionContext) field_Query_searchMaterials_argsInput(
 ) (gqlmodels.SearchMaterialInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSearchMaterialInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialInput(ctx, tmp)
+		return ec.unmarshalNSearchMaterialInput2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialInput(ctx, tmp)
 	}
 
 	var zeroVal gqlmodels.SearchMaterialInput
@@ -167,7 +167,7 @@ func (ec *executionContext) field_Query_searchRootShelves_argsInput(
 ) (gqlmodels.SearchRootShelfInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSearchRootShelfInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRootShelfInput(ctx, tmp)
+		return ec.unmarshalNSearchRootShelfInput2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRootShelfInput(ctx, tmp)
 	}
 
 	var zeroVal gqlmodels.SearchRootShelfInput
@@ -190,7 +190,7 @@ func (ec *executionContext) field_Query_searchRoutineTags_argsInput(
 ) (gqlmodels.SearchRoutineTagInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSearchRoutineTagInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTagInput(ctx, tmp)
+		return ec.unmarshalNSearchRoutineTagInput2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTagInput(ctx, tmp)
 	}
 
 	var zeroVal gqlmodels.SearchRoutineTagInput
@@ -213,7 +213,7 @@ func (ec *executionContext) field_Query_searchRoutineTaskRecords_argsInput(
 ) (gqlmodels.SearchRoutineTaskRecordInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSearchRoutineTaskRecordInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordInput(ctx, tmp)
+		return ec.unmarshalNSearchRoutineTaskRecordInput2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordInput(ctx, tmp)
 	}
 
 	var zeroVal gqlmodels.SearchRoutineTaskRecordInput
@@ -236,7 +236,7 @@ func (ec *executionContext) field_Query_searchRoutineTasks_argsInput(
 ) (gqlmodels.SearchRoutineTaskInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSearchRoutineTaskInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskInput(ctx, tmp)
+		return ec.unmarshalNSearchRoutineTaskInput2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskInput(ctx, tmp)
 	}
 
 	var zeroVal gqlmodels.SearchRoutineTaskInput
@@ -259,7 +259,7 @@ func (ec *executionContext) field_Query_searchRoutines_argsInput(
 ) (gqlmodels.SearchRoutineInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSearchRoutineInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineInput(ctx, tmp)
+		return ec.unmarshalNSearchRoutineInput2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineInput(ctx, tmp)
 	}
 
 	var zeroVal gqlmodels.SearchRoutineInput
@@ -282,7 +282,7 @@ func (ec *executionContext) field_Query_searchStations_argsInput(
 ) (gqlmodels.SearchStationInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSearchStationInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchStationInput(ctx, tmp)
+		return ec.unmarshalNSearchStationInput2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchStationInput(ctx, tmp)
 	}
 
 	var zeroVal gqlmodels.SearchStationInput
@@ -305,7 +305,7 @@ func (ec *executionContext) field_Query_searchSubShelves_argsInput(
 ) (gqlmodels.SearchSubShelfInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSearchSubShelfInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchSubShelfInput(ctx, tmp)
+		return ec.unmarshalNSearchSubShelfInput2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchSubShelfInput(ctx, tmp)
 	}
 
 	var zeroVal gqlmodels.SearchSubShelfInput
@@ -328,7 +328,7 @@ func (ec *executionContext) field_Query_searchThemes_argsInput(
 ) (gqlmodels.SearchThemeInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSearchThemeInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchThemeInput(ctx, tmp)
+		return ec.unmarshalNSearchThemeInput2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchThemeInput(ctx, tmp)
 	}
 
 	var zeroVal gqlmodels.SearchThemeInput
@@ -351,7 +351,7 @@ func (ec *executionContext) field_Query_searchUsers_argsInput(
 ) (gqlmodels.SearchUserInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSearchUserInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchUserInput(ctx, tmp)
+		return ec.unmarshalNSearchUserInput2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchUserInput(ctx, tmp)
 	}
 
 	var zeroVal gqlmodels.SearchUserInput
@@ -394,7 +394,7 @@ func (ec *executionContext) _Query_searchUsers(ctx context.Context, field graphq
 	}
 	res := resTmp.(*gqlmodels.SearchUserConnection)
 	fc.Result = res
-	return ec.marshalNSearchUserConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchUserConnection(ctx, field.Selections, res)
+	return ec.marshalNSearchUserConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchUserConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_searchUsers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -459,7 +459,7 @@ func (ec *executionContext) _Query_searchThemes(ctx context.Context, field graph
 	}
 	res := resTmp.(*gqlmodels.SearchThemeConnection)
 	fc.Result = res
-	return ec.marshalNSearchThemeConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchThemeConnection(ctx, field.Selections, res)
+	return ec.marshalNSearchThemeConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchThemeConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_searchThemes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -524,7 +524,7 @@ func (ec *executionContext) _Query_searchRootShelves(ctx context.Context, field 
 	}
 	res := resTmp.(*gqlmodels.SearchRootShelfConnection)
 	fc.Result = res
-	return ec.marshalNSearchRootShelfConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRootShelfConnection(ctx, field.Selections, res)
+	return ec.marshalNSearchRootShelfConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRootShelfConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_searchRootShelves(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -589,7 +589,7 @@ func (ec *executionContext) _Query_searchSubShelves(ctx context.Context, field g
 	}
 	res := resTmp.(*gqlmodels.SearchSubShelfConnection)
 	fc.Result = res
-	return ec.marshalNSearchSubShelfConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchSubShelfConnection(ctx, field.Selections, res)
+	return ec.marshalNSearchSubShelfConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchSubShelfConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_searchSubShelves(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -654,7 +654,7 @@ func (ec *executionContext) _Query_searchItems(ctx context.Context, field graphq
 	}
 	res := resTmp.(*gqlmodels.SearchItemConnection)
 	fc.Result = res
-	return ec.marshalNSearchItemConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchItemConnection(ctx, field.Selections, res)
+	return ec.marshalNSearchItemConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchItemConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_searchItems(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -719,7 +719,7 @@ func (ec *executionContext) _Query_searchMaterials(ctx context.Context, field gr
 	}
 	res := resTmp.(*gqlmodels.SearchMaterialConnection)
 	fc.Result = res
-	return ec.marshalNSearchMaterialConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialConnection(ctx, field.Selections, res)
+	return ec.marshalNSearchMaterialConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchMaterialConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_searchMaterials(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -784,7 +784,7 @@ func (ec *executionContext) _Query_searchBlockPacks(ctx context.Context, field g
 	}
 	res := resTmp.(*gqlmodels.SearchBlockPackConnection)
 	fc.Result = res
-	return ec.marshalNSearchBlockPackConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBlockPackConnection(ctx, field.Selections, res)
+	return ec.marshalNSearchBlockPackConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBlockPackConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_searchBlockPacks(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -849,7 +849,7 @@ func (ec *executionContext) _Query_searchBlocks(ctx context.Context, field graph
 	}
 	res := resTmp.(*gqlmodels.SearchBlockConnection)
 	fc.Result = res
-	return ec.marshalNSearchBlockConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBlockConnection(ctx, field.Selections, res)
+	return ec.marshalNSearchBlockConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBlockConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_searchBlocks(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -914,7 +914,7 @@ func (ec *executionContext) _Query_searchStations(ctx context.Context, field gra
 	}
 	res := resTmp.(*gqlmodels.SearchStationConnection)
 	fc.Result = res
-	return ec.marshalNSearchStationConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchStationConnection(ctx, field.Selections, res)
+	return ec.marshalNSearchStationConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchStationConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_searchStations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -979,7 +979,7 @@ func (ec *executionContext) _Query_searchRoutines(ctx context.Context, field gra
 	}
 	res := resTmp.(*gqlmodels.SearchRoutineConnection)
 	fc.Result = res
-	return ec.marshalNSearchRoutineConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineConnection(ctx, field.Selections, res)
+	return ec.marshalNSearchRoutineConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_searchRoutines(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1044,7 +1044,7 @@ func (ec *executionContext) _Query_searchRoutineTags(ctx context.Context, field 
 	}
 	res := resTmp.(*gqlmodels.SearchRoutineTagConnection)
 	fc.Result = res
-	return ec.marshalNSearchRoutineTagConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTagConnection(ctx, field.Selections, res)
+	return ec.marshalNSearchRoutineTagConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTagConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_searchRoutineTags(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1109,7 +1109,7 @@ func (ec *executionContext) _Query_searchRoutineTasks(ctx context.Context, field
 	}
 	res := resTmp.(*gqlmodels.SearchRoutineTaskConnection)
 	fc.Result = res
-	return ec.marshalNSearchRoutineTaskConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskConnection(ctx, field.Selections, res)
+	return ec.marshalNSearchRoutineTaskConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_searchRoutineTasks(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1174,7 +1174,7 @@ func (ec *executionContext) _Query_searchRoutineTaskRecords(ctx context.Context,
 	}
 	res := resTmp.(*gqlmodels.SearchRoutineTaskRecordConnection)
 	fc.Result = res
-	return ec.marshalNSearchRoutineTaskRecordConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordConnection(ctx, field.Selections, res)
+	return ec.marshalNSearchRoutineTaskRecordConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_searchRoutineTaskRecords(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {

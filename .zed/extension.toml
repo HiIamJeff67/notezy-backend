@@ -1,8 +1,8 @@
-id = "notezy-snippets"
-name = "Notezy Snippets"
+id = "notegic-snippets"
+name = "Notegic Snippets"
 version = "0.1.0"
 schema_version = 1
 authors = ["Jeff"]
-description = "Project snippets for notezy-backend"
-repository = "https://github.com/HiIamJeff67/notezy-backend"
+description = "Project snippets for notegic-backend"
+repository = "https://github.com/HiIamJeff67/notegic-backend"
 snippets = ["./snippets/snippets.json", "./snippets/go.json"]

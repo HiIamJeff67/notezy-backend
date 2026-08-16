@@ -9,11 +9,11 @@ import (
 
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
+	inputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
 )
 
 type UserQuotaRepositoryInterface interface {

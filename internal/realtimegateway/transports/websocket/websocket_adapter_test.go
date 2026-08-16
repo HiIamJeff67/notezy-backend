@@ -21,17 +21,17 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
+	constants "github.com/HiIamJeff67/notegic-backend/shared/constants"
+	sharedtokens "github.com/HiIamJeff67/notegic-backend/shared/tokens"
 
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
-	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1"
+	coreeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/events"
+	realtimegatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/realtime-gateway/v1"
+	yjsworkercontract "github.com/HiIamJeff67/notegic-backend/contracts/yjs-worker/v1"
 
-	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
+	platformredis "github.com/HiIamJeff67/notegic-backend/shared/platform/redis"
 
-	realtimeleasecache "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
-	realtimetypes "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/types"
+	realtimeleasecache "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/data/cache/realtimelease"
+	realtimetypes "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/types"
 )
 
 type fakeWorkerManager struct {
@@ -203,7 +203,7 @@ func TestGatewayRevokesMatchingBlockPackChannels(t *testing.T) {
 func TestGatewaySendsReadyAndPong(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	userAgent := "notezy-realtime-test"
+	userAgent := "notegic-realtime-test"
 	userPublicId := uuid.New()
 	configureRealtimeTicketKeys(t)
 	connectionTicket, _, exception := generateRealtimeConnectionTicket(userPublicId, userAgent)
@@ -265,7 +265,7 @@ func TestGatewaySendsReadyAndPong(t *testing.T) {
 func TestGatewayRejectsConnectionsOutsideRealtimeBetaAllowlist(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	userAgent := "notezy-realtime-test"
+	userAgent := "notegic-realtime-test"
 	userPublicId := uuid.New()
 	configureRealtimeTicketKeys(t)
 	connectionTicket, _, exception := generateRealtimeConnectionTicket(userPublicId, userAgent)
@@ -311,7 +311,7 @@ func TestGatewayRejectsConnectionsOutsideRealtimeBetaAllowlist(t *testing.T) {
 func TestGatewayRejectsConnectionsWhenGatewayCapacityIsReached(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	userAgent := "notezy-realtime-test"
+	userAgent := "notegic-realtime-test"
 	configureRealtimeTicketKeys(t)
 
 	firstTicket, _, exception := generateRealtimeConnectionTicket(uuid.New(), userAgent)
@@ -352,7 +352,7 @@ func TestGatewayRejectsConnectionsWhenGatewayCapacityIsReached(t *testing.T) {
 func TestGatewayRejectsConnectionsWhenUserCapacityIsReached(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	userAgent := "notezy-realtime-test"
+	userAgent := "notegic-realtime-test"
 	userPublicId := uuid.New()
 	configureRealtimeTicketKeys(t)
 	connectionTicket, _, exception := generateRealtimeConnectionTicket(userPublicId, userAgent)
@@ -394,7 +394,7 @@ func TestGatewayRejectsConnectionsWhenUserCapacityIsReached(t *testing.T) {
 func TestGatewayRejectsReplayedConnectionTicket(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	userAgent := "notezy-realtime-test"
+	userAgent := "notegic-realtime-test"
 	configureRealtimeTicketKeys(t)
 	connectionTicket, _, exception := generateRealtimeConnectionTicket(uuid.New(), userAgent)
 	if exception != nil {
@@ -427,7 +427,7 @@ func TestGatewayRejectsReplayedConnectionTicket(t *testing.T) {
 func TestGatewayRejectsBlockPackSubscriptionWhenRoomCapacityIsReached(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	userAgent := "notezy-realtime-test"
+	userAgent := "notegic-realtime-test"
 	firstUserPublicId := uuid.New()
 	secondUserPublicId := uuid.New()
 	blockPackId := uuid.New()
@@ -576,7 +576,7 @@ func TestGatewayRejectsBlockPackSubscriptionWhenRoomCapacityIsReached(t *testing
 func TestGatewayMultiplexesAndRelaysBlockPackChannels(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	userAgent := "notezy-realtime-test"
+	userAgent := "notegic-realtime-test"
 	userPublicId := uuid.New()
 	configureRealtimeTicketKeys(t)
 	connectionTicket, _, exception := generateRealtimeConnectionTicket(userPublicId, userAgent)
@@ -784,7 +784,7 @@ func TestGatewayMultiplexesAndRelaysBlockPackChannels(t *testing.T) {
 func TestGatewayRejectsYjsDocumentUpdatesOnReadOnlyChannels(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	userAgent := "notezy-realtime-test"
+	userAgent := "notegic-realtime-test"
 	userPublicId := uuid.New()
 	configureRealtimeTicketKeys(t)
 	connectionTicket, _, exception := generateRealtimeConnectionTicket(userPublicId, userAgent)

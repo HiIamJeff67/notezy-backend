@@ -1,7 +1,7 @@
 package apicontract
 
 import (
-	coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
+	coreapicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api"
 )
 
 type RevokeMyAPIKeyRequestDto struct {

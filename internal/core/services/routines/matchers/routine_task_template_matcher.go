@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	blocknote "github.com/HiIamJeff67/notezy-backend/contracts/types/blocknote"
+	blocknote "github.com/HiIamJeff67/notegic-backend/contracts/types/blocknote"
 )
 
 type RoutineTaskTemplateMatcherInterface interface {

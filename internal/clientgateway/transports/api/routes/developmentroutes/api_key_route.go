@@ -5,17 +5,17 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+	cookies "github.com/HiIamJeff67/notegic-backend/shared/cookies"
 
-	binders "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/binders"
-	controllers "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/controllers"
-	interceptors "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/interceptors"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/middlewares"
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
+	binders "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/binders"
+	controllers "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/controllers"
+	interceptors "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/interceptors"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/middlewares"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
 )
 
 type APIKeyRouteDependencies struct {
-	CoreClient                *coreadapters.CoreAdapter
+	CoreAdapter               *coreadapters.CoreAdapter
 	AccessTokenCookieHandler  *cookies.CookieHandler
 	RefreshTokenCookieHandler *cookies.CookieHandler
 	RateLimiters              RateLimiters
@@ -25,9 +25,9 @@ func configureDevelopmentAPIKeyRoutes(
 	router *gin.RouterGroup,
 	deps APIKeyRouteDependencies,
 ) {
-	coreClient, accessTokenCookieHandler, refreshTokenCookieHandler, rateLimiters := deps.CoreClient, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.RateLimiters
+	coreAdapter, accessTokenCookieHandler, refreshTokenCookieHandler, rateLimiters := deps.CoreAdapter, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.RateLimiters
 	binder := binders.NewAPIKeyBinder()
-	controller := controllers.NewAPIKeyController(coreClient)
+	controller := controllers.NewAPIKeyController(coreAdapter)
 	routes := router.Group("/me/api-keys")
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(rateLimiters.Unauthorized),

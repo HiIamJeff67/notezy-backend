@@ -1,6 +1,6 @@
 package database
 
-import platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
+import platformpostgres "github.com/HiIamJeff67/notegic-backend/shared/platform/postgres"
 
 const (
 	TableName_UserTable        platformpostgres.TableName = "UserTable"

@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
+	coreapicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api"
 )
 
 type RoutineTaskRecordCountDatum struct {

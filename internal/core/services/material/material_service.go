@@ -11,28 +11,28 @@ import (
 	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	constants "github.com/HiIamJeff67/notegic-backend/shared/constants"
+	types "github.com/HiIamJeff67/notegic-backend/shared/types"
 
-	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
+	searchcursor "github.com/HiIamJeff67/notegic-backend/shared/lib/searchcursor"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/materials"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/materials"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
-	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
-	scopes "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/scopes"
-	materialsql "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/sqls/material"
-	storage "github.com/HiIamJeff67/notezy-backend/internal/core/data/storage"
-	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/core/exceptions"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
+	data "github.com/HiIamJeff67/notegic-backend/internal/core/data/database"
+	inputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
+	scopes "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/scopes"
+	materialsql "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/sqls/material"
+	storage "github.com/HiIamJeff67/notegic-backend/internal/core/data/storage"
+	apiexceptions "github.com/HiIamJeff67/notegic-backend/internal/core/exceptions"
 )
 
 type MaterialServiceInterface interface {
@@ -122,7 +122,7 @@ func (s *MaterialService) GetMyMaterialById(
 
 	downloadURL, err := s.storage.PresignGetObjectByKey(ctx, material.ContentKey, nil)
 	if err != nil {
-		logs.NotezyLogger.Error(ctx, err, "Failed to presign Material object")
+		logs.NotegicLogger.Error(ctx, err, "Failed to presign Material object")
 	}
 
 	return &apicontract.GetMyMaterialByIdResponseDto{
@@ -198,7 +198,7 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 
 	downloadURL, err := s.storage.PresignGetObjectByKey(ctx, contentKey, nil)
 	if err != nil {
-		logs.NotezyLogger.Error(ctx, err, "Failed to presign Material object")
+		logs.NotegicLogger.Error(ctx, err, "Failed to presign Material object")
 	}
 	resDto.DownloadURL = downloadURL // could be empty string
 
@@ -252,7 +252,7 @@ func (s *MaterialService) GetMyMaterialsByParentSubShelfId(
 	for _, material := range materials {
 		downloadURL, err := s.storage.PresignGetObjectByKey(ctx, material.ContentKey, nil)
 		if err != nil {
-			logs.NotezyLogger.Error(ctx, err, "Failed to presign Material object")
+			logs.NotegicLogger.Error(ctx, err, "Failed to presign Material object")
 		}
 		resDto = append(resDto, apicontract.GetMyMaterialByIdResponseDto{
 			Id:               material.Id,
@@ -316,7 +316,7 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 	for _, material := range materials {
 		downloadURL, err := s.storage.PresignGetObjectByKey(ctx, material.ContentKey, nil)
 		if err != nil {
-			logs.NotezyLogger.Error(ctx, err, "Failed to presign Material object")
+			logs.NotegicLogger.Error(ctx, err, "Failed to presign Material object")
 		}
 		resDto = append(resDto, apicontract.GetMyMaterialByIdResponseDto{
 			Id:               material.Id,
@@ -620,7 +620,7 @@ func (s *MaterialService) RestoreMyMaterialById(
 
 	downloadURL, err := s.storage.PresignGetObjectByKey(ctx, restoredMaterial.ContentKey, nil)
 	if err != nil {
-		logs.NotezyLogger.Error(ctx, err, "Failed to presign Material object")
+		logs.NotegicLogger.Error(ctx, err, "Failed to presign Material object")
 	}
 
 	return &apicontract.RestoreMyMaterialByIdResponseDto{
@@ -668,7 +668,7 @@ func (s *MaterialService) RestoreMyMaterialsByIds(
 	for _, restoredMaterial := range restoredMaterials {
 		downloadURL, err := s.storage.PresignGetObjectByKey(ctx, restoredMaterial.ContentKey, nil)
 		if err != nil {
-			logs.NotezyLogger.Error(ctx, err, "Failed to presign Material object")
+			logs.NotegicLogger.Error(ctx, err, "Failed to presign Material object")
 		}
 		resDto = append(resDto, apicontract.RestoreMyMaterialByIdResponseDto{
 			Id:               restoredMaterial.Id,

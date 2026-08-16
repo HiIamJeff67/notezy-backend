@@ -1,19 +1,22 @@
 package kafka
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
-	kafkatopics "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka/topics"
+	"github.com/HiIamJeff67/notegic-backend/shared/lib/pointers"
+	kafkatopics "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka/topics"
+	"github.com/twmb/franz-go/pkg/kmsg"
 )
 
 func TestValidateTopicSpecRequiresExplicitCreationSettings(t *testing.T) {
-	if err := validateTopicSpec(kafkatopics.TopicSpec{Name: "notezy.test.v1"}); err == nil {
+	if err := validateTopicSpec(kafkatopics.TopicSpec{Name: "notegic.test.v1"}); err == nil {
 		t.Fatal("validate topic spec returned nil for incomplete settings")
 	}
 
 	specification := kafkatopics.TopicSpec{
-		Name:                "notezy.test.v1",
+		Name:                "notegic.test.v1",
 		Partitions:          3,
 		ReplicationFactor:   1,
 		Retention:           7 * 24 * time.Hour,
@@ -28,14 +31,16 @@ func TestValidateTopicSpecRequiresExplicitCreationSettings(t *testing.T) {
 }
 
 func TestTopicRequestUsesKafkaMillisecondRetention(t *testing.T) {
-	request := topicRequest(kafkatopics.TopicSpec{
-		Name:              "notezy.test.v1",
-		Partitions:        3,
+	request := kmsg.CreateTopicsRequestTopic{
+		Topic:             "notegic.test.v1",
+		NumPartitions:     3,
 		ReplicationFactor: 1,
-		Retention:         5 * time.Minute,
-		CleanupPolicy:     "delete",
-		MinInSyncReplicas: 1,
-	})
+		Configs: []kmsg.CreateTopicsRequestTopicConfig{
+			{Name: "cleanup.policy", Value: pointers.ToPtr("delete")},
+			{Name: "retention.ms", Value: pointers.ToPtr(fmt.Sprintf("%d", 5*time.Minute/time.Millisecond))},
+			{Name: "min.insync.replicas", Value: pointers.ToPtr(fmt.Sprintf("%d", 1))},
+		},
+	}
 
 	if got := *request.Configs[1].Value; got != "300000" {
 		t.Fatalf("retention.ms = %q, want 300000", got)
@@ -45,12 +50,12 @@ func TestTopicRequestUsesKafkaMillisecondRetention(t *testing.T) {
 func TestValidateTopicSpecRejectsInvalidValues(t *testing.T) {
 	tests := []kafkatopics.TopicSpec{
 		{Name: ""},
-		{Name: " notezy.test.v1 ", Partitions: 3, ReplicationFactor: 1, Retention: time.Hour, CleanupPolicy: "delete", MinInSyncReplicas: 1},
-		{Name: "notezy.test.v1", Partitions: -1},
-		{Name: "notezy.test.v1", ReplicationFactor: -1},
-		{Name: "notezy.test.v1", Retention: -time.Second},
-		{Name: "notezy.test.v1", MinInSyncReplicas: -1},
-		{Name: "notezy.test.v1", Partitions: 1, ReplicationFactor: 1, Retention: time.Hour, CleanupPolicy: "delete", MinInSyncReplicas: 1, CreateDeadLetter: true},
+		{Name: " notegic.test.v1 ", Partitions: 3, ReplicationFactor: 1, Retention: time.Hour, CleanupPolicy: "delete", MinInSyncReplicas: 1},
+		{Name: "notegic.test.v1", Partitions: -1},
+		{Name: "notegic.test.v1", ReplicationFactor: -1},
+		{Name: "notegic.test.v1", Retention: -time.Second},
+		{Name: "notegic.test.v1", MinInSyncReplicas: -1},
+		{Name: "notegic.test.v1", Partitions: 1, ReplicationFactor: 1, Retention: time.Hour, CleanupPolicy: "delete", MinInSyncReplicas: 1, CreateDeadLetter: true},
 	}
 
 	for _, specification := range tests {

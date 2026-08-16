@@ -5,11 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
 
-	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/apigateway/ratelimit"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/api/middlewares"
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/core/adapters"
+	ratelimit "github.com/HiIamJeff67/notegic-backend/internal/apigateway/ratelimit"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/api/middlewares"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/core/adapters"
 )
 
 var (
@@ -22,14 +22,14 @@ type RateLimiters struct {
 }
 
 type APIRouteDependencies struct {
-	CoreClient     *coreadapters.CoreAdapter
+	CoreAdapter    *coreadapters.CoreAdapter
 	AllowedDomains []string
 	RateLimiters   RateLimiters
 }
 
 func NewRouter(deps APIRouteDependencies) *gin.Engine {
 	DevelopmentRouter = gin.Default()
-	coreClient, allowedDomains, rateLimiters := deps.CoreClient, deps.AllowedDomains, deps.RateLimiters
+	coreAdapter, allowedDomains, rateLimiters := deps.CoreAdapter, deps.AllowedDomains, deps.RateLimiters
 	DevelopmentAPIRouterGroup = DevelopmentRouter.Group("/" + gatewaycontract.APIDevelopmentBaseURL) // use in development mode
 	DevelopmentAPIRouterGroup.Use(
 		middlewares.SanitizeXForwardedForMiddleware(),
@@ -42,15 +42,15 @@ func NewRouter(deps APIRouteDependencies) *gin.Engine {
 
 	// APIGateway deliberately exposes only the first-party resource domains
 	// that are stable enough for external integrations.
-	configureDevelopmentStationRoutes(DevelopmentAPIRouterGroup, StationRouteDependencies{CoreClient: coreClient, RateLimiters: rateLimiters})
-	configureDevelopmentRoutineRoutes(DevelopmentAPIRouterGroup, RoutineRouteDependencies{CoreClient: coreClient, RateLimiters: rateLimiters})
-	configureDevelopmentRoutineTagRoutes(DevelopmentAPIRouterGroup, RoutineTagRouteDependencies{CoreClient: coreClient, RateLimiters: rateLimiters})
-	configureDevelopmentRoutineTaskRoutes(DevelopmentAPIRouterGroup, RoutineTaskRouteDependencies{CoreClient: coreClient, RateLimiters: rateLimiters})
-	configureDevelopmentRootShelfRoutes(DevelopmentAPIRouterGroup, RootShelfRouteDependencies{CoreClient: coreClient, RateLimiters: rateLimiters})
-	configureDevelopmentSubShelfRoutes(DevelopmentAPIRouterGroup, SubShelfRouteDependencies{CoreClient: coreClient, RateLimiters: rateLimiters})
-	configureDevelopmentMaterialRoutes(DevelopmentAPIRouterGroup, MaterialRouteDependencies{CoreClient: coreClient, RateLimiters: rateLimiters})
-	configureDevelopmentBlockPackRoutes(DevelopmentAPIRouterGroup, BlockPackRouteDependencies{CoreClient: coreClient, RateLimiters: rateLimiters})
-	configureDevelopmentBlockRoutes(DevelopmentAPIRouterGroup, BlockRouteDependencies{CoreClient: coreClient, RateLimiters: rateLimiters})
+	configureDevelopmentStationRoutes(DevelopmentAPIRouterGroup, StationRouteDependencies{CoreAdapter: coreAdapter, RateLimiters: rateLimiters})
+	configureDevelopmentRoutineRoutes(DevelopmentAPIRouterGroup, RoutineRouteDependencies{CoreAdapter: coreAdapter, RateLimiters: rateLimiters})
+	configureDevelopmentRoutineTagRoutes(DevelopmentAPIRouterGroup, RoutineTagRouteDependencies{CoreAdapter: coreAdapter, RateLimiters: rateLimiters})
+	configureDevelopmentRoutineTaskRoutes(DevelopmentAPIRouterGroup, RoutineTaskRouteDependencies{CoreAdapter: coreAdapter, RateLimiters: rateLimiters})
+	configureDevelopmentRootShelfRoutes(DevelopmentAPIRouterGroup, RootShelfRouteDependencies{CoreAdapter: coreAdapter, RateLimiters: rateLimiters})
+	configureDevelopmentSubShelfRoutes(DevelopmentAPIRouterGroup, SubShelfRouteDependencies{CoreAdapter: coreAdapter, RateLimiters: rateLimiters})
+	configureDevelopmentMaterialRoutes(DevelopmentAPIRouterGroup, MaterialRouteDependencies{CoreAdapter: coreAdapter, RateLimiters: rateLimiters})
+	configureDevelopmentBlockPackRoutes(DevelopmentAPIRouterGroup, BlockPackRouteDependencies{CoreAdapter: coreAdapter, RateLimiters: rateLimiters})
+	configureDevelopmentBlockRoutes(DevelopmentAPIRouterGroup, BlockRouteDependencies{CoreAdapter: coreAdapter, RateLimiters: rateLimiters})
 
 	return DevelopmentRouter
 }

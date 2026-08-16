@@ -6,10 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/sub-shelves"
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/sub-shelves"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
 )
 
 func (t *SubShelfEndpoint) SearchSubShelves(ctx *gin.Context) {

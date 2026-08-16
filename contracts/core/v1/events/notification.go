@@ -6,10 +6,10 @@ import (
 
 	"github.com/google/uuid"
 
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 )
 
-const CoreNotificationTopic eventcontract.Topic = "notezy.core.notification.v1"
+const CoreNotificationTopic eventcontract.Topic = "notegic.core.notification.v1"
 
 const (
 	AggregateType_Notification      eventcontract.AggregateType = "Notification"

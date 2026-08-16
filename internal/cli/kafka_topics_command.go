@@ -5,8 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
-	kafkatopics "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka/topics"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
+	kafkatopics "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka/topics"
 )
 
 func init() {
@@ -25,7 +25,7 @@ func newKafkaCommand() *cobra.Command {
 func newEnsureKafkaTopicsCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "topics ensure",
-		Short: "Create all versioned Notezy Kafka topics and their dead-letter topics.",
+		Short: "Create all versioned Notegic Kafka topics and their dead-letter topics.",
 		RunE: func(command *cobra.Command, _ []string) error {
 			connectionConfig, err := platformkafka.LoadConnectionConfig()
 			if err != nil {
@@ -34,7 +34,7 @@ func newEnsureKafkaTopicsCommand() *cobra.Command {
 
 			provisioner, err := platformkafka.NewTopicProvisioner(platformkafka.ClientConfig{
 				ConnectionConfig: connectionConfig,
-				ClientId:         "notezy-kafka-topic-bootstrap",
+				ClientId:         "notegic-kafka-topic-bootstrap",
 			})
 			if err != nil {
 				return err
@@ -42,7 +42,7 @@ func newEnsureKafkaTopicsCommand() *cobra.Command {
 			defer provisioner.Close()
 
 			if err := provisioner.EnsureTopics(command.Context(), kafkatopics.All()); err != nil {
-				return fmt.Errorf("ensure Notezy Kafka topics: %w", err)
+				return fmt.Errorf("ensure Notegic Kafka topics: %w", err)
 			}
 
 			return nil

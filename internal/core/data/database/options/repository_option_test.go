@@ -3,7 +3,7 @@ package options
 import (
 	"testing"
 
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
 )
 
 func TestAllowedPermissionsPresence(t *testing.T) {

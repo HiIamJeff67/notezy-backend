@@ -6,7 +6,7 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	"github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -40,27 +40,27 @@ import (
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalOSupportedIcon2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐSupportedIcon(ctx context.Context, v any) (*enums.SupportedIcon, error) {
+func (ec *executionContext) unmarshalOSupportedIcon2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐSupportedIcon(ctx context.Context, v any) (*enums.SupportedIcon, error) {
 	if v == nil {
 		return nil, nil
 	}
 	tmp, err := graphql.UnmarshalString(v)
-	res := unmarshalOSupportedIcon2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐSupportedIcon[tmp]
+	res := unmarshalOSupportedIcon2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐSupportedIcon[tmp]
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOSupportedIcon2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐSupportedIcon(ctx context.Context, sel ast.SelectionSet, v *enums.SupportedIcon) graphql.Marshaler {
+func (ec *executionContext) marshalOSupportedIcon2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐSupportedIcon(ctx context.Context, sel ast.SelectionSet, v *enums.SupportedIcon) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	_ = sel
 	_ = ctx
-	res := graphql.MarshalString(marshalOSupportedIcon2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐSupportedIcon[*v])
+	res := graphql.MarshalString(marshalOSupportedIcon2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐSupportedIcon[*v])
 	return res
 }
 
 var (
-	unmarshalOSupportedIcon2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐSupportedIcon = map[string]enums.SupportedIcon{
+	unmarshalOSupportedIcon2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐSupportedIcon = map[string]enums.SupportedIcon{
 		"SupportedIcon_GrinningFace":               enums.SupportedIcon_GrinningFace,
 		"SupportedIcon_SmilingFaceWithSmilingEyes": enums.SupportedIcon_SmilingFaceWithSmilingEyes,
 		"SupportedIcon_RedHeart":                   enums.SupportedIcon_RedHeart,
@@ -77,7 +77,7 @@ var (
 		"SupportedIcon_Calendar":                   enums.SupportedIcon_Calendar,
 		"SupportedIcon_Clock":                      enums.SupportedIcon_Clock,
 	}
-	marshalOSupportedIcon2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐSupportedIcon = map[enums.SupportedIcon]string{
+	marshalOSupportedIcon2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐSupportedIcon = map[enums.SupportedIcon]string{
 		enums.SupportedIcon_GrinningFace:               "SupportedIcon_GrinningFace",
 		enums.SupportedIcon_SmilingFaceWithSmilingEyes: "SupportedIcon_SmilingFaceWithSmilingEyes",
 		enums.SupportedIcon_RedHeart:                   "SupportedIcon_RedHeart",

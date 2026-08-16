@@ -10,25 +10,25 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	constants "github.com/HiIamJeff67/notegic-backend/shared/constants"
 
-	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
+	searchcursor "github.com/HiIamJeff67/notegic-backend/shared/lib/searchcursor"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/users"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
-	userdata "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/userdata"
-	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/userdata/inputs"
-	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
+	userdata "github.com/HiIamJeff67/notegic-backend/internal/core/data/cache/userdata"
+	cacheinputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/cache/userdata/inputs"
+	data "github.com/HiIamJeff67/notegic-backend/internal/core/data/database"
+	inputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
 )
 
 type UserServiceInterface interface {
@@ -198,8 +198,8 @@ func (s *UserService) UpdateMe(
 		exception = s.userDataCacheClient.Update(user.Name, cacheinputs.UpdateUserDataCacheInput{
 			DisplayName: requestDto.Body.Values.DisplayName,
 		})
-		if exception != nil && logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(
+		if exception != nil && logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(
 				ctx,
 				exception.Origin(),
 				exception.String(),
@@ -210,8 +210,8 @@ func (s *UserService) UpdateMe(
 		exception = s.userDataCacheClient.Update(user.Name, cacheinputs.UpdateUserDataCacheInput{
 			Status: status,
 		})
-		if exception != nil && logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(
+		if exception != nil && logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(
 				ctx,
 				exception.Origin(),
 				exception.String(),

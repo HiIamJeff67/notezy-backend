@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -476,7 +476,7 @@ func (ec *executionContext) _SearchPageInfo(ctx context.Context, sel ast.Selecti
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNSearchPageInfo2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchPageInfo(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchPageInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchPageInfo2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchPageInfo(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchPageInfo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -486,7 +486,7 @@ func (ec *executionContext) marshalNSearchPageInfo2ᚖgithubᚗcomᚋHiIamJeff67
 	return ec._SearchPageInfo(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOSearchSortOrder2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx context.Context, v any) (*gqlmodels.SearchSortOrder, error) {
+func (ec *executionContext) unmarshalOSearchSortOrder2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx context.Context, v any) (*gqlmodels.SearchSortOrder, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -495,7 +495,7 @@ func (ec *executionContext) unmarshalOSearchSortOrder2ᚖgithubᚗcomᚋHiIamJef
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOSearchSortOrder2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchSortOrder) graphql.Marshaler {
+func (ec *executionContext) marshalOSearchSortOrder2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchSortOrder) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

@@ -310,6 +310,23 @@ export class RealtimeGateway {
   }
 
   private resyncRoom(room: Room, blockPackId: string): void {
+    const resyncError = new Error("Yjs room resync requested");
+    console.error("[YjsWorker] room resync requested", {
+      blockPackId,
+      lastUpdateSequence: room.lastUpdateSequence,
+      compactedUntilSequence: room.compactedUntilSequence,
+      projectedUntilSequence: room.projectedUntilSequence,
+      pendingYjsUpdates: room.pendingYjsUpdates.length,
+      pendingPersistenceUpdates: room.pendingPersistenceUpdates.length,
+      pendingPersistenceBatches: [
+        ...this.pendingPersistenceBatches.values(),
+      ].filter(pendingBlockPackId => pendingBlockPackId === blockPackId).length,
+      inFlightPersistenceBatchId:
+        room.inFlightPersistenceBatch?.persistenceBatchId ?? null,
+      subscribers: room.subscribers.size,
+      isLoading: room.isLoading,
+      stack: resyncError.stack,
+    });
     for (const [persistenceBatchId, pendingBlockPackId] of this
       .pendingPersistenceBatches) {
       if (pendingBlockPackId === blockPackId) {
@@ -413,7 +430,7 @@ export class RealtimeGateway {
       try {
         payload = Buffer.from(
           JSON.stringify({
-            schemaId: "notezy.blocknote",
+            schemaId: "notegic.blocknote",
             schemaVersion: 1,
             projectedSequence,
             blocks: this.blockPackProjector.projectYjsDocument(room.document),

@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-infos"
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/user-infos"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
 )
 
 func (t *UserInfoEndpoint) LoadUserInfos(ctx *gin.Context) {

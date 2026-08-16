@@ -1,6 +1,6 @@
 @apiGatewayBaseUrl = http://localhost/api/development/v1
 @apiKey = replace-with-your-api-key
-@userAgent = NotezyHttpFile/1.0
+@userAgent = NotegicHttpFile/1.0
 @id = 1
 @userPublicId = 00000000-0000-4000-8000-000000000001
 @stationId = 00000000-0000-4000-8000-000000000001

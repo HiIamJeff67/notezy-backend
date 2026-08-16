@@ -81,7 +81,7 @@ func writeGatewayArtifacts(root string, endpoints []endpoint) {
 			parameters = append(parameters, map[string]any{"name": name, "in": "query", "required": isRequired(query, name), "schema": schema, "example": schemaExample(schema, name)})
 		}
 		if _, ok := properties(header)["userAgent"]; ok {
-			parameters = append(parameters, map[string]any{"name": "User-Agent", "in": "header", "required": true, "schema": map[string]any{"type": "string"}, "example": "NotezyIntegration/1.0"})
+			parameters = append(parameters, map[string]any{"name": "User-Agent", "in": "header", "required": true, "schema": map[string]any{"type": "string"}, "example": "NotegicIntegration/1.0"})
 		}
 		if len(parameters) > 0 {
 			sort.Slice(parameters, func(i, j int) bool {
@@ -150,18 +150,18 @@ func writeGatewayArtifacts(root string, endpoints []endpoint) {
 	openAPI := map[string]any{
 		"openapi": "3.1.0",
 		"info": map[string]any{
-			"title": "Notezy APIGateway API", "version": "1.0.0",
+			"title": "Notegic APIGateway API", "version": "1.0.0",
 			"description": "Complete machine-readable contract for routes exposed by APIGateway v1. Authenticated requests use user-owned API keys.",
 		},
 		"servers": []any{
 			map[string]any{"url": "http://localhost/api/development/v1", "description": "Local development"},
-			map[string]any{"url": "https://api.notezy.app/api/development/v1", "description": "Hosted Beta"},
+			map[string]any{"url": "https://api.notegic.app/api/development/v1", "description": "Hosted Beta"},
 		},
 		"tags": tagList, "paths": paths, "components": components,
 	}
 	writeJSON(filepath.Join(base, "openapi", "openapi.json"), openAPI)
-	writeJSON(filepath.Join(base, "postman", "Notezy-APIGateway-v1.postman_collection.json"), gatewayPostman(endpoints))
-	writeJSON(filepath.Join(base, "postman", "Notezy-APIGateway-v1.postman_environment.example.json"), postmanEnvironment())
+	writeJSON(filepath.Join(base, "postman", "notegic-api-gateway-v1.postman_collection.json"), gatewayPostman(endpoints))
+	writeJSON(filepath.Join(base, "postman", "notegic-api-gateway-v1.postman_environment.example.json"), postmanEnvironment())
 	writeText(filepath.Join(base, "examples", "curl", "all-endpoints.sh"), curlExamples(endpoints))
 	writeText(filepath.Join(base, "examples", "http", "all-endpoints.http"), httpExamples(endpoints))
 	writeText(filepath.Join(base, "reference", "endpoints.md"), endpointReference(endpoints))
@@ -364,7 +364,7 @@ func gatewayPostman(endpoints []endpoint) map[string]any {
 	})
 	return map[string]any{
 		"info": map[string]any{
-			"_postman_id": "a8f3fa62-f2cd-4cf0-97ab-a801b42ee101", "name": "Notezy APIGateway v1",
+			"_postman_id": "a8f3fa62-f2cd-4cf0-97ab-a801b42ee101", "name": "Notegic APIGateway v1",
 			"description": "Generated from the APIGateway v1 route and Go DTO contracts. Authenticated requests use X-API-Key.",
 			"schema":      "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		},
@@ -375,7 +375,7 @@ func gatewayPostman(endpoints []endpoint) map[string]any {
 func postmanEnvironment() map[string]any {
 	values := []any{
 		map[string]any{"key": "apiGatewayBaseUrl", "value": "http://localhost/api/development/v1", "enabled": true},
-		map[string]any{"key": "userAgent", "value": "Postman/Notezy-v1", "enabled": true},
+		map[string]any{"key": "userAgent", "value": "Postman/Notegic-v1", "enabled": true},
 		map[string]any{"key": "apiKey", "value": "", "enabled": true, "type": "secret"},
 	}
 	for _, name := range []string{"id", "userPublicId", "stationId", "routineId", "routineTagId", "routineTaskId", "rootShelfId", "subShelfId", "prevSubShelfId", "parentSubShelfId", "materialId", "blockPackId", "blockId", "itemId"} {
@@ -386,8 +386,8 @@ func postmanEnvironment() map[string]any {
 		values = append(values, map[string]any{"key": name, "value": value, "enabled": true})
 	}
 	return map[string]any{
-		"id": "8b8bf8a7-bbc0-4af7-9a6a-068180a25fa0", "name": "Notezy v1 example (no credentials)",
-		"values": values, "_postman_variable_scope": "environment", "_postman_exported_using": "Notezy generator",
+		"id": "8b8bf8a7-bbc0-4af7-9a6a-068180a25fa0", "name": "Notegic v1 example (no credentials)",
+		"values": values, "_postman_variable_scope": "environment", "_postman_exported_using": "Notegic generator",
 	}
 }
 
@@ -402,7 +402,7 @@ func curlExamples(endpoints []endpoint) string {
 	var output bytes.Buffer
 	output.WriteString("#!/usr/bin/env bash\nset -euo pipefail\n\n")
 	output.WriteString("api_gateway_base_url=\"${API_GATEWAY_BASE_URL:-http://localhost/api/development/v1}\"\napi_key=\"${API_KEY:-}\"\n")
-	output.WriteString("user_agent=\"${USER_AGENT:-NotezyCurlExample/1.0}\"\n")
+	output.WriteString("user_agent=\"${USER_AGENT:-NotegicCurlExample/1.0}\"\n")
 	output.WriteString("id=\"${AVATAR_ID:-1}\"\n")
 	for _, id := range []string{"userPublicId", "stationId", "routineId", "routineTagId", "routineTaskId", "rootShelfId", "subShelfId", "prevSubShelfId", "parentSubShelfId", "materialId", "blockPackId", "blockId", "itemId"} {
 		fmt.Fprintf(&output, "%s=\"${%s:-00000000-0000-4000-8000-000000000001}\"\n", id, strings.ToUpper(id))
@@ -445,7 +445,7 @@ func endpointReference(endpoints []endpoint) string {
 
 func httpExamples(endpoints []endpoint) string {
 	var output bytes.Buffer
-	output.WriteString("@apiGatewayBaseUrl = http://localhost/api/development/v1\n@apiKey = replace-with-your-api-key\n@userAgent = NotezyHttpFile/1.0\n")
+	output.WriteString("@apiGatewayBaseUrl = http://localhost/api/development/v1\n@apiKey = replace-with-your-api-key\n@userAgent = NotegicHttpFile/1.0\n")
 	output.WriteString("@id = 1\n")
 	for _, id := range []string{"userPublicId", "stationId", "routineId", "routineTagId", "routineTaskId", "rootShelfId", "subShelfId", "prevSubShelfId", "parentSubShelfId", "materialId", "blockPackId", "blockId", "itemId"} {
 		fmt.Fprintf(&output, "@%s = 00000000-0000-4000-8000-000000000001\n", id)
@@ -477,7 +477,7 @@ func httpExamples(endpoints []endpoint) string {
 }
 
 func writeGatewayRules(base string, endpointCount int) {
-	writeText(filepath.Join(base, "README.md"), fmt.Sprintf(`# Notezy APIGateway v1 public API
+	writeText(filepath.Join(base, "README.md"), fmt.Sprintf(`# Notegic APIGateway v1 public API
 
 This directory contains the machine-readable and human-readable contract for all %d versioned routes currently exposed by APIGateway v1.
 

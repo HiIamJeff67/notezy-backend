@@ -3,7 +3,7 @@ package topics
 import (
 	"time"
 
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	coreeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/events"
 )
 
 func CoreNotificationTopicSpec() TopicSpec {

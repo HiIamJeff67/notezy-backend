@@ -8,8 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
-	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
+	sharedcontexts "github.com/HiIamJeff67/notegic-backend/shared/lib/contexts"
 )
 
 func TestTokenResponseMiddlewareAddsInternalTokenEnvelope(t *testing.T) {

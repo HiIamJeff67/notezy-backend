@@ -1,20 +1,20 @@
 package resolvers
 
 import (
-	dataloaders "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/graphql/dataloaders"
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
+	dataloaders "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/graphql/dataloaders"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
 )
 
 // This file is GraphQL transport dependency injection.
 
 type Resolver struct {
-	dataloader dataloaders.Dataloaders
-	coreClient *coreadapters.CoreAdapter
+	dataloader  dataloaders.Dataloaders
+	coreAdapter *coreadapters.CoreAdapter
 }
 
-func NewResolver(coreClient *coreadapters.CoreAdapter) *Resolver {
+func NewResolver(coreAdapter *coreadapters.CoreAdapter) *Resolver {
 	return &Resolver{
-		dataloader: dataloaders.NewDataloaders(coreClient),
-		coreClient: coreClient,
+		dataloader:  dataloaders.NewDataloaders(coreAdapter),
+		coreAdapter: coreAdapter,
 	}
 }

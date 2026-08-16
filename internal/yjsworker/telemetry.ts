@@ -49,20 +49,20 @@ export class Telemetry {
   private constructor(sdk: NodeSDK) {
     this.sdk = sdk;
 
-    const meter = metrics.getMeter("notezy.yjs-worker");
-    this.logger = logs.getLogger("notezy.yjs-worker");
-    this.tracer = trace.getTracer("notezy.yjs-worker");
+    const meter = metrics.getMeter("notegic.yjs-worker");
+    this.logger = logs.getLogger("notegic.yjs-worker");
+    this.tracer = trace.getTracer("notegic.yjs-worker");
     this.operationCount = meter.createCounter(
-      "notezy.yjs.worker.operation.count"
+      "notegic.yjs.worker.operation.count"
     );
     this.operationDuration = meter.createHistogram(
-      "notezy.yjs.worker.operation.duration"
+      "notegic.yjs.worker.operation.duration"
     );
-    this.payloadBytes = meter.createCounter("notezy.yjs.worker.payload.bytes");
+    this.payloadBytes = meter.createCounter("notegic.yjs.worker.payload.bytes");
     this.internalSocketCount = meter.createUpDownCounter(
-      "notezy.yjs.worker.internal_socket.count"
+      "notegic.yjs.worker.internal_socket.count"
     );
-    this.gcDuration = meter.createHistogram("notezy.yjs.worker.gc.duration");
+    this.gcDuration = meter.createHistogram("notegic.yjs.worker.gc.duration");
     this.gcObserver = new PerformanceObserver(entries => {
       for (const entry of entries.getEntries()) {
         this.gcDuration.record(entry.duration);
@@ -70,28 +70,28 @@ export class Telemetry {
     });
 
     const activeRoomGauge = meter.createObservableGauge(
-      "notezy.yjs.worker.active_room.count"
+      "notegic.yjs.worker.active_room.count"
     );
     const activeSubscriberGauge = meter.createObservableGauge(
-      "notezy.yjs.worker.active_subscriber.count"
+      "notegic.yjs.worker.active_subscriber.count"
     );
     const heapGauge = meter.createObservableGauge(
-      "notezy.yjs.worker.process.heap.bytes"
+      "notegic.yjs.worker.process.heap.bytes"
     );
     const rssGauge = meter.createObservableGauge(
-      "notezy.yjs.worker.process.rss.bytes"
+      "notegic.yjs.worker.process.rss.bytes"
     );
     const externalGauge = meter.createObservableGauge(
-      "notezy.yjs.worker.process.external.bytes"
+      "notegic.yjs.worker.process.external.bytes"
     );
     const arrayBuffersGauge = meter.createObservableGauge(
-      "notezy.yjs.worker.process.array_buffers.bytes"
+      "notegic.yjs.worker.process.array_buffers.bytes"
     );
     const eventLoopDelayGauge = meter.createObservableGauge(
-      "notezy.yjs.worker.event_loop_delay.milliseconds"
+      "notegic.yjs.worker.event_loop_delay.milliseconds"
     );
     const uptimeGauge = meter.createObservableGauge(
-      "notezy.yjs.worker.process.uptime.seconds"
+      "notegic.yjs.worker.process.uptime.seconds"
     );
     meter.addBatchObservableCallback(
       result => {

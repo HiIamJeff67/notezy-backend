@@ -11,11 +11,11 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	notificationeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	coreeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/events"
+	notificationeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/notification/v1/events"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/notification/data/database/schemas"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/notification/data/database/schemas"
 )
 
 type NotificationRepository interface {

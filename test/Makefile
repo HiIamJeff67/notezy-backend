@@ -12,13 +12,13 @@ test-integration:
 	$(MAKE) test-integration-run
 
 test-integration-run:
-	@if [ -d integration ]; then NOTEZY_RUN_INTEGRATION=1 KAFKA_BROKERS=$(KAFKA_BROKERS) go test ./integration ./integration/infrastructure; else echo "no root integration tests"; fi
+	@if [ -d integration ]; then NOTEGIC_RUN_INTEGRATION=1 KAFKA_BROKERS=$(KAFKA_BROKERS) go test ./integration ./integration/infrastructure; else echo "no root integration tests"; fi
 
 test-integration-kafka:
 	$(MAKE) test-integration-kafka-run
 
 test-integration-kafka-run:
-	@NOTEZY_RUN_INTEGRATION=1 KAFKA_BROKERS=$(KAFKA_BROKERS) go test -count=1 ./integration/kafka
+	@NOTEGIC_RUN_INTEGRATION=1 KAFKA_BROKERS=$(KAFKA_BROKERS) go test -count=1 ./integration/kafka
 
 test-load-websocket:
 	@command -v k6 >/dev/null 2>&1 || { echo "k6 is required; see test/load/README.md"; exit 1; }

@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	emailstatus "github.com/HiIamJeff67/notezy-backend/internal/email/transports/status"
+	emailstatus "github.com/HiIamJeff67/notegic-backend/internal/email/transports/status"
 )
 
 func TestStatusRoutes(t *testing.T) {

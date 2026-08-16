@@ -6,7 +6,7 @@ docs/**
 secrets/**
 *.temp
 temp/
-backup-codes-thenotezy.*
+backup-codes-thenotegic.*
 LICENSES/**
 internal/yjsworker/node_modules/
 internal/yjsworker/dist/

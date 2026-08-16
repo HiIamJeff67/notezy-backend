@@ -3,11 +3,11 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-infos"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/user-infos"
 
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
 )
 
 type UserInfoControllerInterface interface {
@@ -16,14 +16,14 @@ type UserInfoControllerInterface interface {
 }
 
 type UserInfoController struct {
-	coreClient *coreadapters.CoreAdapter
+	coreAdapter *coreadapters.CoreAdapter
 }
 
 func NewUserInfoController(
-	coreClient *coreadapters.CoreAdapter,
+	coreAdapter *coreadapters.CoreAdapter,
 ) UserInfoControllerInterface {
 	return &UserInfoController{
-		coreClient: coreClient,
+		coreAdapter: coreAdapter,
 	}
 }
 
@@ -33,7 +33,7 @@ func (c *UserInfoController) GetMyInfo(ctx *gin.Context, request *apicontract.Ge
 		apicontract.GetMyInfoResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.GetMyInfoOperation,
 		"/core/v1/user-infos/get",
@@ -52,7 +52,7 @@ func (c *UserInfoController) UpdateMyInfo(ctx *gin.Context, request *apicontract
 		apicontract.UpdateMyInfoResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.UpdateMyInfoOperation,
 		"/core/v1/user-infos/update",

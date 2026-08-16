@@ -30,7 +30,7 @@ func NewMeter(meter metric.Meter) MeterInterface {
 }
 
 var (
-	NotezyMeter MeterInterface
+	NotegicMeter MeterInterface
 )
 
 func (m *Meter) Count(ctx context.Context, name string, value int64, attributes ...attribute.KeyValue) {

@@ -3,9 +3,9 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
 
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/core/transports/gateway/middlewares"
 )
 
 type RouterDependencies struct {

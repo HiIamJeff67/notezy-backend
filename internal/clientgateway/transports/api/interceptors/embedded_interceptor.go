@@ -6,14 +6,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+	sharedcontexts "github.com/HiIamJeff67/notegic-backend/shared/lib/contexts"
 
-	responsewriter "github.com/HiIamJeff67/notezy-backend/shared/util/responsewriter"
+	responsewriter "github.com/HiIamJeff67/notegic-backend/shared/util/responsewriter"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/contexts"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/contexts"
 )
 
 // To add additional field to the response with possibly embedded data that is required for the frontend.

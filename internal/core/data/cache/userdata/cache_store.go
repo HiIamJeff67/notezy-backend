@@ -4,9 +4,9 @@ import (
 	"context"
 	"strings"
 
-	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
+	platformredis "github.com/HiIamJeff67/notegic-backend/shared/platform/redis"
 
-	redislibraries "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/userdata/libraries"
+	redislibraries "github.com/HiIamJeff67/notegic-backend/internal/core/data/cache/userdata/libraries"
 )
 
 type UserDataCacheStore struct {

@@ -5,12 +5,12 @@ import (
 
 	"github.com/google/uuid"
 
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
-	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
+	enumcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 
-	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
+	platformpostgres "github.com/HiIamJeff67/notegic-backend/shared/platform/postgres"
 
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
 )
 
 type Station struct {

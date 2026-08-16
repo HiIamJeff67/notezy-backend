@@ -7,10 +7,10 @@ import (
 
 	"github.com/google/uuid"
 
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	scopes "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/scopes"
+	inputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	scopes "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/scopes"
 )
 
 type BlockPackYjsRepositoryInterface interface {

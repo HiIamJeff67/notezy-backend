@@ -8,12 +8,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
-	notificationscontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/api"
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
+	notificationscontract "github.com/HiIamJeff67/notegic-backend/contracts/notification/v1/api"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	sharedcontexts "github.com/HiIamJeff67/notegic-backend/shared/lib/contexts"
 
-	services "github.com/HiIamJeff67/notezy-backend/internal/notification/services"
+	services "github.com/HiIamJeff67/notegic-backend/internal/notification/services"
 )
 
 type NotificationEndpoint struct {

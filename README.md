@@ -1,8 +1,8 @@
-<a><img src="global/images/logo/NotezyDocumentationHeaderImage.png" alt="Notezy" /></a>
+<a><img src="global/images/logo/NotegicDocumentationHeaderImage.png" alt="Notegic" /></a>
 
-# Notezy Backend
+# Notegic Backend
 
-Notezy Backend is the server-side application for Notezy. It is a modular,
+Notegic Backend is the server-side application for Notegic. It is a modular,
 multi-runtime Go backend with a dedicated TypeScript Yjs worker. The repository
 is currently maintained as a proprietary project; it is not the old open-source
 starter architecture.
@@ -104,7 +104,7 @@ make -C internal/core seed
 ```
 
 `make compose-up` configures SOPS automatically. It decrypts the development
-artifact `secrets/envs/.env.enc` into a temporary file and passes that file to
+artifact `.env.enc` into a temporary file and passes that file to
 Compose. Raw `docker compose up` does not invoke SOPS and only reads `.env`.
 For encrypted local environments, configure `.sops.yaml` with the intended age
 recipients and use:
@@ -124,7 +124,7 @@ to follow one service.
 For a production-like local stack:
 
 ```sh
-COMPOSE_PROJECT_NAME=notezy-prod-local \
+COMPOSE_PROJECT_NAME=notegic-prod-local \
 	COMPOSE_FILE=infra/docker/docker-compose.prod.yaml \
 	COMPOSE_ENCRYPTED_ENV_FILE=secrets/envs/.env.production.enc \
 	make compose-up
@@ -201,7 +201,7 @@ GitHub Actions is the primary repository automation:
 - `staging.yml` promotes an immutable GHCR image tag on an approved staging
   self-hosted runner and checks `/startedz` and `/healthz` for every runtime.
 
-Jenkins is an optional self-hosted pipeline executor, not another Notezy
+Jenkins is an optional self-hosted pipeline executor, not another Notegic
 runtime. The root `Jenkinsfile` deliberately calls the same Makefile targets as
 GitHub Actions. It is useful when an organization needs an on-premise runner,
 private network access, a separate approval system, or an existing Jenkins
@@ -214,7 +214,7 @@ Staging commands are shared by both systems:
 
 ```sh
 IMAGE_REGISTRY=ghcr.io/ORG/REPO IMAGE_TAG=TAG \
-COMPOSE_ENV_FILE=/etc/notezy/staging.env make staging-deploy
+COMPOSE_ENV_FILE=/etc/notegic/staging.env make staging-deploy
 make staging-smoke
 ```
 
@@ -232,7 +232,7 @@ separate operational work and are not implied by a successful staging run.
 
 ## Licensing
 
-Project code is distributed under the Notezy proprietary license:
+Project code is distributed under the Notegic proprietary license:
 
 - `LICENSE.md` — English
 - `LICENSE(tw).md` — Traditional Chinese

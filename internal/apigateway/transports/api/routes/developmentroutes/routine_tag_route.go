@@ -5,15 +5,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	binders "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/api/binders"
-	controllers "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/api/controllers"
-	interceptors "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/api/interceptors"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/api/middlewares"
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/core/adapters"
+	binders "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/api/binders"
+	controllers "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/api/controllers"
+	interceptors "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/api/interceptors"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/api/middlewares"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/core/adapters"
 )
 
 type RoutineTagRouteDependencies struct {
-	CoreClient   *coreadapters.CoreAdapter
+	CoreAdapter  *coreadapters.CoreAdapter
 	RateLimiters RateLimiters
 }
 
@@ -21,13 +21,13 @@ func configureDevelopmentRoutineTagRoutes(
 	router *gin.RouterGroup,
 	deps RoutineTagRouteDependencies,
 ) {
-	coreClient, rateLimiters := deps.CoreClient, deps.RateLimiters
+	coreAdapter, rateLimiters := deps.CoreAdapter, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
 
 	routineTagBinder := binders.NewRoutineTagBinder()
-	routineTagController := controllers.NewRoutineTagController(coreClient)
+	routineTagController := controllers.NewRoutineTagController(coreAdapter)
 
 	routineTagRoutes := router.Group("/routine-tags")
 	defaultMiddlewares := []gin.HandlerFunc{

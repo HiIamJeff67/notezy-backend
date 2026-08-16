@@ -3,11 +3,11 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/api-keys"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/api-keys"
 
-	apikeyservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/apikey"
-	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
+	apikeyservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/apikey"
+	endpoints "github.com/HiIamJeff67/notegic-backend/internal/core/transports/gateway/endpoints"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/core/transports/gateway/middlewares"
 )
 
 type APIKeyRouterDependencies struct {

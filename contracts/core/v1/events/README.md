@@ -5,7 +5,7 @@ dependency on Core implementation, RealtimeGateway, persistence, or a Kafka
 client. The generic envelope and primitive transport types are imported from
 `contracts/types/events/`; this package owns only Core lifecycle topics and payloads.
 
-`notezy.core.lifecycle.v1` carries Core lifecycle facts. Every event uses its
+`notegic.core.lifecycle.v1` carries Core lifecycle facts. Every event uses its
 aggregate UUID string as `kafkaKey`, so one aggregate remains ordered within a
 Kafka partition. `BlockPack` events always describe exactly one BlockPack;
 bulk mutations create one outbox row and one event per affected BlockPack.

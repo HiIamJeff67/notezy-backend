@@ -1,4 +1,4 @@
-name: Notezy Staging Delivery
+name: Notegic Staging Delivery
 
 on:
   workflow_dispatch:
@@ -13,7 +13,7 @@ permissions:
   packages: read
 
 concurrency:
-  group: notezy-staging
+  group: notegic-staging
   cancel-in-progress: false
 
 jobs:
@@ -24,9 +24,9 @@ jobs:
     env:
       IMAGE_TAG: ${{ inputs.image_tag }}
       COMPOSE_FILE: infra/docker/docker-compose.prod.yaml
-      STAGING_ENCRYPTED_ENV_FILE: /etc/notezy/secrets/envs/.env.staging.enc
-      STAGING_SOPS_CONFIG_FILE: /etc/notezy/sops/.sops.yaml
-      STAGING_AGE_KEY_FILE: /etc/notezy/sops/age/keys-staging.txt
+      STAGING_ENCRYPTED_ENV_FILE: /etc/notegic/secrets/envs/.env.staging.enc
+      STAGING_SOPS_CONFIG_FILE: /etc/notegic/sops/.sops.yaml
+      STAGING_AGE_KEY_FILE: /etc/notegic/sops/age/keys-staging.txt
     steps:
       - uses: actions/checkout@v4
       - name: Decrypt staging environment
@@ -40,7 +40,7 @@ jobs:
           test -f "$SOPS_CONFIG_FILE"
           test -f "$SOPS_AGE_KEY_FILE"
           test -f "$COMPOSE_ENCRYPTED_ENV_FILE"
-          temporary_env_file="$RUNNER_TEMP/notezy-staging.env"
+          temporary_env_file="$RUNNER_TEMP/notegic-staging.env"
           sops --config "$SOPS_CONFIG_FILE" decrypt \
             --input-type dotenv \
             --output-type dotenv \
@@ -77,4 +77,4 @@ jobs:
           retention-days: 14
       - name: Remove decrypted staging environment
         if: always()
-        run: rm -f "${RUNNER_TEMP}/notezy-staging.env"
+        run: rm -f "${RUNNER_TEMP}/notegic-staging.env"

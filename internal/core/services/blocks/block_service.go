@@ -14,27 +14,27 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	constants "github.com/HiIamJeff67/notegic-backend/shared/constants"
+	types "github.com/HiIamJeff67/notegic-backend/shared/types"
 
-	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
+	searchcursor "github.com/HiIamJeff67/notegic-backend/shared/lib/searchcursor"
 
-	editableblock "github.com/HiIamJeff67/notezy-backend/shared/util/editableblock"
+	editableblock "github.com/HiIamJeff67/notegic-backend/shared/util/editableblock"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
-	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/blocks"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
+	yjsworkercontract "github.com/HiIamJeff67/notegic-backend/contracts/yjs-worker/v1"
 
-	metrics "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/metrics"
+	metrics "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/metrics"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
-	scopes "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/scopes"
-	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/core/exceptions"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
+	scopes "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/scopes"
+	apiexceptions "github.com/HiIamJeff67/notegic-backend/internal/core/exceptions"
 )
 
 type BlockServiceInterface interface {
@@ -292,7 +292,7 @@ func (s *BlockService) ApplyWithTransaction(
 		First(&document).Error; err != nil {
 		return nil, fmt.Errorf("failed to lock yjs document for projection: %w", err)
 	}
-	metrics.NotezyMeter.Value(ctx, "yjs.projection.lag", document.LastUpdateSequence-document.ProjectedUntilSequence)
+	metrics.NotegicMeter.Value(ctx, "yjs.projection.lag", document.LastUpdateSequence-document.ProjectedUntilSequence)
 
 	if requestDto.ProjectedSequence <= document.ProjectedUntilSequence {
 		return &apicontract.ApplyBlockProjectionResponseDto{
@@ -479,7 +479,7 @@ func (s *BlockService) ApplyMany(
 	documentByBlockPackId := make(map[uuid.UUID]schemas.BlockPackYjsDocument, len(documents))
 	for _, document := range documents {
 		documentByBlockPackId[document.BlockPackId] = document
-		metrics.NotezyMeter.Value(ctx, "yjs.projection.lag", document.LastUpdateSequence-document.ProjectedUntilSequence)
+		metrics.NotegicMeter.Value(ctx, "yjs.projection.lag", document.LastUpdateSequence-document.ProjectedUntilSequence)
 	}
 
 	applicableProjections := make([]preparedProjection, 0, len(preparedProjections))

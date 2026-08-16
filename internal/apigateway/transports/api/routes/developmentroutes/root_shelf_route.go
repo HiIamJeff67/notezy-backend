@@ -5,17 +5,17 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	enumcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 
-	binders "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/api/binders"
-	controllers "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/api/controllers"
-	interceptors "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/api/interceptors"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/api/middlewares"
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/core/adapters"
+	binders "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/api/binders"
+	controllers "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/api/controllers"
+	interceptors "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/api/interceptors"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/api/middlewares"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/core/adapters"
 )
 
 type RootShelfRouteDependencies struct {
-	CoreClient   *coreadapters.CoreAdapter
+	CoreAdapter  *coreadapters.CoreAdapter
 	RateLimiters RateLimiters
 }
 
@@ -23,13 +23,13 @@ func configureDevelopmentRootShelfRoutes(
 	router *gin.RouterGroup,
 	deps RootShelfRouteDependencies,
 ) {
-	coreClient, rateLimiters := deps.CoreClient, deps.RateLimiters
+	coreAdapter, rateLimiters := deps.CoreAdapter, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
 
 	rootShelfBinder := binders.NewRootShelfBinder()
-	rootShelfController := controllers.NewRootShelfController(coreClient)
+	rootShelfController := controllers.NewRootShelfController(coreAdapter)
 
 	rootShelfRoutes := router.Group("/root-shelves")
 	defaultMiddlewares := []gin.HandlerFunc{

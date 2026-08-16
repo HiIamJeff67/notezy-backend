@@ -7,12 +7,12 @@ import (
 
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
+	sharedcontexts "github.com/HiIamJeff67/notegic-backend/shared/lib/contexts"
+	sharedtokens "github.com/HiIamJeff67/notegic-backend/shared/tokens"
 
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
 )
 
 func WithGatewaySource(ctx context.Context, source string) context.Context {

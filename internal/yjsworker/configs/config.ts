@@ -14,7 +14,7 @@ export const config = {
     return port;
   })(),
   telemetry: {
-    serviceName: process.env.OTEL_SERVICE_NAME ?? "notezy-yjs-worker",
+    serviceName: process.env.OTEL_SERVICE_NAME ?? "notegic-yjs-worker",
     serviceVersion: process.env.OTEL_SERVICE_VERSION ?? "0.1.0",
     deploymentEnvironment:
       process.env.OTEL_DEPLOYMENT_ENVIRONMENT ??
@@ -24,7 +24,7 @@ export const config = {
       process.env.OTEL_SERVICE_INSTANCE_ID ?? process.env.HOSTNAME ?? "unknown",
     otlpEndpoint: (
       process.env.OTEL_EXPORTER_OTLP_ENDPOINT ??
-      "http://notezy-otel-collector:4318"
+      "http://notegic-otel-collector:4318"
     ).replace(/\/$/, ""),
   },
 };

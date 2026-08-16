@@ -110,7 +110,7 @@ func newTestArchitectureCommand() *cobra.Command {
 }
 
 func findRepositoryRoot() (string, error) {
-	if configuredRoot := os.Getenv("NOTEZY_REPOSITORY_ROOT"); configuredRoot != "" {
+	if configuredRoot := os.Getenv("NOTEGIC_REPOSITORY_ROOT"); configuredRoot != "" {
 		return filepath.Abs(configuredRoot)
 	}
 

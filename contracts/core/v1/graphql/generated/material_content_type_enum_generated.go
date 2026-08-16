@@ -6,7 +6,7 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	"github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -40,15 +40,15 @@ import (
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNMaterialContentType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐMaterialContentType(ctx context.Context, v any) (enums.MaterialContentType, error) {
+func (ec *executionContext) unmarshalNMaterialContentType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐMaterialContentType(ctx context.Context, v any) (enums.MaterialContentType, error) {
 	tmp, err := graphql.UnmarshalString(v)
-	res := unmarshalNMaterialContentType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐMaterialContentType[tmp]
+	res := unmarshalNMaterialContentType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐMaterialContentType[tmp]
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNMaterialContentType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐMaterialContentType(ctx context.Context, sel ast.SelectionSet, v enums.MaterialContentType) graphql.Marshaler {
+func (ec *executionContext) marshalNMaterialContentType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐMaterialContentType(ctx context.Context, sel ast.SelectionSet, v enums.MaterialContentType) graphql.Marshaler {
 	_ = sel
-	res := graphql.MarshalString(marshalNMaterialContentType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐMaterialContentType[v])
+	res := graphql.MarshalString(marshalNMaterialContentType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐMaterialContentType[v])
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -58,7 +58,7 @@ func (ec *executionContext) marshalNMaterialContentType2githubᚗcomᚋHiIamJeff
 }
 
 var (
-	unmarshalNMaterialContentType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐMaterialContentType = map[string]enums.MaterialContentType{
+	unmarshalNMaterialContentType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐMaterialContentType = map[string]enums.MaterialContentType{
 		"None":             enums.MaterialContentType_None,
 		"Application_JSON": enums.MaterialContentType_JSON,
 		"Application_PDF":  enums.MaterialContentType_PDF,
@@ -75,7 +75,7 @@ var (
 		"Video_WebM":       enums.MaterialContentType_WebM,
 		"Audio_Mpeg":       enums.MaterialContentType_Mpeg,
 	}
-	marshalNMaterialContentType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐMaterialContentType = map[enums.MaterialContentType]string{
+	marshalNMaterialContentType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐMaterialContentType = map[enums.MaterialContentType]string{
 		enums.MaterialContentType_None:      "None",
 		enums.MaterialContentType_JSON:      "Application_JSON",
 		enums.MaterialContentType_PDF:       "Application_PDF",

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	sharedstrings "github.com/HiIamJeff67/notezy-backend/shared/lib/strings"
+	sharedstrings "github.com/HiIamJeff67/notegic-backend/shared/lib/strings"
 )
 
 type Config struct {

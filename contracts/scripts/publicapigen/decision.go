@@ -34,7 +34,7 @@ ClientGateway continues to use access/refresh JWT cookies for the existing web/c
 
 The APIGateway key is verified at the edge and again in Core through the API key cache/DB fallback. Core writes the same actor fields used by client requests into context, but does not run browser `+"`AuthMiddleware()`"+`. Unauthorized rate limiting remains IP-first; API key ID is only an auxiliary dimension.
 
-This mechanism is suitable for a user's own client and trusted server-side integrations. Third-party browser apps must not collect Notezy credentials and also require an explicitly allowed Origin.
+This mechanism is suitable for a user's own client and trusted server-side integrations. Third-party browser apps must not collect Notegic credentials and also require an explicitly allowed Origin.
 
 ## Maintenance
 

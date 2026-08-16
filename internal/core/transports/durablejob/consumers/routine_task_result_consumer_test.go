@@ -9,18 +9,18 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1"
-	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/events"
-	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	durablejobcontract "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1"
+	durablejobeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1/events"
+	durablejobroutinetasktypes "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1/types/routine-tasks"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
 
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	coreenums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
-	routineservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/routines"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	coreenums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
+	routineservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/routines"
 )
 
 type routineTaskExecutionServiceStub struct {

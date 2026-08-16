@@ -8,20 +8,20 @@ WORKSPACE_MODULES := contracts shared internal/cli internal/core internal/durabl
 	env-encrypt-all development production test staging \
 	test-client-gateway test-api-gateway devlog install-hooks
 
-COMPOSE_INTEGRATION_PROJECT := notezy-integration
+COMPOSE_INTEGRATION_PROJECT := notegic-integration
 COMPOSE_INTEGRATION_FILE := infra/docker/docker-compose.integration.yaml
 COMPOSE_FILE ?= docker-compose.yaml
-COMPOSE_ENCRYPTED_ENV_FILE ?= .env.development.enc
+COMPOSE_ENCRYPTED_ENV_FILE ?= .env.enc
 COMPOSE_SOPS_CONFIG ?= .sops.yaml
 SOPS ?= sops
 SOPS_CONFIG ?= .sops.yaml
 ENVIRONMENTS := development production test staging
 ENVIRONMENT ?= development
-ENV_DIRECTORY ?= .
+ENV_DIRECTORY ?= secrets/envs
 ENVIRONMENT_GOAL := $(firstword $(filter $(ENVIRONMENTS),$(MAKECMDGOALS)))
 SELECTED_ENVIRONMENT := $(if $(ENVIRONMENT_GOAL),$(ENVIRONMENT_GOAL),$(ENVIRONMENT))
-ENV_PLAINTEXT_FILE ?= $(ENV_DIRECTORY)/.env.$(SELECTED_ENVIRONMENT)
-ENV_ENCRYPTED_FILE ?= $(ENV_DIRECTORY)/.env.$(SELECTED_ENVIRONMENT).enc
+ENV_PLAINTEXT_FILE ?= $(if $(filter development,$(SELECTED_ENVIRONMENT)),.env,$(ENV_DIRECTORY)/.env.$(SELECTED_ENVIRONMENT))
+ENV_ENCRYPTED_FILE ?= $(if $(filter development,$(SELECTED_ENVIRONMENT)),.env.enc,$(ENV_DIRECTORY)/.env.$(SELECTED_ENVIRONMENT).enc)
 
 env-check:
 	@command -v "$(SOPS)" >/dev/null 2>&1 || { echo "sops is required; install SOPS before using env-* targets" >&2; exit 1; }
@@ -29,7 +29,7 @@ env-check:
 
 env-encrypt: env-check
 	@test -f "$(ENV_PLAINTEXT_FILE)" || { echo "missing $(ENV_PLAINTEXT_FILE)" >&2; exit 1; }
-	@mkdir -p "$(ENV_DIRECTORY)"
+	@mkdir -p "$$(dirname "$(ENV_ENCRYPTED_FILE)")"
 	@temporary_file="$$(mktemp "$(ENV_ENCRYPTED_FILE).tmp.XXXXXX")"; \
 	trap 'rm -f "$$temporary_file"' EXIT INT TERM; \
 	set -e; \
@@ -53,7 +53,7 @@ development production test staging:
 env-decrypt: env-check
 	@test -f "$(ENV_ENCRYPTED_FILE)" || { echo "missing $(ENV_ENCRYPTED_FILE)" >&2; exit 1; }
 	@mkdir -p "$$(dirname "$(ENV_PLAINTEXT_FILE)")"
-	@temporary_file="$$(mktemp "$$(dirname "$(ENV_PLAINTEXT_FILE)")/.notezy-env.XXXXXX")"; \
+	@temporary_file="$$(mktemp "$$(dirname "$(ENV_PLAINTEXT_FILE)")/.notegic-env.XXXXXX")"; \
 	trap 'rm -f "$$temporary_file"' EXIT INT TERM; \
 	set -e; \
 	umask 077; \
@@ -105,7 +105,7 @@ ci-containers:
 		echo "docker build $$runtime"; \
 		target=production; \
 		if [ "$$runtime" = yjsworker ]; then target=runtime; fi; \
-		docker build --target "$$target" --file "internal/$$runtime/Dockerfile" --tag "notezy-ci-$$runtime" .; \
+		docker build --target "$$target" --file "internal/$$runtime/Dockerfile" --tag "notegic-ci-$$runtime" .; \
 	done
 
 staging-deploy:
@@ -119,7 +119,7 @@ compose-up:
 	command -v "$(SOPS)" >/dev/null 2>&1 || { echo "sops is required; install SOPS before starting Compose" >&2; exit 1; }; \
 	test -f "$(COMPOSE_SOPS_CONFIG)" || { echo "missing $(COMPOSE_SOPS_CONFIG)" >&2; exit 1; }; \
 	test -f "$(COMPOSE_ENCRYPTED_ENV_FILE)" || { echo "missing $(COMPOSE_ENCRYPTED_ENV_FILE)" >&2; exit 1; }; \
-	temporary_file="$$(mktemp "$${TMPDIR:-/tmp}/notezy-compose-env.XXXXXX")"; \
+	temporary_file="$$(mktemp "$${TMPDIR:-/tmp}/notegic-compose-env.XXXXXX")"; \
 	trap 'rm -f "$$temporary_file"' EXIT INT TERM; \
 	"$(SOPS)" --config "$(COMPOSE_SOPS_CONFIG)" decrypt --input-type dotenv --output-type dotenv "$(COMPOSE_ENCRYPTED_ENV_FILE)" > "$$temporary_file"; \
 	chmod 600 "$$temporary_file"; \
@@ -130,7 +130,7 @@ compose-down:
 	command -v "$(SOPS)" >/dev/null 2>&1 || { echo "sops is required; install SOPS before stopping Compose" >&2; exit 1; }; \
 	test -f "$(COMPOSE_SOPS_CONFIG)" || { echo "missing $(COMPOSE_SOPS_CONFIG)" >&2; exit 1; }; \
 	test -f "$(COMPOSE_ENCRYPTED_ENV_FILE)" || { echo "missing $(COMPOSE_ENCRYPTED_ENV_FILE)" >&2; exit 1; }; \
-	temporary_file="$$(mktemp "$${TMPDIR:-/tmp}/notezy-compose-env.XXXXXX")"; \
+	temporary_file="$$(mktemp "$${TMPDIR:-/tmp}/notegic-compose-env.XXXXXX")"; \
 	trap 'rm -f "$$temporary_file"' EXIT INT TERM; \
 	"$(SOPS)" --config "$(COMPOSE_SOPS_CONFIG)" decrypt --input-type dotenv --output-type dotenv "$(COMPOSE_ENCRYPTED_ENV_FILE)" > "$$temporary_file"; \
 	chmod 600 "$$temporary_file"; \

@@ -4,7 +4,7 @@
 
 `shared/lib/queue` implements a generic FIFO queue with fixed capacity.
 
-It is a lightweight data structure used by Notezy internals (for example, BFS-like
+It is a lightweight data structure used by Notegic internals (for example, BFS-like
 traversals in adapters) and supports any element type through Go generics.
 
 ## Files
@@ -38,7 +38,7 @@ package main
 import (
 	"fmt"
 
-	queue "github.com/HiIamJeff67/notezy-backend/shared/lib/queue"
+	queue "github.com/HiIamJeff67/notegic-backend/shared/lib/queue"
 )
 
 func main() {

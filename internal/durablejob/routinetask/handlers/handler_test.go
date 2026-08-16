@@ -7,12 +7,12 @@ import (
 
 	"github.com/google/uuid"
 
-	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
-	blocknote "github.com/HiIamJeff67/notezy-backend/contracts/types/blocknote"
-	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	routinetasktypes "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1/types/routine-tasks"
+	blocknote "github.com/HiIamJeff67/notegic-backend/contracts/types/blocknote"
+	enums "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	validation "github.com/HiIamJeff67/notezy-backend/internal/durablejob/validations"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	validation "github.com/HiIamJeff67/notegic-backend/internal/durablejob/validations"
 )
 
 func TestPurposeHandlerPreparesAssignmentWithoutDatabaseAccess(t *testing.T) {

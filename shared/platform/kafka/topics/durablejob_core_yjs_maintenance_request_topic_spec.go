@@ -3,7 +3,7 @@ package topics
 import (
 	"time"
 
-	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/events"
+	durablejobeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1/events"
 )
 
 func DurableJobCoreYjsMaintenanceRequestTopicSpec() TopicSpec {

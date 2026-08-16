@@ -5,7 +5,7 @@ root="$(git rev-parse --show-toplevel)"
 today="$(date +%F)"
 month="${today%-??}"
 relative_path="docs/devlogs/$month/$today.md"
-temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/notezy-devlog-check.XXXXXX")"
+temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/notegic-devlog-check.XXXXXX")"
 trap 'rm -rf "$temporary_dir"' EXIT INT TERM
 
 if ! git -C "$root" cat-file -e ":$relative_path" 2>/dev/null; then

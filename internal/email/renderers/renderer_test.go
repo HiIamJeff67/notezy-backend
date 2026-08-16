@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	emailcontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1"
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	emailconfig "github.com/HiIamJeff67/notezy-backend/internal/email/configs"
+	emailcontract "github.com/HiIamJeff67/notegic-backend/contracts/email/v1"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	emailconfig "github.com/HiIamJeff67/notegic-backend/internal/email/configs"
 )
 
 func TestRendererRenderAndContentType(t *testing.T) {
@@ -56,12 +56,12 @@ func TestRendererRenderAndContentType(t *testing.T) {
 				t.Fatalf("ContentType() = %q, want %q", renderer.ContentType(), test.wantType)
 			}
 
-			body, exception := renderer.Render(map[string]any{"Name": "Notezy"})
+			body, exception := renderer.Render(map[string]any{"Name": "Notegic"})
 			if exception != nil {
 				t.Fatalf("Render() exception = %v", exception)
 			}
-			if body != "Hello, Notezy!" {
-				t.Fatalf("Render() = %q, want %q", body, "Hello, Notezy!")
+			if body != "Hello, Notegic!" {
+				t.Fatalf("Render() = %q, want %q", body, "Hello, Notegic!")
 			}
 		})
 	}

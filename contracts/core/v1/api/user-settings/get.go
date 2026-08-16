@@ -1,8 +1,8 @@
 package apicontract
 
-import coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
+import coreapicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api"
 
-import enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+import enumcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 
 type GetMySettingRequestDto struct {
 	coreapicontract.RequestDto[

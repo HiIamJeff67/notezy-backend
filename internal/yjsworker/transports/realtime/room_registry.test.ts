@@ -30,10 +30,10 @@ test("RoomRegistry tracks subscribers before a Yjs document is materialized", ()
   assert.equal(registry.getSubscriber(blockPackId, connectionId, 1), room);
 
   const document = new Y.Doc();
-  document.getMap("document-store").set("title", "Notezy");
+  document.getMap("document-store").set("title", "Notegic");
   room.document = document;
 
-  assert.equal(room.document.getMap("document-store").get("title"), "Notezy");
+  assert.equal(room.document.getMap("document-store").get("title"), "Notegic");
 
   registry.detach(blockPackId, connectionId, 1);
 

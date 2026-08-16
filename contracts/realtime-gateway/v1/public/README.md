@@ -1,4 +1,4 @@
-# Notezy RealtimeGateway v1 public contract
+# Notegic RealtimeGateway v1 public contract
 
 This directory specifies every versioned endpoint emitted directly by RealtimeGateway v1 for realtime clients. It is a runtime-specific public contract, separate from the APIGateway integration contract.
 

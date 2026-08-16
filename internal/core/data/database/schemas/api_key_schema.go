@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
+	platformpostgres "github.com/HiIamJeff67/notegic-backend/shared/platform/postgres"
 )
 
 // APIKey stores only the digest of a credential. The clear-text secret is

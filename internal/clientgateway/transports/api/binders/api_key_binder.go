@@ -3,11 +3,11 @@ package binders
 import (
 	"github.com/gin-gonic/gin"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/api-keys"
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/api-keys"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 
-	controllers "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/controllers"
+	controllers "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/controllers"
 )
 
 type APIKeyBinderInterface interface {

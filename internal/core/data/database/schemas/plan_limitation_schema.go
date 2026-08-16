@@ -3,11 +3,11 @@ package schemas
 import (
 	"time"
 
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
 )
 
 // This table is only mutatable by the admin, and accessable by both client user and admin.
-// To declare the value or data of this table, you MUST use the seeding method under notezy-backend/internal/core/data/database/seeds/
+// To declare the value or data of this table, you MUST use the seeding method under notegic-backend/internal/core/data/database/seeds/
 type PlanLimitation struct {
 	Key                            enums.UserPlan `json:"key" gorm:"column:key; type:\"UserPlan\"; primaryKey;"`
 	MaxRootShelfCount              int32          `json:"maxRootShelfCount" gorm:"column:max_root_shelf_count; type:integer; not null;"`

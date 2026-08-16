@@ -41,7 +41,7 @@ package main
 import (
 	"fmt"
 
-	concurrency "github.com/HiIamJeff67/notezy-backend/shared/lib/concurrency"
+	concurrency "github.com/HiIamJeff67/notegic-backend/shared/lib/concurrency"
 )
 
 func main() {

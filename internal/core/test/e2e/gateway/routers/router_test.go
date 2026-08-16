@@ -9,18 +9,18 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
+	sharedtokens "github.com/HiIamJeff67/notegic-backend/shared/tokens"
 
-	rootshelvescontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/root-shelves"
-	stationscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/stations"
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	rootshelvescontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/root-shelves"
+	stationscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/stations"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
 
-	corerouters "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/routers"
+	corerouters "github.com/HiIamJeff67/notegic-backend/internal/core/transports/gateway/routers"
 )
 
 func TestRouterValidatesRootShelfEnvelopeBeforeCallingService(t *testing.T) {
-	t.Setenv("CORE_DELEGATION_AUDIENCE", "notezy-api-test")
-	t.Setenv("CORE_DELEGATION_ISSUER", "notezy-gateway-test")
+	t.Setenv("CORE_DELEGATION_AUDIENCE", "notegic-api-test")
+	t.Setenv("CORE_DELEGATION_ISSUER", "notegic-gateway-test")
 	t.Setenv("CORE_DELEGATION_SECRET", "test-delegation-secret")
 	t.Setenv("JWT_ACCESS_TOKEN_SECRET_KEY", "test-access-secret")
 
@@ -65,8 +65,8 @@ func TestRouterValidatesRootShelfEnvelopeBeforeCallingService(t *testing.T) {
 }
 
 func TestRouterValidatesStationEnvelopeBeforeCallingService(t *testing.T) {
-	t.Setenv("CORE_DELEGATION_AUDIENCE", "notezy-api-test")
-	t.Setenv("CORE_DELEGATION_ISSUER", "notezy-gateway-test")
+	t.Setenv("CORE_DELEGATION_AUDIENCE", "notegic-api-test")
+	t.Setenv("CORE_DELEGATION_ISSUER", "notegic-gateway-test")
 	t.Setenv("CORE_DELEGATION_SECRET", "test-delegation-secret")
 	t.Setenv("JWT_ACCESS_TOKEN_SECRET_KEY", "test-access-secret")
 
@@ -111,8 +111,8 @@ func TestRouterValidatesStationEnvelopeBeforeCallingService(t *testing.T) {
 }
 
 func TestRouterRejectsDelegationForAnotherOperation(t *testing.T) {
-	t.Setenv("CORE_DELEGATION_AUDIENCE", "notezy-api-test")
-	t.Setenv("CORE_DELEGATION_ISSUER", "notezy-gateway-test")
+	t.Setenv("CORE_DELEGATION_AUDIENCE", "notegic-api-test")
+	t.Setenv("CORE_DELEGATION_ISSUER", "notegic-gateway-test")
 	t.Setenv("CORE_DELEGATION_SECRET", "test-delegation-secret")
 	t.Setenv("JWT_ACCESS_TOKEN_SECRET_KEY", "test-access-secret")
 

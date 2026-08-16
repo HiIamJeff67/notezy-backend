@@ -9,19 +9,19 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	gatewayconfig "github.com/HiIamJeff67/notezy-backend/internal/apigateway/configs"
-	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/apigateway/ratelimit"
+	gatewayconfig "github.com/HiIamJeff67/notegic-backend/internal/apigateway/configs"
+	ratelimit "github.com/HiIamJeff67/notegic-backend/internal/apigateway/ratelimit"
 )
 
 func InitUnauthorizedRateLimiter(config gatewayconfig.RateLimitConfig) *ratelimit.HybridRateLimiter {
 	limiter := ratelimit.NewHybridRateLimiter(config, false)
-	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Unauthorized rate limiter initialized with rate: %v, burst: %d, user limit: %d, window: %v", config.RateLimit, config.Burst, config.UserLimit, config.WindowDuration))
+	logs.NotegicLogger.Info(context.Background(), fmt.Sprintf("Unauthorized rate limiter initialized with rate: %v, burst: %d, user limit: %d, window: %v", config.RateLimit, config.Burst, config.UserLimit, config.WindowDuration))
 	return limiter
 }
 
@@ -44,7 +44,7 @@ func UnauthorizedRateLimitMiddleware(rateLimiter *ratelimit.HybridRateLimiter) g
 		allowed, remaining := rateLimiter.AllowByFingerprint(fingerprint)
 		if !allowed {
 			setRateLimitHeaders(ctx, remaining, rateLimiter)
-			logs.NotezyLogger.Debug(ctx.Request.Context(), fmt.Sprintf("Rate limit exceeded for fingerprint: %s", fingerprint))
+			logs.NotegicLogger.Debug(ctx.Request.Context(), fmt.Sprintf("Rate limit exceeded for fingerprint: %s", fingerprint))
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.New(
 				"PermissionDeniedDueToTooManyRequests",
 				"Auth",

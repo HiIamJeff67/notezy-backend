@@ -7,13 +7,13 @@ import (
 	"github.com/google/uuid"
 	gophersdataloader "github.com/graph-gophers/dataloader/v7"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/users"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
 
-	gatewaycontexts "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/contexts"
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
+	gatewaycontexts "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/contexts"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
 )
 
 type LoadUserSource string
@@ -37,13 +37,13 @@ type UserDataloaderInterface interface {
 }
 
 type UserDataloader struct {
-	coreClient *coreadapters.CoreAdapter
-	loader     *UserLoaderType
+	coreAdapter *coreadapters.CoreAdapter
+	loader      *UserLoaderType
 }
 
-func NewUserDataloader(coreClient *coreadapters.CoreAdapter) UserDataloaderInterface {
+func NewUserDataloader(coreAdapter *coreadapters.CoreAdapter) UserDataloaderInterface {
 	dataloader := &UserDataloader{
-		coreClient: coreClient,
+		coreAdapter: coreAdapter,
 	}
 	dataloader.loader = gophersdataloader.NewBatchedLoader(
 		dataloader.batchFunction(),
@@ -106,7 +106,7 @@ func (d *UserDataloader) batchFunction() UserBatchFunctionType {
 			apicontract.LoadThemeAuthorsResponseDto,
 		](
 			ginContext,
-			d.coreClient,
+			d.coreAdapter,
 			&requestDto,
 			apicontract.LoadThemeAuthorsOperation,
 			"/core/v1/users/graphql/load-theme-authors",

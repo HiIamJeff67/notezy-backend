@@ -9,7 +9,7 @@ month="${today%-??}"
 archive_dir="${DEVLOG_ARCHIVE_DIR:-$archive_dir}"
 archive_file="$archive_dir/$month/$today.md"
 index_file="${DEVLOG_INDEX_FILE:-$root/DEVLOG.md}"
-temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/notezy-devlog.XXXXXX")"
+temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/notegic-devlog.XXXXXX")"
 trap 'rm -rf "$temporary_dir"' EXIT INT TERM
 
 if [[ ! "$commit_limit" =~ ^[1-9][0-9]*$ ]]; then

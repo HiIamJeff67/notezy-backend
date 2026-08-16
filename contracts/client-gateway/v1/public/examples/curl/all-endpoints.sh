@@ -2,9 +2,9 @@
 set -euo pipefail
 
 gateway_base_url="${GATEWAY_BASE_URL:-http://localhost/api/development/v1}"
-cookie_jar="${COOKIE_JAR:-./notezy-cookies.txt}"
+cookie_jar="${COOKIE_JAR:-./notegic-cookies.txt}"
 csrf_token="${CSRF_TOKEN:-}"
-user_agent="${USER_AGENT:-NotezyCurlExample/1.0}"
+user_agent="${USER_AGENT:-NotegicCurlExample/1.0}"
 account="${ACCOUNT:-}"
 email="${EMAIL:-}"
 password="${PASSWORD:-}"

@@ -1,6 +1,6 @@
 # Versioning and Release Tags
 
-This document defines the Notezy Backend versioning, Git tag, GitHub Release,
+This document defines the Notegic Backend versioning, Git tag, GitHub Release,
 and deployment version management conventions.
 
 ## Tag and Release Naming
@@ -119,9 +119,9 @@ After the tag is pushed:
 Docker images must use the same version tag:
 
 ```text
-notezy-core:v0.1.0-beta.1
-notezy-client-gateway:v0.1.0-beta.1
-notezy-notification:v0.1.0-beta.1
+notegic-core:v0.1.0-beta.1
+notegic-client-gateway:v0.1.0-beta.1
+notegic-notification:v0.1.0-beta.1
 ```
 
 ## Tag Management Rules
@@ -150,7 +150,7 @@ git show v0.1.0-beta.1
 git push origin v0.1.0-beta.1
 ```
 
-Git itself does not enforce the tag format; the format above is the Notezy
+Git itself does not enforce the tag format; the format above is the Notegic
 project convention. The GitHub Actions `v*` trigger is an automation setting.
 If the project later requires stricter validation, the workflow must validate
 the tag format explicitly as well.

@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	notification "github.com/HiIamJeff67/notezy-backend/internal/notification"
+	notification "github.com/HiIamJeff67/notegic-backend/internal/notification"
 )
 
 func main() {

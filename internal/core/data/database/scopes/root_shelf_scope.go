@@ -4,10 +4,10 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	types "github.com/HiIamJeff67/notegic-backend/shared/types"
 
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
 )
 
 type RootShelfScopeInterface interface {

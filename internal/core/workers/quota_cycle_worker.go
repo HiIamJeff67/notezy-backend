@@ -8,11 +8,11 @@ import (
 
 	"gorm.io/gorm"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	coreconfig "github.com/HiIamJeff67/notezy-backend/internal/core/configs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
+	coreconfig "github.com/HiIamJeff67/notegic-backend/internal/core/configs"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
 )
 
 type QuotaCycleWorkerInterface interface {
@@ -41,8 +41,8 @@ func NewQuotaCycleWorker(
 /* ============================== Auxiliary Functions ============================== */
 
 func (w *QuotaCycleWorker) reconcile(ctx context.Context) {
-	if err := w.Reconcile(ctx); err != nil && ctx.Err() == nil && logs.NotezyLogger != nil {
-		logs.NotezyLogger.Error(ctx, err, "User quota cycle reconciliation failed")
+	if err := w.Reconcile(ctx); err != nil && ctx.Err() == nil && logs.NotegicLogger != nil {
+		logs.NotegicLogger.Error(ctx, err, "User quota cycle reconciliation failed")
 	}
 }
 

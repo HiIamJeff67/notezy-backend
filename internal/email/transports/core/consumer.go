@@ -9,13 +9,13 @@ import (
 	validatorpkg "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 
-	emailcontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1"
-	emaileventscontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	emailcontract "github.com/HiIamJeff67/notegic-backend/contracts/email/v1"
+	emaileventscontract "github.com/HiIamJeff67/notegic-backend/contracts/email/v1/events"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 )
 
 type EmailRequestConsumer struct {
@@ -41,16 +41,16 @@ func (c *EmailRequestConsumer) Start(ctx context.Context) func() {
 		emaileventscontract.CoreEmailRequestTopic.String(),
 	)
 	if err != nil {
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(ctx, err, "Failed to create Core email request consumer")
+		if logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(ctx, err, "Failed to create Core email request consumer")
 		}
 		return func() {}
 	}
 
 	workerCtx, cancel := context.WithCancel(ctx)
 	go func() {
-		if err := consumer.Run(workerCtx, c.consume); err != nil && workerCtx.Err() == nil && logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(workerCtx, err, "Core email request consumer stopped")
+		if err := consumer.Run(workerCtx, c.consume); err != nil && workerCtx.Err() == nil && logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(workerCtx, err, "Core email request consumer stopped")
 		}
 	}()
 

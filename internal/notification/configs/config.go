@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
+	platformpostgres "github.com/HiIamJeff67/notegic-backend/shared/platform/postgres"
 )
 
 type Config struct {

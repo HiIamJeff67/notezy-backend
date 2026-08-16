@@ -5,8 +5,8 @@ import (
 
 	"gorm.io/datatypes"
 
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
-	validation "github.com/HiIamJeff67/notezy-backend/internal/core/validations"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
+	validation "github.com/HiIamJeff67/notegic-backend/internal/core/validations"
 )
 
 func TestValidateCreateBlockPackRoutineTaskPayloadAcceptsNestedBlockTree(t *testing.T) {

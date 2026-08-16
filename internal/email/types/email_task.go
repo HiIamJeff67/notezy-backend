@@ -3,7 +3,7 @@ package types
 import (
 	"time"
 
-	emailcontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1"
+	emailcontract "github.com/HiIamJeff67/notegic-backend/contracts/email/v1"
 )
 
 type EmailTaskType string

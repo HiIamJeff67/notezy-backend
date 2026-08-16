@@ -13,52 +13,52 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	authcode "github.com/HiIamJeff67/notezy-backend/shared/lib/authcode"
+	authcode "github.com/HiIamJeff67/notegic-backend/shared/lib/authcode"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
-	observability "github.com/HiIamJeff67/notezy-backend/shared/platform/observability"
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
-	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
-	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
+	observability "github.com/HiIamJeff67/notegic-backend/shared/platform/observability"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
+	platformpostgres "github.com/HiIamJeff67/notegic-backend/shared/platform/postgres"
+	platformredis "github.com/HiIamJeff67/notegic-backend/shared/platform/redis"
 
-	coreconfig "github.com/HiIamJeff67/notezy-backend/internal/core/configs"
-	apikeycache "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/apikey"
-	userdata "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/userdata"
-	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	constraints "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/constraints"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
-	triggers "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/triggers"
-	views "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/views"
-	scopes "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/scopes"
-	seeds "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/seeds"
-	storage "github.com/HiIamJeff67/notezy-backend/internal/core/data/storage"
-	apikeyservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/apikey"
-	authservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/auth"
-	blockservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/blocks"
-	materialservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/material"
-	otherservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/other"
-	realtimeservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/realtime"
-	routineservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/routines"
-	shelfservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/shelves"
-	userservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/user"
-	coretransports "github.com/HiIamJeff67/notezy-backend/internal/core/transports"
-	durablejobtransport "github.com/HiIamJeff67/notezy-backend/internal/core/transports/durablejob"
-	durablejobconsumers "github.com/HiIamJeff67/notezy-backend/internal/core/transports/durablejob/consumers"
-	durablejobproducers "github.com/HiIamJeff67/notezy-backend/internal/core/transports/durablejob/producers"
-	durablejobrouters "github.com/HiIamJeff67/notezy-backend/internal/core/transports/durablejob/routers"
-	emailtransport "github.com/HiIamJeff67/notezy-backend/internal/core/transports/email"
-	coremiddlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
-	gatewayrouters "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/routers"
-	status "github.com/HiIamJeff67/notezy-backend/internal/core/transports/status"
-	yjsworkertransport "github.com/HiIamJeff67/notezy-backend/internal/core/transports/yjsworker"
-	yjsworkerconsumers "github.com/HiIamJeff67/notezy-backend/internal/core/transports/yjsworker/consumers"
-	yjsworkerproducers "github.com/HiIamJeff67/notezy-backend/internal/core/transports/yjsworker/producers"
-	validation "github.com/HiIamJeff67/notezy-backend/internal/core/validations"
-	coreworkers "github.com/HiIamJeff67/notezy-backend/internal/core/workers"
+	coreconfig "github.com/HiIamJeff67/notegic-backend/internal/core/configs"
+	apikeycache "github.com/HiIamJeff67/notegic-backend/internal/core/data/cache/apikey"
+	userdata "github.com/HiIamJeff67/notegic-backend/internal/core/data/cache/userdata"
+	data "github.com/HiIamJeff67/notegic-backend/internal/core/data/database"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	constraints "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/constraints"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
+	triggers "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/triggers"
+	views "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/views"
+	scopes "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/scopes"
+	seeds "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/seeds"
+	storage "github.com/HiIamJeff67/notegic-backend/internal/core/data/storage"
+	apikeyservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/apikey"
+	authservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/auth"
+	blockservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/blocks"
+	materialservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/material"
+	otherservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/other"
+	realtimeservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/realtime"
+	routineservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/routines"
+	shelfservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/shelves"
+	userservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/user"
+	coretransports "github.com/HiIamJeff67/notegic-backend/internal/core/transports"
+	durablejobtransport "github.com/HiIamJeff67/notegic-backend/internal/core/transports/durablejob"
+	durablejobconsumers "github.com/HiIamJeff67/notegic-backend/internal/core/transports/durablejob/consumers"
+	durablejobproducers "github.com/HiIamJeff67/notegic-backend/internal/core/transports/durablejob/producers"
+	durablejobrouters "github.com/HiIamJeff67/notegic-backend/internal/core/transports/durablejob/routers"
+	emailtransport "github.com/HiIamJeff67/notegic-backend/internal/core/transports/email"
+	coremiddlewares "github.com/HiIamJeff67/notegic-backend/internal/core/transports/gateway/middlewares"
+	gatewayrouters "github.com/HiIamJeff67/notegic-backend/internal/core/transports/gateway/routers"
+	status "github.com/HiIamJeff67/notegic-backend/internal/core/transports/status"
+	yjsworkertransport "github.com/HiIamJeff67/notegic-backend/internal/core/transports/yjsworker"
+	yjsworkerconsumers "github.com/HiIamJeff67/notegic-backend/internal/core/transports/yjsworker/consumers"
+	yjsworkerproducers "github.com/HiIamJeff67/notegic-backend/internal/core/transports/yjsworker/producers"
+	validation "github.com/HiIamJeff67/notegic-backend/internal/core/validations"
+	coreworkers "github.com/HiIamJeff67/notegic-backend/internal/core/workers"
 )
 
 type Application struct {
@@ -360,7 +360,7 @@ func (a *Application) loadKafkaConnectionConfig() platformkafka.ConnectionConfig
 func (a *Application) initializeObservability() func() {
 	return observability.Initialize(
 		context.Background(),
-		observability.LoadConfig("notezy-core"),
+		observability.LoadConfig("notegic-core"),
 	)
 }
 
@@ -416,8 +416,8 @@ func (a *Application) initializeCacheClients(
 			http.StatusInternalServerError,
 			true,
 		).WithOrigin(err)
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(context.Background(), exception.Origin(), exception.String())
+		if logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(context.Background(), exception.Origin(), exception.String())
 		}
 		_ = redisClientSet.Close()
 		_ = data.Disconnect(data.DB)
@@ -451,14 +451,14 @@ func (a *Application) initializeKafka(
 ) (*platformkafka.Producer, bool) {
 	kafkaProducer, err := platformkafka.NewProducer(platformkafka.ClientConfig{
 		ConnectionConfig: config,
-		ClientId:         "notezy-core",
+		ClientId:         "notegic-core",
 	})
 	kafkaReady := err == nil
 	if err != nil {
-		logs.NotezyLogger.Warn(context.Background(), "Kafka is unavailable; Core is running in degraded mode", attribute.String("error.message", err.Error()))
+		logs.NotegicLogger.Warn(context.Background(), "Kafka is unavailable; Core is running in degraded mode", attribute.String("error.message", err.Error()))
 	} else if err := kafkaProducer.Ping(context.Background()); err != nil {
 		kafkaReady = false
-		logs.NotezyLogger.Warn(context.Background(), "Kafka is unavailable; Core is running in degraded mode", attribute.String("error.message", err.Error()))
+		logs.NotegicLogger.Warn(context.Background(), "Kafka is unavailable; Core is running in degraded mode", attribute.String("error.message", err.Error()))
 	}
 	return kafkaProducer, kafkaReady
 }
@@ -502,7 +502,7 @@ func (a *Application) initializeWorkers(
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
 				ConnectionConfig: kafkaConnection,
-				ClientId:         "notezy-core-durablejob-routine-task",
+				ClientId:         "notegic-core-durablejob-routine-task",
 			},
 			ConsumerGroup:       durablejobtransport.RoutineTaskClaimConsumerGroup,
 			MaximumAttempts:     config.KafkaConsumer.MaximumAttempts,
@@ -524,7 +524,7 @@ func (a *Application) initializeWorkers(
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
 				ConnectionConfig: kafkaConnection,
-				ClientId:         "notezy-core-durablejob-routine-task-result",
+				ClientId:         "notegic-core-durablejob-routine-task-result",
 			},
 			ConsumerGroup:       durablejobtransport.RoutineTaskResultConsumerGroup,
 			MaximumAttempts:     config.KafkaConsumer.MaximumAttempts,
@@ -541,7 +541,7 @@ func (a *Application) initializeWorkers(
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
 				ConnectionConfig: kafkaConnection,
-				ClientId:         "notezy-core-durablejob-yjs-maintenance",
+				ClientId:         "notegic-core-durablejob-yjs-maintenance",
 			},
 			ConsumerGroup:       durablejobtransport.YjsMaintenanceRequestConsumerGroup,
 			MaximumAttempts:     config.KafkaConsumer.MaximumAttempts,
@@ -555,7 +555,7 @@ func (a *Application) initializeWorkers(
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
 				ConnectionConfig: kafkaConnection,
-				ClientId:         "notezy-core-durablejob-yjs-maintenance-result",
+				ClientId:         "notegic-core-durablejob-yjs-maintenance-result",
 			},
 			ConsumerGroup:       yjsworkertransport.MaintenanceResultConsumerGroup,
 			MaximumAttempts:     config.KafkaConsumer.MaximumAttempts,
@@ -579,7 +579,7 @@ func (a *Application) initializeWorkers(
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
 				ConnectionConfig: kafkaConnection,
-				ClientId:         "notezy-core-yjsworker",
+				ClientId:         "notegic-core-yjsworker",
 			},
 			ConsumerGroup:       yjsworkertransport.CommandConsumerGroup,
 			MaximumAttempts:     config.KafkaConsumer.MaximumAttempts,

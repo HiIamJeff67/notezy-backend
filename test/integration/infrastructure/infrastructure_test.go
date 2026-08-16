@@ -9,8 +9,8 @@ import (
 )
 
 func TestInfrastructureComposeServices(t *testing.T) {
-	if os.Getenv("NOTEZY_RUN_INTEGRATION") != "1" {
-		t.Skip("set NOTEZY_RUN_INTEGRATION=1 to run Docker-backed integration tests")
+	if os.Getenv("NOTEGIC_RUN_INTEGRATION") != "1" {
+		t.Skip("set NOTEGIC_RUN_INTEGRATION=1 to run Docker-backed integration tests")
 	}
 
 	repositoryRoot, err := os.Getwd()
@@ -23,7 +23,7 @@ func TestInfrastructureComposeServices(t *testing.T) {
 	command := exec.Command(
 		"docker",
 		"compose",
-		"--project-name", "notezy-integration",
+		"--project-name", "notegic-integration",
 		"--file", composeFile,
 		"ps",
 		"--status", "running",
@@ -43,10 +43,10 @@ func TestInfrastructureComposeServices(t *testing.T) {
 	}
 
 	for _, service := range []string{
-		"notezy-integration-db",
-		"notezy-integration-notification-db",
-		"notezy-integration-redis",
-		"notezy-integration-kafka",
+		"notegic-integration-db",
+		"notegic-integration-notification-db",
+		"notegic-integration-redis",
+		"notegic-integration-kafka",
 	} {
 		if _, running := runningServices[service]; !running {
 			t.Errorf("integration Compose service %q is not running", service)

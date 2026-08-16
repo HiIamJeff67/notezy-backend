@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	enumcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/apigateway/contexts"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/apigateway/contexts"
 )
 
 func TestAllowedPermissionsMiddleware(t *testing.T) {

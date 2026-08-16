@@ -13,7 +13,7 @@ Phase 0 endpoint:
 | Environment | URL |
 | --- | --- |
 | local through nginx | `ws://localhost/realtime/development/v1` |
-| production | `wss://api.notezy.app/realtime/development/v1` |
+| production | `wss://api.notegic.app/realtime/development/v1` |
 
 A physical WebSocket belongs to one client app instance. Each new connection receives a new `connectionId`, and its `connectorChannelId` values are valid only for that connection.
 
@@ -59,7 +59,7 @@ state. Participants are ephemeral presence data, not an access-control source; a
 empty array means no active room connection was observed. User profile details, if
 needed by a client, remain a separate Core API query.
 
-Tickets are EdDSA JWTs signed by Core and verified by RealtimeGateway. Core exclusively receives `REALTIME_TICKET_PRIVATE_KEY_BASE64`, which is Base64-encoded PKCS#8 Ed25519 DER. RealtimeGateway exclusively receives `REALTIME_TICKET_PUBLIC_KEY_BASE64`, which is Base64-encoded PKIX Ed25519 DER. The Node worker receives neither key and does not validate public tickets; it only accepts internal frames whose claims were verified by RealtimeGateway. Tickets contain `iss`, `aud`, `sub`, `jti`, `iat`, `exp`, a hash of the `User-Agent`, and the channel claims where applicable. Audiences are `notezy-realtime-connection` and `notezy-realtime-block-pack`.
+Tickets are EdDSA JWTs signed by Core and verified by RealtimeGateway. Core exclusively receives `REALTIME_TICKET_PRIVATE_KEY_BASE64`, which is Base64-encoded PKCS#8 Ed25519 DER. RealtimeGateway exclusively receives `REALTIME_TICKET_PUBLIC_KEY_BASE64`, which is Base64-encoded PKIX Ed25519 DER. The Node worker receives neither key and does not validate public tickets; it only accepts internal frames whose claims were verified by RealtimeGateway. Tickets contain `iss`, `aud`, `sub`, `jti`, `iat`, `exp`, a hash of the `User-Agent`, and the channel claims where applicable. Audiences are `notegic-realtime-connection` and `notegic-realtime-block-pack`.
 
 Generate the two deployment values once and store them in secret management, never in the repository:
 

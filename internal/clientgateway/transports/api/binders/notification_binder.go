@@ -3,12 +3,12 @@ package binders
 import (
 	"github.com/gin-gonic/gin"
 
-	notificationscontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/api"
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	notificationscontract "github.com/HiIamJeff67/notegic-backend/contracts/notification/v1/api"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 
-	controllers "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/controllers"
+	controllers "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/controllers"
 )
 
 type NotificationBinderInterface interface {

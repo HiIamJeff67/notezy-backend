@@ -5,8 +5,8 @@ import (
 
 	validator "github.com/go-playground/validator/v10"
 
-	notificationtypescontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/types"
-	sharedvalidations "github.com/HiIamJeff67/notezy-backend/shared/validations"
+	notificationtypescontract "github.com/HiIamJeff67/notegic-backend/contracts/notification/v1/types"
+	sharedvalidations "github.com/HiIamJeff67/notegic-backend/shared/validations"
 )
 
 func TestRegisterNotificationValidations(t *testing.T) {

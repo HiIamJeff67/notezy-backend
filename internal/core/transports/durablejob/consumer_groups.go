@@ -1,7 +1,7 @@
 package durablejobtransport
 
 const (
-	RoutineTaskClaimConsumerGroup      = "notezy-core-durablejob-routine-task-v1"
-	RoutineTaskResultConsumerGroup     = "notezy-core-durablejob-routine-task-result-v1"
-	YjsMaintenanceRequestConsumerGroup = "notezy-core-durablejob-yjs-maintenance-request-v1"
+	RoutineTaskClaimConsumerGroup      = "notegic-core-durablejob-routine-task-v1"
+	RoutineTaskResultConsumerGroup     = "notegic-core-durablejob-routine-task-result-v1"
+	YjsMaintenanceRequestConsumerGroup = "notegic-core-durablejob-yjs-maintenance-request-v1"
 )

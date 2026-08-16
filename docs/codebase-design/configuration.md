@@ -18,7 +18,7 @@ clients, workers, transports, and services.
 | APIGateway | `internal/apigateway/configs/` | `API_GATEWAY_LISTEN_ADDRESS`, `CORE_BASE_URL` |
 | Core | `internal/core/configs/` | `CORE_LISTEN_ADDRESS`, `OAUTH_GOOGLE_*`, `STORAGE_KEY_SALT`, `OUTBOX_RELAY_*`, user-data cache TTL, quota-cycle worker interval, Yjs document initialization endpoint/timeout |
 | DurableJob | `internal/durablejob/configs/` | `DURABLEJOB_LISTEN_ADDRESS`, runtime Kafka and maintenance strategy settings |
-| Email | `internal/email/configs/` | `EMAIL_LISTEN_ADDRESS`, `SMTP_*`, `NOTEZY_OFFICIAL_*`, `KAFKA_*` consumer settings |
+| Email | `internal/email/configs/` | `EMAIL_LISTEN_ADDRESS`, `SMTP_*`, `NOTEGIC_OFFICIAL_*`, `KAFKA_*` consumer settings |
 | RealtimeGateway | `internal/realtimegateway/configs/` | `REALTIME_GATEWAY_LISTEN_ADDRESS`, `REALTIME_ENABLED`, `YJS_WORKER_URLS` |
 
 `shared/platform/config/` must not be recreated. A platform component owns
@@ -64,8 +64,9 @@ logged or committed.
 
 ## Environment secret storage
 
-The project uses SOPS with age for encrypted environment files. The encrypted
-`.env.enc` for development and `.env.<environment>.enc` for other environments,
+The project uses SOPS with age for encrypted environment files. Development
+uses `.env` and `.env.enc`; production, test, and staging use
+`secrets/envs/.env.<environment>` and `secrets/envs/.env.<environment>.enc`,
 along with `.sops.yaml`, plaintext environment files, and age identities, are
 deployment/local artifacts and are ignored by Git. Transfer encrypted files
 only through an approved private channel; never commit them to GitHub. Each

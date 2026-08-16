@@ -1,6 +1,6 @@
 package realtimetypes
 
-import enumscontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+import enumscontract "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 
 type ChannelPermission = enumscontract.ChannelPermission
 

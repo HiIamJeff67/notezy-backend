@@ -1,4 +1,4 @@
-# Notezy APIGateway v1 public API
+# Notegic APIGateway v1 public API
 
 This directory contains the machine-readable and human-readable contract for all 131 versioned routes currently exposed by APIGateway v1.
 

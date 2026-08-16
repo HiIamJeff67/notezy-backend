@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
-	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
+	"github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -221,7 +221,7 @@ func (ec *executionContext) _PublicUserInfo_gender(ctx context.Context, field gr
 	}
 	res := resTmp.(enums.UserGender)
 	fc.Result = res
-	return ec.marshalNUserGender2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐUserGender(ctx, field.Selections, res)
+	return ec.marshalNUserGender2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐUserGender(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PublicUserInfo_gender(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -262,7 +262,7 @@ func (ec *executionContext) _PublicUserInfo_country(ctx context.Context, field g
 	}
 	res := resTmp.(*enums.Country)
 	fc.Result = res
-	return ec.marshalOCountry2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐCountry(ctx, field.Selections, res)
+	return ec.marshalOCountry2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐCountry(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PublicUserInfo_country(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -392,7 +392,7 @@ func (ec *executionContext) _PublicUserInfo(ctx context.Context, sel ast.Selecti
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalOPublicUserInfo2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPublicUserInfo(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PublicUserInfo) graphql.Marshaler {
+func (ec *executionContext) marshalOPublicUserInfo2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPublicUserInfo(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PublicUserInfo) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

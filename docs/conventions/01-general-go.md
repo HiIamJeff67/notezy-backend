@@ -123,7 +123,7 @@ Handle empty input first to avoid invalid `VALUES` statements. Handle the `Error
 
 - Before adding a helper, check [shared/lib](../../shared/lib/) for a package that already provides the responsibility. Reuse an existing implementation instead of copying it into a service/repository.
 - Choose the existing package for the problem: use `shared/lib/array` for deduplication/sets, `shared/lib/searchcursor` for cursor pagination, `shared/lib/concurrency` for concurrent work, and `shared/lib/queue`/`shared/lib/stack` for queues/stacks. Flatten EditableBlock trees with `shared/util/editableblock.FlattenEditableBlock(s)`; use `shared/util/responsewriter` and `shared/util/exceptionwriter` for cross-runtime HTTP response formatting and public exception rendering. Rate limiting remains owned by each Gateway runtime.
-- `shared/lib` contains only cross-domain, reusable logic independent of the application layer. It must not import Notezy project code; required third-party libraries are allowed. Business rules used by one domain stay in that domain instead of moving to shared for possible future reuse.
+- `shared/lib` contains only cross-domain, reusable logic independent of the application layer. It must not import Notegic project code; required third-party libraries are allowed. Business rules used by one domain stay in that domain instead of moving to shared for possible future reuse.
 - When an existing library is close but not an exact fit, add the smallest generic capability to that library. If the need belongs to one domain, use a small domain-local helper and avoid creating a one-off shared package.
 
 ## Change Scope

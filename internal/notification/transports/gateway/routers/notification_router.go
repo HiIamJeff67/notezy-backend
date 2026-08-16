@@ -3,10 +3,10 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	notificationscontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/api"
+	notificationscontract "github.com/HiIamJeff67/notegic-backend/contracts/notification/v1/api"
 
-	endpoints "github.com/HiIamJeff67/notezy-backend/internal/notification/transports/gateway/endpoints"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/notification/transports/gateway/middlewares"
+	endpoints "github.com/HiIamJeff67/notegic-backend/internal/notification/transports/gateway/endpoints"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/notification/transports/gateway/middlewares"
 )
 
 func ConfigureNotificationRoutes(

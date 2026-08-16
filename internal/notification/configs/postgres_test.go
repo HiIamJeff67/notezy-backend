@@ -4,7 +4,7 @@ import "testing"
 
 func TestLoadPostgresConfig(t *testing.T) {
 	t.Setenv("NOTIFICATION_DB_HOST", "database")
-	t.Setenv("NOTIFICATION_DB_USER", "notezy_notification")
+	t.Setenv("NOTIFICATION_DB_USER", "notegic_notification")
 	t.Setenv("NOTIFICATION_DB_PASSWORD", "secret")
 	t.Setenv("NOTIFICATION_DB_NAME", "notification")
 	t.Setenv("NOTIFICATION_DB_PORT", "5432")

@@ -11,27 +11,27 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
-	platform "github.com/HiIamJeff67/notezy-backend/shared/platform"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	cookies "github.com/HiIamJeff67/notegic-backend/shared/cookies"
+	platform "github.com/HiIamJeff67/notegic-backend/shared/platform"
+	types "github.com/HiIamJeff67/notegic-backend/shared/types"
 
-	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
+	realtimegatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/realtime-gateway/v1"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
-	observability "github.com/HiIamJeff67/notezy-backend/shared/platform/observability"
-	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
+	observability "github.com/HiIamJeff67/notegic-backend/shared/platform/observability"
+	platformredis "github.com/HiIamJeff67/notegic-backend/shared/platform/redis"
 
-	realtimeconfig "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/configs"
-	ratelimitrecord "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/ratelimitrecord"
-	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
-	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/ratelimit"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/api/middlewares"
-	apiRouters "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/api/routers"
-	coreconsumers "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/core/consumers"
-	durablejobconsumers "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/durablejob/consumers"
-	notificationconsumers "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/notification/consumers"
-	status "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/status"
-	websockettransport "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/websocket"
+	realtimeconfig "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/configs"
+	ratelimitrecord "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/data/cache/ratelimitrecord"
+	realtimelease "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/data/cache/realtimelease"
+	ratelimit "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/ratelimit"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/transports/api/middlewares"
+	apiRouters "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/transports/api/routers"
+	coreconsumers "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/transports/core/consumers"
+	durablejobconsumers "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/transports/durablejob/consumers"
+	notificationconsumers "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/transports/notification/consumers"
+	status "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/transports/status"
+	websockettransport "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/transports/websocket"
 )
 
 type Application struct {
@@ -92,7 +92,7 @@ func (a *Application) loadKafkaConnectionConfig() platformkafka.ConnectionConfig
 func (a *Application) initializeObservability() func() {
 	return observability.Initialize(
 		context.Background(),
-		observability.LoadConfig("notezy-realtime-gateway"),
+		observability.LoadConfig("notegic-realtime-gateway"),
 	)
 }
 
@@ -184,9 +184,9 @@ func (a *Application) initializeConsumers(
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
 				ConnectionConfig: kafkaConnection,
-				ClientId:         "notezy-realtime-gateway-lifecycle",
+				ClientId:         "notegic-realtime-gateway-lifecycle",
 			},
-			ConsumerGroup:       "notezy-realtime-gateway-lifecycle-v1",
+			ConsumerGroup:       "notegic-realtime-gateway-lifecycle-v1",
 			MaximumAttempts:     config.KafkaConsumer.MaximumAttempts,
 			InitialRetryBackoff: config.KafkaConsumer.InitialRetryBackoff,
 			MaximumRetryBackoff: config.KafkaConsumer.MaximumRetryBackoff,
@@ -198,9 +198,9 @@ func (a *Application) initializeConsumers(
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
 				ConnectionConfig: kafkaConnection,
-				ClientId:         "notezy-realtime-gateway-durable-job-routine-task-lifecycle",
+				ClientId:         "notegic-realtime-gateway-durable-job-routine-task-lifecycle",
 			},
-			ConsumerGroup:       "notezy-realtime-gateway-durable-job-routine-task-lifecycle-v1",
+			ConsumerGroup:       "notegic-realtime-gateway-durable-job-routine-task-lifecycle-v1",
 			MaximumAttempts:     config.KafkaConsumer.MaximumAttempts,
 			InitialRetryBackoff: config.KafkaConsumer.InitialRetryBackoff,
 			MaximumRetryBackoff: config.KafkaConsumer.MaximumRetryBackoff,
@@ -212,9 +212,9 @@ func (a *Application) initializeConsumers(
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
 				ConnectionConfig: kafkaConnection,
-				ClientId:         "notezy-realtime-gateway-notification",
+				ClientId:         "notegic-realtime-gateway-notification",
 			},
-			ConsumerGroup:       "notezy-realtime-gateway-notification-v1",
+			ConsumerGroup:       "notegic-realtime-gateway-notification-v1",
 			MaximumAttempts:     config.KafkaConsumer.MaximumAttempts,
 			InitialRetryBackoff: config.KafkaConsumer.InitialRetryBackoff,
 			MaximumRetryBackoff: config.KafkaConsumer.MaximumRetryBackoff,

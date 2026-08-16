@@ -9,12 +9,12 @@ import (
 	validatorpkg "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 
-	emailcontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1"
-	emaileventscontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	emailcontract "github.com/HiIamJeff67/notegic-backend/contracts/email/v1"
+	emaileventscontract "github.com/HiIamJeff67/notegic-backend/contracts/email/v1/events"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
 )
 
 type senderStub struct {
@@ -59,7 +59,7 @@ func TestEmailRequestConsumerMapsLocalErrorClassification(t *testing.T) {
 				Operation:  emailcontract.SendWelcomeEmailOperation,
 				OccurredAt: time.Now().UTC(),
 				To:         "user@example.com",
-				UserName:   "Notezy User",
+				UserName:   "Notegic User",
 				Status:     "active",
 			}
 			data, err := json.Marshal(request)

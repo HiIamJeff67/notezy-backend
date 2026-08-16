@@ -10,14 +10,14 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	notificationscontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/api"
-	notificationtypescontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/types"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
-	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
+	coreeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/events"
+	notificationscontract "github.com/HiIamJeff67/notegic-backend/contracts/notification/v1/api"
+	notificationtypescontract "github.com/HiIamJeff67/notegic-backend/contracts/notification/v1/types"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
+	searchcursor "github.com/HiIamJeff67/notegic-backend/shared/lib/searchcursor"
 
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/notification/data/database/repositories"
-	notificationexceptions "github.com/HiIamJeff67/notezy-backend/internal/notification/exceptions"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/notification/data/database/repositories"
+	notificationexceptions "github.com/HiIamJeff67/notegic-backend/internal/notification/exceptions"
 )
 
 type NotificationServiceInterface interface {

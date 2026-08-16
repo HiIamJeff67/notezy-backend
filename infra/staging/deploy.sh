@@ -10,7 +10,7 @@ export IMAGE_REGISTRY
 
 root_directory=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 compose_file=${COMPOSE_FILE:-"$root_directory/infra/docker/docker-compose.prod.yaml"}
-compose_env_file=${COMPOSE_ENV_FILE:-/etc/notezy/staging.env}
+compose_env_file=${COMPOSE_ENV_FILE:-/etc/notegic/staging.env}
 compose_encrypted_env_file=${COMPOSE_ENCRYPTED_ENV_FILE:-}
 temporary_env_file=
 
@@ -29,7 +29,7 @@ if [ -n "$compose_encrypted_env_file" ]; then
 	: "${SOPS_AGE_KEY_FILE:?SOPS_AGE_KEY_FILE is required when COMPOSE_ENCRYPTED_ENV_FILE is set}"
 	test -f "$SOPS_AGE_KEY_FILE" || { echo "missing SOPS age key file: $SOPS_AGE_KEY_FILE" >&2; exit 1; }
 	export SOPS_AGE_KEY_FILE
-	temporary_env_file=$(mktemp "${TMPDIR:-/tmp}/notezy-staging-env.XXXXXX")
+	temporary_env_file=$(mktemp "${TMPDIR:-/tmp}/notegic-staging-env.XXXXXX")
 	sops --config "$sops_config_file" decrypt \
 		--input-type dotenv \
 		--output-type dotenv \
@@ -38,13 +38,13 @@ if [ -n "$compose_encrypted_env_file" ]; then
 	compose_env_file=$temporary_env_file
 fi
 
-export CLIENT_GATEWAY_IMAGE="$IMAGE_REGISTRY/notezy-client-gateway:$IMAGE_TAG"
-export API_GATEWAY_IMAGE="$IMAGE_REGISTRY/notezy-api-gateway:$IMAGE_TAG"
-export CORE_IMAGE="$IMAGE_REGISTRY/notezy-core:$IMAGE_TAG"
-export DURABLE_JOB_IMAGE="$IMAGE_REGISTRY/notezy-durablejob:$IMAGE_TAG"
-export EMAIL_IMAGE="$IMAGE_REGISTRY/notezy-email:$IMAGE_TAG"
-export REALTIME_GATEWAY_IMAGE="$IMAGE_REGISTRY/notezy-realtimegateway:$IMAGE_TAG"
-export YJS_WORKER_IMAGE="$IMAGE_REGISTRY/notezy-yjsworker:$IMAGE_TAG"
+export CLIENT_GATEWAY_IMAGE="$IMAGE_REGISTRY/notegic-client-gateway:$IMAGE_TAG"
+export API_GATEWAY_IMAGE="$IMAGE_REGISTRY/notegic-api-gateway:$IMAGE_TAG"
+export CORE_IMAGE="$IMAGE_REGISTRY/notegic-core:$IMAGE_TAG"
+export DURABLE_JOB_IMAGE="$IMAGE_REGISTRY/notegic-durablejob:$IMAGE_TAG"
+export EMAIL_IMAGE="$IMAGE_REGISTRY/notegic-email:$IMAGE_TAG"
+export REALTIME_GATEWAY_IMAGE="$IMAGE_REGISTRY/notegic-realtimegateway:$IMAGE_TAG"
+export YJS_WORKER_IMAGE="$IMAGE_REGISTRY/notegic-yjsworker:$IMAGE_TAG"
 
 docker compose --project-directory "$root_directory" --env-file "$compose_env_file" -f "$compose_file" pull
 docker compose --project-directory "$root_directory" --env-file "$compose_env_file" -f "$compose_file" up -d --no-build --remove-orphans

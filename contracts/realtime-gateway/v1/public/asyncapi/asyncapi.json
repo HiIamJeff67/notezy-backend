@@ -803,7 +803,7 @@
   },
   "info": {
     "description": "Public multiplexed RealtimeGateway protocol. Text frames are JSON; binary frames use the documented six-byte header.",
-    "title": "Notezy RealtimeGateway WebSocket API",
+    "title": "Notegic RealtimeGateway WebSocket API",
     "version": "1.0.0"
   },
   "operations": {
@@ -839,7 +839,7 @@
   "servers": {
     "hostedBeta": {
       "description": "Hosted Beta",
-      "host": "api.notezy.app",
+      "host": "api.notegic.app",
       "pathname": "/realtime/development/v1",
       "protocol": "wss",
       "security": [

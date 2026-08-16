@@ -1,6 +1,6 @@
 package apicontract
 
-import blocknote "github.com/HiIamJeff67/notezy-backend/contracts/types/blocknote"
+import blocknote "github.com/HiIamJeff67/notegic-backend/contracts/types/blocknote"
 
 type InitializeBlockPackYjsDocumentReqDto struct {
 	Blocks []blocknote.ArborizedEditableBlock `json:"blocks"`

@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -57,7 +57,7 @@ func (ec *executionContext) _SearchBadgeConnection_searchEdges(ctx context.Conte
 	}
 	res := resTmp.([]*gqlmodels.SearchBadgeEdge)
 	fc.Result = res
-	return ec.marshalNSearchBadgeEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBadgeEdgeᚄ(ctx, field.Selections, res)
+	return ec.marshalNSearchBadgeEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBadgeEdgeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SearchBadgeConnection_searchEdges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -107,7 +107,7 @@ func (ec *executionContext) _SearchBadgeConnection_searchPageInfo(ctx context.Co
 	}
 	res := resTmp.(*gqlmodels.SearchPageInfo)
 	fc.Result = res
-	return ec.marshalNSearchPageInfo2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchPageInfo(ctx, field.Selections, res)
+	return ec.marshalNSearchPageInfo2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchPageInfo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SearchBadgeConnection_searchPageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -293,7 +293,7 @@ func (ec *executionContext) _SearchBadgeEdge_node(ctx context.Context, field gra
 	}
 	res := resTmp.(*gqlmodels.PublicBadge)
 	fc.Result = res
-	return ec.marshalNPublicBadge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPublicBadge(ctx, field.Selections, res)
+	return ec.marshalNPublicBadge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPublicBadge(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SearchBadgeEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -370,7 +370,7 @@ func (ec *executionContext) unmarshalInputSearchBadgeFilters(ctx context.Context
 		switch k {
 		case "type":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
-			data, err := ec.unmarshalOBadgeType2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐBadgeType(ctx, v)
+			data, err := ec.unmarshalOBadgeType2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐBadgeType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -428,21 +428,21 @@ func (ec *executionContext) unmarshalInputSearchBadgeInput(ctx context.Context, 
 			it.First = data
 		case "filters":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filters"))
-			data, err := ec.unmarshalOSearchBadgeFilters2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBadgeFilters(ctx, v)
+			data, err := ec.unmarshalOSearchBadgeFilters2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBadgeFilters(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Filters = data
 		case "sortBy":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortBy"))
-			data, err := ec.unmarshalOSearchBadgeSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBadgeSortBy(ctx, v)
+			data, err := ec.unmarshalOSearchBadgeSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBadgeSortBy(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.SortBy = data
 		case "sortOrder":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortOrder"))
-			data, err := ec.unmarshalOSearchSortOrder2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx, v)
+			data, err := ec.unmarshalOSearchSortOrder2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -563,7 +563,7 @@ func (ec *executionContext) _SearchBadgeEdge(ctx context.Context, sel ast.Select
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNSearchBadgeEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBadgeEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.SearchBadgeEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchBadgeEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBadgeEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.SearchBadgeEdge) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -587,7 +587,7 @@ func (ec *executionContext) marshalNSearchBadgeEdge2ᚕᚖgithubᚗcomᚋHiIamJe
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSearchBadgeEdge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBadgeEdge(ctx, sel, v[i])
+			ret[i] = ec.marshalNSearchBadgeEdge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBadgeEdge(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -607,7 +607,7 @@ func (ec *executionContext) marshalNSearchBadgeEdge2ᚕᚖgithubᚗcomᚋHiIamJe
 	return ret
 }
 
-func (ec *executionContext) marshalNSearchBadgeEdge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBadgeEdge(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchBadgeEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchBadgeEdge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBadgeEdge(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchBadgeEdge) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -617,7 +617,7 @@ func (ec *executionContext) marshalNSearchBadgeEdge2ᚖgithubᚗcomᚋHiIamJeff6
 	return ec._SearchBadgeEdge(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOSearchBadgeFilters2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBadgeFilters(ctx context.Context, v any) (*gqlmodels.SearchBadgeFilters, error) {
+func (ec *executionContext) unmarshalOSearchBadgeFilters2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBadgeFilters(ctx context.Context, v any) (*gqlmodels.SearchBadgeFilters, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -625,7 +625,7 @@ func (ec *executionContext) unmarshalOSearchBadgeFilters2ᚖgithubᚗcomᚋHiIam
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOSearchBadgeSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBadgeSortBy(ctx context.Context, v any) (*gqlmodels.SearchBadgeSortBy, error) {
+func (ec *executionContext) unmarshalOSearchBadgeSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBadgeSortBy(ctx context.Context, v any) (*gqlmodels.SearchBadgeSortBy, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -634,7 +634,7 @@ func (ec *executionContext) unmarshalOSearchBadgeSortBy2ᚖgithubᚗcomᚋHiIamJ
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOSearchBadgeSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBadgeSortBy(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchBadgeSortBy) graphql.Marshaler {
+func (ec *executionContext) marshalOSearchBadgeSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchBadgeSortBy(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchBadgeSortBy) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

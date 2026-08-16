@@ -3,10 +3,10 @@ package handlers
 import (
 	"gorm.io/datatypes"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
-	parsers "github.com/HiIamJeff67/notezy-backend/internal/core/services/routines/parsers"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
+	parsers "github.com/HiIamJeff67/notegic-backend/internal/core/services/routines/parsers"
 )
 
 type RoutineTaskHandlerInterface interface {

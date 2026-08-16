@@ -5,11 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/stations"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/stations"
 
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/core/adapters"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/core/adapters"
 )
 
 type StationControllerInterface interface {
@@ -43,12 +43,12 @@ type StationControllerInterface interface {
 }
 
 type StationController struct {
-	coreClient *coreadapters.CoreAdapter
+	coreAdapter *coreadapters.CoreAdapter
 }
 
-func NewStationController(coreClient *coreadapters.CoreAdapter) StationControllerInterface {
+func NewStationController(coreAdapter *coreadapters.CoreAdapter) StationControllerInterface {
 	return &StationController{
-		coreClient: coreClient,
+		coreAdapter: coreAdapter,
 	}
 }
 
@@ -58,7 +58,7 @@ func (c *StationController) GetMyStationById(ctx *gin.Context, request *apicontr
 		apicontract.GetMyStationByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.GetMyStationByIdOperation,
 		"/core/v1/stations/get-by-id",
@@ -77,7 +77,7 @@ func (c *StationController) GetAllMyStations(ctx *gin.Context, request *apicontr
 		apicontract.GetAllMyStationsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.GetAllMyStationsOperation,
 		"/core/v1/stations/get-all",
@@ -96,7 +96,7 @@ func (c *StationController) CreateStation(ctx *gin.Context, request *apicontract
 		apicontract.CreateStationResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.CreateStationOperation,
 		"/core/v1/stations/create",
@@ -115,7 +115,7 @@ func (c *StationController) CreateStations(ctx *gin.Context, request *apicontrac
 		apicontract.CreateStationsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.CreateStationsOperation,
 		"/core/v1/stations/create-many",
@@ -134,7 +134,7 @@ func (c *StationController) UpdateMyStationById(ctx *gin.Context, request *apico
 		apicontract.UpdateMyStationByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.UpdateMyStationByIdOperation,
 		"/core/v1/stations/update",
@@ -153,7 +153,7 @@ func (c *StationController) UpdateMyStationsByIds(ctx *gin.Context, request *api
 		apicontract.UpdateMyStationsByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.UpdateMyStationsByIdsOperation,
 		"/core/v1/stations/update-many",
@@ -172,7 +172,7 @@ func (c *StationController) RestoreMyStationById(ctx *gin.Context, request *apic
 		apicontract.RestoreMyStationByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.RestoreMyStationByIdOperation,
 		"/core/v1/stations/restore",
@@ -191,7 +191,7 @@ func (c *StationController) RestoreMyStationsByIds(ctx *gin.Context, request *ap
 		apicontract.RestoreMyStationsByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.RestoreMyStationsByIdsOperation,
 		"/core/v1/stations/restore-many",
@@ -210,7 +210,7 @@ func (c *StationController) DeleteMyStationById(ctx *gin.Context, request *apico
 		apicontract.DeleteMyStationByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.DeleteMyStationByIdOperation,
 		"/core/v1/stations/delete",
@@ -229,7 +229,7 @@ func (c *StationController) DeleteMyStationsByIds(ctx *gin.Context, request *api
 		apicontract.DeleteMyStationsByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.DeleteMyStationsByIdsOperation,
 		"/core/v1/stations/delete-many",
@@ -248,7 +248,7 @@ func (c *StationController) HardDeleteMyStationById(ctx *gin.Context, request *a
 		apicontract.HardDeleteMyStationByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.HardDeleteMyStationByIdOperation,
 		"/core/v1/stations/hard-delete",
@@ -267,7 +267,7 @@ func (c *StationController) HardDeleteMyStationsByIds(ctx *gin.Context, request 
 		apicontract.HardDeleteMyStationsByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.HardDeleteMyStationsByIdsOperation,
 		"/core/v1/stations/hard-delete-many",
@@ -288,7 +288,7 @@ func (c *StationController) VisualizeMyTotalCount(ctx *gin.Context, request *api
 		apicontract.VisualizeMyTotalCountResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.VisualizeMyTotalCountOperation,
 		"/core/v1/stations/visualizations/total-count",
@@ -309,7 +309,7 @@ func (c *StationController) GetMyStationPermission(ctx *gin.Context, request *ap
 		apicontract.GetMyStationPermissionResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.GetMyStationPermissionOperation,
 		"/core/v1/stations/permissions/get",
@@ -328,7 +328,7 @@ func (c *StationController) CreateMyStationPermission(ctx *gin.Context, request 
 		apicontract.CreateMyStationPermissionResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.CreateMyStationPermissionOperation,
 		"/core/v1/stations/permissions/create",
@@ -349,7 +349,7 @@ func (c *StationController) UpsertMyStationPermission(
 		apicontract.UpsertMyStationPermissionResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.UpsertMyStationPermissionOperation,
 		"/core/v1/stations/permissions/upsert",
@@ -370,7 +370,7 @@ func (c *StationController) UpsertMyStationPermissions(
 		apicontract.UpsertMyStationPermissionsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.UpsertMyStationPermissionsOperation,
 		"/core/v1/stations/permissions/upsert-many",
@@ -389,7 +389,7 @@ func (c *StationController) UpdateMyStationPermission(ctx *gin.Context, request 
 		apicontract.UpdateMyStationPermissionResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.UpdateMyStationPermissionOperation,
 		"/core/v1/stations/permissions/update",
@@ -410,7 +410,7 @@ func (c *StationController) TransferMyStationOwnership(
 		apicontract.TransferMyStationOwnershipResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.TransferMyStationOwnershipOperation,
 		"/core/v1/stations/ownership/transfer",
@@ -431,7 +431,7 @@ func (c *StationController) DeleteMyStationPermission(
 		apicontract.DeleteMyStationPermissionResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.DeleteMyStationPermissionOperation,
 		"/core/v1/stations/permissions/delete",
@@ -452,7 +452,7 @@ func (c *StationController) DeleteMyStationPermissions(
 		apicontract.DeleteMyStationPermissionsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.DeleteMyStationPermissionsOperation,
 		"/core/v1/stations/permissions/delete-many",
@@ -471,7 +471,7 @@ func (c *StationController) LeaveMyStation(ctx *gin.Context, request *apicontrac
 		apicontract.LeaveMyStationResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.LeaveMyStationOperation,
 		"/core/v1/stations/memberships/leave",
@@ -490,7 +490,7 @@ func (c *StationController) LeaveMyStations(ctx *gin.Context, request *apicontra
 		apicontract.LeaveMyStationsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.LeaveMyStationsOperation,
 		"/core/v1/stations/memberships/leave-many",

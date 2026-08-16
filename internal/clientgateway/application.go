@@ -11,21 +11,21 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
-	platform "github.com/HiIamJeff67/notezy-backend/shared/platform"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	cookies "github.com/HiIamJeff67/notegic-backend/shared/cookies"
+	platform "github.com/HiIamJeff67/notegic-backend/shared/platform"
+	types "github.com/HiIamJeff67/notegic-backend/shared/types"
 
-	observability "github.com/HiIamJeff67/notezy-backend/shared/platform/observability"
-	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
+	observability "github.com/HiIamJeff67/notegic-backend/shared/platform/observability"
+	platformredis "github.com/HiIamJeff67/notegic-backend/shared/platform/redis"
 
-	gatewayconfig "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/configs"
-	ratelimitrecord "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/data/cache/ratelimitrecord"
-	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/ratelimit"
-	ratelimitmiddlewares "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/middlewares"
-	developmentroutes "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/routes/developmentroutes"
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
-	notificationadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/notification/adapters"
-	status "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/status"
+	gatewayconfig "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/configs"
+	ratelimitrecord "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/data/cache/ratelimitrecord"
+	ratelimit "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/ratelimit"
+	ratelimitmiddlewares "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/middlewares"
+	developmentroutes "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/routes/developmentroutes"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
+	notificationadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/notification/adapters"
+	status "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/status"
 )
 
 type Application struct {
@@ -76,7 +76,7 @@ func (a *Application) loadRedisConfig() platformredis.Config {
 func (a *Application) initializeObservability() func() {
 	return observability.Initialize(
 		context.Background(),
-		observability.LoadConfig("notezy-client-gateway"),
+		observability.LoadConfig("notegic-client-gateway"),
 	)
 
 }
@@ -123,7 +123,7 @@ func (a *Application) buildRouter(
 		SameSite: http.SameSiteStrictMode,
 	})
 	router := developmentroutes.NewRouter(developmentroutes.APIRouteDependencies{
-		CoreClient:                coreadapters.NewCoreAdapter(config.CoreBaseUrl, config.CoreAdapterTimeout),
+		CoreAdapter:               coreadapters.NewCoreAdapter(config.CoreBaseUrl, config.CoreAdapterTimeout),
 		NotificationClient:        notificationadapters.NewNotificationAdapter(config.NotificationBaseUrl, config.NotificationAdapterTimeout),
 		AllowedDomains:            config.AllowedDomains,
 		AccessTokenCookieHandler:  accessTokenCookieHandler,

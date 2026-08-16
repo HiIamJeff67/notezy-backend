@@ -3,7 +3,7 @@ package topics
 import (
 	"time"
 
-	yjsworkereventscontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1/events"
+	yjsworkereventscontract "github.com/HiIamJeff67/notegic-backend/contracts/yjs-worker/v1/events"
 )
 
 func YjsWorkerCoreMaintenanceCommandTopicSpec() TopicSpec {

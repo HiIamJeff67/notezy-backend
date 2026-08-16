@@ -11,15 +11,15 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
-	metrics "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/metrics"
-	traces "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/traces"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
+	metrics "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/metrics"
+	traces "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/traces"
 
-	coreconfig "github.com/HiIamJeff67/notezy-backend/internal/core/configs"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
+	coreconfig "github.com/HiIamJeff67/notegic-backend/internal/core/configs"
+	inputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
 )
 
 type OutboxRelay struct {
@@ -85,9 +85,9 @@ func (r *OutboxRelay) run(ctx context.Context) {
 }
 
 func (r *OutboxRelay) relay(ctx context.Context) {
-	if traces.NotezyTracer != nil {
-		relayCtx, span := traces.NotezyTracer.Start(ctx, "outbox.relay")
-		defer traces.NotezyTracer.End(span, nil)
+	if traces.NotegicTracer != nil {
+		relayCtx, span := traces.NotegicTracer.Start(ctx, "outbox.relay")
+		defer traces.NotegicTracer.End(span, nil)
 		ctx = relayCtx
 	}
 
@@ -99,19 +99,19 @@ func (r *OutboxRelay) relay(ctx context.Context) {
 		options.WithDB(r.db),
 	)
 	if exception != nil {
-		if traces.NotezyTracer != nil {
-			traces.NotezyTracer.RecordError(ctx, exception)
+		if traces.NotegicTracer != nil {
+			traces.NotegicTracer.RecordError(ctx, exception)
 		}
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(ctx, exception, "Failed to claim outbox events")
+		if logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(ctx, exception, "Failed to claim outbox events")
 		}
 		return
 	}
 	if len(events) == 0 {
 		return
 	}
-	if metrics.NotezyMeter != nil {
-		metrics.NotezyMeter.Count(ctx, "outbox.relay.claimed.count", int64(len(events)))
+	if metrics.NotegicMeter != nil {
+		metrics.NotegicMeter.Count(ctx, "outbox.relay.claimed.count", int64(len(events)))
 	}
 
 	publishedEventIds := make([]uuid.UUID, 0, len(events))
@@ -141,14 +141,14 @@ func (r *OutboxRelay) relay(ctx context.Context) {
 			LastError:   err.Error(),
 			AvailableAt: time.Now().Add(backoff),
 		})
-		if metrics.NotezyMeter != nil {
-			metrics.NotezyMeter.Count(ctx, "outbox.relay.failure.count", 1)
+		if metrics.NotegicMeter != nil {
+			metrics.NotegicMeter.Count(ctx, "outbox.relay.failure.count", 1)
 		}
-		if traces.NotezyTracer != nil {
-			traces.NotezyTracer.RecordError(ctx, err)
+		if traces.NotegicTracer != nil {
+			traces.NotegicTracer.RecordError(ctx, err)
 		}
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(ctx, err, "Failed to publish outbox event")
+		if logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(ctx, err, "Failed to publish outbox event")
 		}
 	}
 
@@ -158,14 +158,14 @@ func (r *OutboxRelay) relay(ctx context.Context) {
 		r.workerId,
 		options.WithDB(r.db),
 	); exception != nil {
-		if traces.NotezyTracer != nil {
-			traces.NotezyTracer.RecordError(ctx, exception)
+		if traces.NotegicTracer != nil {
+			traces.NotegicTracer.RecordError(ctx, exception)
 		}
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(ctx, exception, "Failed to mark outbox events as published")
+		if logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(ctx, exception, "Failed to mark outbox events as published")
 		}
-	} else if metrics.NotezyMeter != nil && len(publishedEventIds) > 0 {
-		metrics.NotezyMeter.Count(ctx, "outbox.relay.published.count", int64(len(publishedEventIds)))
+	} else if metrics.NotegicMeter != nil && len(publishedEventIds) > 0 {
+		metrics.NotegicMeter.Count(ctx, "outbox.relay.published.count", int64(len(publishedEventIds)))
 	}
 
 	if exception := r.outboxEventRepository.MarkFailedMany(
@@ -174,14 +174,14 @@ func (r *OutboxRelay) relay(ctx context.Context) {
 		r.workerId,
 		options.WithDB(r.db),
 	); exception != nil {
-		if traces.NotezyTracer != nil {
-			traces.NotezyTracer.RecordError(ctx, exception)
+		if traces.NotegicTracer != nil {
+			traces.NotegicTracer.RecordError(ctx, exception)
 		}
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(ctx, exception, "Failed to schedule outbox event retries")
+		if logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(ctx, exception, "Failed to schedule outbox event retries")
 		}
-	} else if metrics.NotezyMeter != nil && len(failureInputs) > 0 {
-		metrics.NotezyMeter.Count(ctx, "outbox.relay.retry.count", int64(len(failureInputs)))
+	} else if metrics.NotegicMeter != nil && len(failureInputs) > 0 {
+		metrics.NotegicMeter.Count(ctx, "outbox.relay.retry.count", int64(len(failureInputs)))
 	}
 }
 
@@ -192,15 +192,15 @@ func (r *OutboxRelay) cleanup(ctx context.Context) {
 		options.WithDB(r.db),
 	)
 	if exception != nil {
-		if traces.NotezyTracer != nil {
-			traces.NotezyTracer.RecordError(ctx, exception)
+		if traces.NotegicTracer != nil {
+			traces.NotegicTracer.RecordError(ctx, exception)
 		}
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(ctx, exception, "Failed to clean published outbox events")
+		if logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(ctx, exception, "Failed to clean published outbox events")
 		}
 		return
 	}
-	if metrics.NotezyMeter != nil && deletedCount > 0 {
-		metrics.NotezyMeter.Count(ctx, "outbox.cleanup.deleted.count", deletedCount)
+	if metrics.NotegicMeter != nil && deletedCount > 0 {
+		metrics.NotegicMeter.Count(ctx, "outbox.cleanup.deleted.count", deletedCount)
 	}
 }

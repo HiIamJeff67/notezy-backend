@@ -8,9 +8,9 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
-	scopes "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/scopes"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
+	scopes "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/scopes"
 )
 
 func TestCheckPermissionAndGetOneByIdUsesOneQuery(t *testing.T) {

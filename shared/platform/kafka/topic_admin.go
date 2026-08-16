@@ -11,7 +11,8 @@ import (
 	franzkgo "github.com/twmb/franz-go/pkg/kgo"
 	"github.com/twmb/franz-go/pkg/kmsg"
 
-	kafkatopics "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka/topics"
+	"github.com/HiIamJeff67/notegic-backend/shared/lib/pointers"
+	kafkatopics "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka/topics"
 )
 
 type TopicProvisioner struct {
@@ -54,7 +55,16 @@ func (p *TopicProvisioner) EnsureTopics(ctx context.Context, specifications []ka
 			continue
 		}
 		seenTopics[specification.Name] = struct{}{}
-		request.Topics = append(request.Topics, topicRequest(specification))
+		request.Topics = append(request.Topics, kmsg.CreateTopicsRequestTopic{
+			Topic:             specification.Name,
+			NumPartitions:     specification.Partitions,
+			ReplicationFactor: specification.ReplicationFactor,
+			Configs: []kmsg.CreateTopicsRequestTopicConfig{
+				{Name: "cleanup.policy", Value: pointers.ToPtr(specification.CleanupPolicy)},
+				{Name: "retention.ms", Value: pointers.ToPtr(fmt.Sprintf("%d", specification.Retention/time.Millisecond))},
+				{Name: "min.insync.replicas", Value: pointers.ToPtr(fmt.Sprintf("%d", specification.MinInSyncReplicas))},
+			},
+		})
 		if specification.CreateDeadLetter {
 			deadLetter := specification
 			deadLetter.Name = DeadLetterTopic(specification.Name)
@@ -63,7 +73,16 @@ func (p *TopicProvisioner) EnsureTopics(ctx context.Context, specifications []ka
 			deadLetter.DeadLetterRetention = 0
 			if _, exists := seenTopics[deadLetter.Name]; !exists {
 				seenTopics[deadLetter.Name] = struct{}{}
-				request.Topics = append(request.Topics, topicRequest(deadLetter))
+				request.Topics = append(request.Topics, kmsg.CreateTopicsRequestTopic{
+					Topic:             deadLetter.Name,
+					NumPartitions:     deadLetter.Partitions,
+					ReplicationFactor: deadLetter.ReplicationFactor,
+					Configs: []kmsg.CreateTopicsRequestTopicConfig{
+						{Name: "cleanup.policy", Value: pointers.ToPtr(deadLetter.CleanupPolicy)},
+						{Name: "retention.ms", Value: pointers.ToPtr(fmt.Sprintf("%d", deadLetter.Retention/time.Millisecond))},
+						{Name: "min.insync.replicas", Value: pointers.ToPtr(fmt.Sprintf("%d", deadLetter.MinInSyncReplicas))},
+					},
+				})
 			}
 		}
 	}
@@ -128,21 +147,4 @@ func validateTopicSpec(specification kafkatopics.TopicSpec) error {
 	}
 
 	return nil
-}
-
-func topicRequest(specification kafkatopics.TopicSpec) kmsg.CreateTopicsRequestTopic {
-	return kmsg.CreateTopicsRequestTopic{
-		Topic:             specification.Name,
-		NumPartitions:     specification.Partitions,
-		ReplicationFactor: specification.ReplicationFactor,
-		Configs: []kmsg.CreateTopicsRequestTopicConfig{
-			{Name: "cleanup.policy", Value: stringPointer(specification.CleanupPolicy)},
-			{Name: "retention.ms", Value: stringPointer(fmt.Sprintf("%d", specification.Retention/time.Millisecond))},
-			{Name: "min.insync.replicas", Value: stringPointer(fmt.Sprintf("%d", specification.MinInSyncReplicas))},
-		},
-	}
-}
-
-func stringPointer(value string) *string {
-	return &value
 }

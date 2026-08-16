@@ -9,5 +9,5 @@ owning runtime's `test/testdata/` directory instead.
 Run `make test-integration-kafka` after the integration Compose stack is
 available. The tests use `KAFKA_BROKERS` (defaulting to the integration broker
 at `127.0.0.1:19094`) and do not create or manage a Kafka container themselves.
-They require `NOTEZY_RUN_INTEGRATION=1` and are intentionally kept separate from
+They require `NOTEGIC_RUN_INTEGRATION=1` and are intentionally kept separate from
 the ordinary `make test-integration` suite.

@@ -109,7 +109,7 @@
   },
   "info": {
     "description": "Versioned HTTP surface emitted directly by RealtimeGateway. The WebSocket protocol is defined by asyncapi/asyncapi.json.",
-    "title": "Notezy RealtimeGateway HTTP API",
+    "title": "Notegic RealtimeGateway HTTP API",
     "version": "1.0.0"
   },
   "openapi": "3.1.0",
@@ -180,7 +180,7 @@
       "url": "http://localhost/realtime/development/v1"
     },
     {
-      "url": "https://api.notezy.app/realtime/development/v1"
+      "url": "https://api.notegic.app/realtime/development/v1"
     }
   ]
 }

@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
-	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
+	"github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 	"github.com/google/uuid"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -234,7 +234,7 @@ func (ec *executionContext) _PrivateMaterial_contentType(ctx context.Context, fi
 	}
 	res := resTmp.(enums.MaterialContentType)
 	fc.Result = res
-	return ec.marshalNMaterialContentType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐMaterialContentType(ctx, field.Selections, res)
+	return ec.marshalNMaterialContentType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐMaterialContentType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateMaterial_contentType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -515,7 +515,7 @@ func (ec *executionContext) _PrivateMaterial(ctx context.Context, sel ast.Select
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNPrivateMaterial2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPrivateMaterial(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateMaterial) graphql.Marshaler {
+func (ec *executionContext) marshalNPrivateMaterial2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPrivateMaterial(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateMaterial) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

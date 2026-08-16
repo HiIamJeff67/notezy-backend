@@ -5,11 +5,11 @@ import (
 
 	"github.com/google/uuid"
 
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	types "github.com/HiIamJeff67/notegic-backend/shared/types"
 
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
 
-	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
+	platformpostgres "github.com/HiIamJeff67/notegic-backend/shared/platform/postgres"
 )
 
 type SubShelf struct {

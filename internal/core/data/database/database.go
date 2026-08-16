@@ -6,8 +6,8 @@ import (
 
 	"gorm.io/gorm"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
-	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
+	platformpostgres "github.com/HiIamJeff67/notegic-backend/shared/platform/postgres"
 )
 
 var (
@@ -22,37 +22,37 @@ var (
 func Connect(config platformpostgres.Config) *gorm.DB {
 	dbConn, err := platformpostgres.Connect(config)
 	if err != nil {
-		logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Error connecting to the %s database\n", config.Name))
+		logs.NotegicLogger.Error(context.Background(), nil, fmt.Sprintf("Error connecting to the %s database\n", config.Name))
 		panic("Connecting to database error : " + err.Error())
 	}
 
 	if _, ok := DatabaseInstanceToConfig[dbConn]; !ok {
-		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Storing database of %s into the DatabaseInstanceToConfig...", config.Name))
+		logs.NotegicLogger.Info(context.Background(), fmt.Sprintf("Storing database of %s into the DatabaseInstanceToConfig...", config.Name))
 		DatabaseInstanceToConfig[dbConn] = config
 	}
 	if _, ok := DatabaseNameToInstance[config.Name]; !ok {
-		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Storing database of %s into the DatabaseNameToInstance...", config.Name))
+		logs.NotegicLogger.Info(context.Background(), fmt.Sprintf("Storing database of %s into the DatabaseNameToInstance...", config.Name))
 		DatabaseNameToInstance[config.Name] = dbConn
 	}
 
-	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("%s database connected\n", config.Name))
+	logs.NotegicLogger.Info(context.Background(), fmt.Sprintf("%s database connected\n", config.Name))
 	return dbConn
 }
 
 func Disconnect(db *gorm.DB) bool {
 	config, ok := DatabaseInstanceToConfig[db]
 	if !ok {
-		logs.NotezyLogger.Error(context.Background(), nil, "Failed to get the connection of the given database")
+		logs.NotegicLogger.Error(context.Background(), nil, "Failed to get the connection of the given database")
 		return false
 	}
 
 	if err := platformpostgres.Disconnect(db); err != nil {
-		logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Failed to close the connection of %s database", config.Name))
+		logs.NotegicLogger.Error(context.Background(), nil, fmt.Sprintf("Failed to close the connection of %s database", config.Name))
 		return false
 	}
 
 	delete(DatabaseInstanceToConfig, db)
 	delete(DatabaseNameToInstance, config.Name)
-	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("%s database connection closed", config.Name))
+	logs.NotegicLogger.Info(context.Background(), fmt.Sprintf("%s database connection closed", config.Name))
 	return true
 }

@@ -5,7 +5,7 @@ import test from "node:test";
 import type { Block } from "@blocknote/core";
 import { blocksToYXmlFragment } from "@blocknote/core/yjs";
 import * as Y from "yjs";
-import { notezyBlockNoteEditor } from "../types/blocknote_schema.js";
+import { notegicBlockNoteEditor } from "../types/blocknote_schema.js";
 import { BlockPackProjector } from "./block_pack_projector.js";
 
 const blockPackProjector = new BlockPackProjector();
@@ -27,7 +27,7 @@ for (const fixtureName of [
     const sourceBlocks = await readFixture(fixtureName);
     const document = new Y.Doc();
     blocksToYXmlFragment(
-      notezyBlockNoteEditor,
+      notegicBlockNoteEditor,
       sourceBlocks,
       document.getXmlFragment("document-store")
     );
@@ -35,7 +35,7 @@ for (const fixtureName of [
     const projectedBlocks = blockPackProjector.projectYjsDocument(document);
     const rematerializedDocument = new Y.Doc();
     blocksToYXmlFragment(
-      notezyBlockNoteEditor,
+      notegicBlockNoteEditor,
       projectedBlocks,
       rematerializedDocument.getXmlFragment("document-store")
     );

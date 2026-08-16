@@ -6,7 +6,7 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	"github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -40,27 +40,27 @@ import (
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalORoutineTaskRecordErrorCode2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordErrorCode(ctx context.Context, v any) (*enums.RoutineTaskRecordErrorCode, error) {
+func (ec *executionContext) unmarshalORoutineTaskRecordErrorCode2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordErrorCode(ctx context.Context, v any) (*enums.RoutineTaskRecordErrorCode, error) {
 	if v == nil {
 		return nil, nil
 	}
 	tmp, err := graphql.UnmarshalString(v)
-	res := unmarshalORoutineTaskRecordErrorCode2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordErrorCode[tmp]
+	res := unmarshalORoutineTaskRecordErrorCode2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordErrorCode[tmp]
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalORoutineTaskRecordErrorCode2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordErrorCode(ctx context.Context, sel ast.SelectionSet, v *enums.RoutineTaskRecordErrorCode) graphql.Marshaler {
+func (ec *executionContext) marshalORoutineTaskRecordErrorCode2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordErrorCode(ctx context.Context, sel ast.SelectionSet, v *enums.RoutineTaskRecordErrorCode) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	_ = sel
 	_ = ctx
-	res := graphql.MarshalString(marshalORoutineTaskRecordErrorCode2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordErrorCode[*v])
+	res := graphql.MarshalString(marshalORoutineTaskRecordErrorCode2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordErrorCode[*v])
 	return res
 }
 
 var (
-	unmarshalORoutineTaskRecordErrorCode2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordErrorCode = map[string]enums.RoutineTaskRecordErrorCode{
+	unmarshalORoutineTaskRecordErrorCode2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordErrorCode = map[string]enums.RoutineTaskRecordErrorCode{
 		"RoutineTaskRecordErrorCode_PermissionDenied":  enums.RoutineTaskRecordErrorCode_PermissionDenied,
 		"RoutineTaskRecordErrorCode_PayloadInvalid":    enums.RoutineTaskRecordErrorCode_PayloadInvalid,
 		"RoutineTaskRecordErrorCode_TargetNotFound":    enums.RoutineTaskRecordErrorCode_TargetNotFound,
@@ -71,7 +71,7 @@ var (
 		"RoutineTaskRecordErrorCode_Canceled":          enums.RoutineTaskRecordErrorCode_Canceled,
 		"RoutineTaskRecordErrorCode_Unknown":           enums.RoutineTaskRecordErrorCode_Unknown,
 	}
-	marshalORoutineTaskRecordErrorCode2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordErrorCode = map[enums.RoutineTaskRecordErrorCode]string{
+	marshalORoutineTaskRecordErrorCode2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordErrorCode = map[enums.RoutineTaskRecordErrorCode]string{
 		enums.RoutineTaskRecordErrorCode_PermissionDenied:  "RoutineTaskRecordErrorCode_PermissionDenied",
 		enums.RoutineTaskRecordErrorCode_PayloadInvalid:    "RoutineTaskRecordErrorCode_PayloadInvalid",
 		enums.RoutineTaskRecordErrorCode_TargetNotFound:    "RoutineTaskRecordErrorCode_TargetNotFound",

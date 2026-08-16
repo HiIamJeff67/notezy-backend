@@ -3,11 +3,11 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/realtime"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/realtime"
 
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
 )
 
 type RealtimeControllerInterface interface {
@@ -16,14 +16,14 @@ type RealtimeControllerInterface interface {
 }
 
 type RealtimeController struct {
-	coreClient *coreadapters.CoreAdapter
+	coreAdapter *coreadapters.CoreAdapter
 }
 
 func NewRealtimeController(
-	coreClient *coreadapters.CoreAdapter,
+	coreAdapter *coreadapters.CoreAdapter,
 ) RealtimeControllerInterface {
 	return &RealtimeController{
-		coreClient: coreClient,
+		coreAdapter: coreAdapter,
 	}
 }
 
@@ -36,7 +36,7 @@ func (c *RealtimeController) CreateMyRealtimeConnectionTicket(
 		apicontract.CreateMyRealtimeConnectionTicketResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.CreateMyRealtimeConnectionTicketOperation,
 		"/core/v1/realtime/connection-ticket/create",
@@ -58,7 +58,7 @@ func (c *RealtimeController) CreateMyBlockPackChannelTicket(
 		apicontract.CreateMyBlockPackChannelTicketResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.CreateMyBlockPackChannelTicketOperation,
 		"/core/v1/realtime/block-pack-channel-ticket/create",

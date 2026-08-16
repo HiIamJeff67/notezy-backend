@@ -3,7 +3,7 @@
 Notification is an independent runtime with its own PostgreSQL database. Core
 does not write Notification tables: a Core business transaction writes a
 `NotificationRequested` event into the Core outbox, and the Core relay publishes
-`notezy.core.notification.v1`.
+`notegic.core.notification.v1`.
 
 ```mermaid
 flowchart LR

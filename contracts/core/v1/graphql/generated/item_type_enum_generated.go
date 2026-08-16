@@ -6,7 +6,7 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	"github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -40,15 +40,15 @@ import (
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNItemType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐItemType(ctx context.Context, v any) (enums.ItemType, error) {
+func (ec *executionContext) unmarshalNItemType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐItemType(ctx context.Context, v any) (enums.ItemType, error) {
 	tmp, err := graphql.UnmarshalString(v)
-	res := unmarshalNItemType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐItemType[tmp]
+	res := unmarshalNItemType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐItemType[tmp]
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNItemType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐItemType(ctx context.Context, sel ast.SelectionSet, v enums.ItemType) graphql.Marshaler {
+func (ec *executionContext) marshalNItemType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐItemType(ctx context.Context, sel ast.SelectionSet, v enums.ItemType) graphql.Marshaler {
 	_ = sel
-	res := graphql.MarshalString(marshalNItemType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐItemType[v])
+	res := graphql.MarshalString(marshalNItemType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐItemType[v])
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -58,11 +58,11 @@ func (ec *executionContext) marshalNItemType2githubᚗcomᚋHiIamJeff67ᚋnotezy
 }
 
 var (
-	unmarshalNItemType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐItemType = map[string]enums.ItemType{
+	unmarshalNItemType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐItemType = map[string]enums.ItemType{
 		"ItemType_BlockPack": enums.ItemType_BlockPack,
 		"ItemType_Material":  enums.ItemType_Material,
 	}
-	marshalNItemType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐItemType = map[enums.ItemType]string{
+	marshalNItemType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐItemType = map[enums.ItemType]string{
 		enums.ItemType_BlockPack: "ItemType_BlockPack",
 		enums.ItemType_Material:  "ItemType_Material",
 	}

@@ -11,11 +11,11 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/google/uuid"
 
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	constants "github.com/HiIamJeff67/notegic-backend/shared/constants"
 
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	coreeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/events"
 
-	redisscripts "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease/scripts"
+	redisscripts "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/data/cache/realtimelease/scripts"
 )
 
 type RealtimeBlockPackSubscriberLease struct {

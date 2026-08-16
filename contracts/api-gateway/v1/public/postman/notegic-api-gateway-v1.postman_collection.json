@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a8f3fa62-f2cd-4cf0-97ab-a801b42ee101",
     "description": "Generated from the APIGateway v1 route and Go DTO contracts. Authenticated requests use X-API-Key.",
-    "name": "Notezy APIGateway v1",
+    "name": "Notegic APIGateway v1",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [

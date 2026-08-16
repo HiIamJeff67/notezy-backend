@@ -3,11 +3,11 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-accounts"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/user-accounts"
 
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
 )
 
 type UserAccountControllerInterface interface {
@@ -18,12 +18,12 @@ type UserAccountControllerInterface interface {
 }
 
 type UserAccountController struct {
-	coreClient *coreadapters.CoreAdapter
+	coreAdapter *coreadapters.CoreAdapter
 }
 
-func NewUserAccountController(coreClient *coreadapters.CoreAdapter) UserAccountControllerInterface {
+func NewUserAccountController(coreAdapter *coreadapters.CoreAdapter) UserAccountControllerInterface {
 	return &UserAccountController{
-		coreClient: coreClient,
+		coreAdapter: coreAdapter,
 	}
 }
 
@@ -36,7 +36,7 @@ func (c *UserAccountController) GetMyAccount(
 		apicontract.GetMyAccountResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetMyAccountOperation,
 		"/core/v1/user-accounts/get",
@@ -58,7 +58,7 @@ func (c *UserAccountController) UpdateMyAccount(
 		apicontract.UpdateMyAccountResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.UpdateMyAccountOperation,
 		"/core/v1/user-accounts/update",
@@ -80,7 +80,7 @@ func (c *UserAccountController) BindGoogleAccount(
 		apicontract.BindGoogleAccountResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.BindGoogleAccountOperation,
 		"/core/v1/user-accounts/google/bind",
@@ -102,7 +102,7 @@ func (c *UserAccountController) UnbindGoogleAccount(
 		apicontract.UnbindGoogleAccountResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.UnbindGoogleAccountOperation,
 		"/core/v1/user-accounts/google/unbind",

@@ -3,9 +3,9 @@ package ratelimitrecord
 import (
 	"context"
 
-	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
+	platformredis "github.com/HiIamJeff67/notegic-backend/shared/platform/redis"
 
-	redislibraries "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/data/cache/ratelimitrecord/libraries"
+	redislibraries "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/data/cache/ratelimitrecord/libraries"
 )
 
 type RateLimitRecordCacheStore struct {

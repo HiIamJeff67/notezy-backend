@@ -5,9 +5,9 @@ import (
 
 	"gopkg.in/gomail.v2"
 
-	emailconfig "github.com/HiIamJeff67/notezy-backend/internal/email/configs"
-	emailexceptions "github.com/HiIamJeff67/notezy-backend/internal/email/exceptions"
-	emailtypes "github.com/HiIamJeff67/notezy-backend/internal/email/types"
+	emailconfig "github.com/HiIamJeff67/notegic-backend/internal/email/configs"
+	emailexceptions "github.com/HiIamJeff67/notegic-backend/internal/email/exceptions"
+	emailtypes "github.com/HiIamJeff67/notegic-backend/internal/email/types"
 )
 
 type EmailSenderInterface interface {

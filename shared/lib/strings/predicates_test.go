@@ -55,10 +55,10 @@ func TestIsAlphaAndNumberString(t *testing.T) {
 		value string
 		want  bool
 	}{
-		{name: "letters and digits", value: "Notezy123", want: true},
-		{name: "letters only", value: "Notezy", want: false},
+		{name: "letters and digits", value: "Notegic123", want: true},
+		{name: "letters only", value: "Notegic", want: false},
 		{name: "digits only", value: "123", want: false},
-		{name: "contains punctuation", value: "Notezy-123", want: false},
+		{name: "contains punctuation", value: "Notegic-123", want: false},
 	}
 
 	for _, test := range tests {

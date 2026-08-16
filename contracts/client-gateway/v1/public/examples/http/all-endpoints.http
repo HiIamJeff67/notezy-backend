@@ -1,5 +1,5 @@
 @gatewayBaseUrl = http://localhost/api/development/v1
-@userAgent = NotezyHttpFile/1.0
+@userAgent = NotegicHttpFile/1.0
 @csrfToken = replace-after-login
 @id = 1
 @userPublicId = 00000000-0000-4000-8000-000000000001

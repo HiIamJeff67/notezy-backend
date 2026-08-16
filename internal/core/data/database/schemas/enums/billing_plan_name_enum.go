@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
-	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	enumcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 )
 
 type BillingPlanName enumcontract.BillingPlanName
@@ -29,39 +29,39 @@ func (value *BillingPlanName) ToStorable() *BillingPlanName {
 }
 
 const (
-	BillingPlanName_NotezyMonthlyFreePlan       BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotezyMonthlyFreePlan)
-	BillingPlanName_NotezyMonthlyProPlan        BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotezyMonthlyProPlan)
-	BillingPlanName_NotezyYearlyProPlan         BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotezyYearlyProPlan)
-	BillingPlanName_NotezyMonthlyPremiumPlan    BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotezyMonthlyPremiumPlan)
-	BillingPlanName_NotezyYearlyPremiumPlan     BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotezyYearlyPremiumPlan)
-	BillingPlanName_NotezyMonthlyUltimatePlan   BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotezyMonthlyUltimatePlan)
-	BillingPlanName_NotezyYearlyUltimatePlan    BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotezyYearlyUltimatePlan)
-	BillingPlanName_NotezyMonthlyEnterprisePlan BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotezyMonthlyEnterprisePlan)
-	BillingPlanName_NotezyYearlyEnterprisePlan  BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotezyYearlyEnterprisePlan)
+	BillingPlanName_NotegicMonthlyFreePlan       BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotegicMonthlyFreePlan)
+	BillingPlanName_NotegicMonthlyProPlan        BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotegicMonthlyProPlan)
+	BillingPlanName_NotegicYearlyProPlan         BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotegicYearlyProPlan)
+	BillingPlanName_NotegicMonthlyPremiumPlan    BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotegicMonthlyPremiumPlan)
+	BillingPlanName_NotegicYearlyPremiumPlan     BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotegicYearlyPremiumPlan)
+	BillingPlanName_NotegicMonthlyUltimatePlan   BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotegicMonthlyUltimatePlan)
+	BillingPlanName_NotegicYearlyUltimatePlan    BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotegicYearlyUltimatePlan)
+	BillingPlanName_NotegicMonthlyEnterprisePlan BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotegicMonthlyEnterprisePlan)
+	BillingPlanName_NotegicYearlyEnterprisePlan  BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotegicYearlyEnterprisePlan)
 )
 
 var AllBillingPlanNames = []BillingPlanName{
-	BillingPlanName_NotezyMonthlyFreePlan,
-	BillingPlanName_NotezyMonthlyProPlan,
-	BillingPlanName_NotezyYearlyProPlan,
-	BillingPlanName_NotezyMonthlyPremiumPlan,
-	BillingPlanName_NotezyYearlyPremiumPlan,
-	BillingPlanName_NotezyMonthlyUltimatePlan,
-	BillingPlanName_NotezyYearlyUltimatePlan,
-	BillingPlanName_NotezyMonthlyEnterprisePlan,
-	BillingPlanName_NotezyYearlyEnterprisePlan,
+	BillingPlanName_NotegicMonthlyFreePlan,
+	BillingPlanName_NotegicMonthlyProPlan,
+	BillingPlanName_NotegicYearlyProPlan,
+	BillingPlanName_NotegicMonthlyPremiumPlan,
+	BillingPlanName_NotegicYearlyPremiumPlan,
+	BillingPlanName_NotegicMonthlyUltimatePlan,
+	BillingPlanName_NotegicYearlyUltimatePlan,
+	BillingPlanName_NotegicMonthlyEnterprisePlan,
+	BillingPlanName_NotegicYearlyEnterprisePlan,
 }
 
 var AllBillingPlanNameStrings = []string{
-	string(BillingPlanName_NotezyMonthlyFreePlan),
-	string(BillingPlanName_NotezyMonthlyProPlan),
-	string(BillingPlanName_NotezyYearlyProPlan),
-	string(BillingPlanName_NotezyMonthlyPremiumPlan),
-	string(BillingPlanName_NotezyYearlyPremiumPlan),
-	string(BillingPlanName_NotezyMonthlyUltimatePlan),
-	string(BillingPlanName_NotezyYearlyUltimatePlan),
-	string(BillingPlanName_NotezyMonthlyEnterprisePlan),
-	string(BillingPlanName_NotezyYearlyEnterprisePlan),
+	string(BillingPlanName_NotegicMonthlyFreePlan),
+	string(BillingPlanName_NotegicMonthlyProPlan),
+	string(BillingPlanName_NotegicYearlyProPlan),
+	string(BillingPlanName_NotegicMonthlyPremiumPlan),
+	string(BillingPlanName_NotegicYearlyPremiumPlan),
+	string(BillingPlanName_NotegicMonthlyUltimatePlan),
+	string(BillingPlanName_NotegicYearlyUltimatePlan),
+	string(BillingPlanName_NotegicMonthlyEnterprisePlan),
+	string(BillingPlanName_NotegicYearlyEnterprisePlan),
 }
 
 func (bpn BillingPlanName) Name() string {

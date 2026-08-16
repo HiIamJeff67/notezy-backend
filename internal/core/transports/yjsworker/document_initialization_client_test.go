@@ -10,11 +10,11 @@ import (
 
 	"github.com/google/uuid"
 
-	blockpackscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
-	blocknote "github.com/HiIamJeff67/notezy-backend/contracts/types/blocknote"
-	blockenums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	blockpackscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/block-packs"
+	blocknote "github.com/HiIamJeff67/notegic-backend/contracts/types/blocknote"
+	blockenums "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 
-	coreconfig "github.com/HiIamJeff67/notezy-backend/internal/core/configs"
+	coreconfig "github.com/HiIamJeff67/notegic-backend/internal/core/configs"
 )
 
 func TestDocumentInitializationClientInitializeDocuments(t *testing.T) {

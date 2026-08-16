@@ -11,7 +11,7 @@ import (
 
 var rootCommand = &cobra.Command{
 	Use:   "api-gateway",
-	Short: "Run the Notezy APIGateway.",
+	Short: "Run the Notegic APIGateway.",
 	Run: func(_ *cobra.Command, _ []string) {
 		ctx, stop := signal.NotifyContext(
 			context.Background(),

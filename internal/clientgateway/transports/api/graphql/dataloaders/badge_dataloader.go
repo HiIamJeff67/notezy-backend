@@ -7,13 +7,13 @@ import (
 	"github.com/google/uuid"
 	gophersdataloader "github.com/graph-gophers/dataloader/v7"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/badges"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/badges"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
 
-	gatewaycontexts "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/contexts"
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
+	gatewaycontexts "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/contexts"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
 )
 
 type LoadBadgeSource string
@@ -37,13 +37,13 @@ type BadgeDataloaderInterface interface {
 }
 
 type BadgeDataloader struct {
-	coreClient *coreadapters.CoreAdapter
-	loader     *BadgeLoaderType
+	coreAdapter *coreadapters.CoreAdapter
+	loader      *BadgeLoaderType
 }
 
-func NewBadgeDataloader(coreClient *coreadapters.CoreAdapter) BadgeDataloaderInterface {
+func NewBadgeDataloader(coreAdapter *coreadapters.CoreAdapter) BadgeDataloaderInterface {
 	dataloader := &BadgeDataloader{
-		coreClient: coreClient,
+		coreAdapter: coreAdapter,
 	}
 	dataloader.loader = gophersdataloader.NewBatchedLoader(
 		dataloader.batchFunction(),
@@ -106,7 +106,7 @@ func (d *BadgeDataloader) batchFunction() BadgeBatchFunctionType {
 			apicontract.LoadUserBadgesResponseDto,
 		](
 			ginContext,
-			d.coreClient,
+			d.coreAdapter,
 			&requestDto,
 			apicontract.LoadUserBadgesOperation,
 			"/core/v1/badges/graphql/load",

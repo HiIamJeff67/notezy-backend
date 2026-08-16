@@ -1,11 +1,11 @@
-module github.com/HiIamJeff67/notezy-backend/internal/clientgateway
+module github.com/HiIamJeff67/notegic-backend/internal/clientgateway
 
 go 1.26.0
 
 require (
 	github.com/99designs/gqlgen v0.17.76
-	github.com/HiIamJeff67/notezy-backend/contracts v0.0.0
-	github.com/HiIamJeff67/notezy-backend/shared v0.0.0
+	github.com/HiIamJeff67/notegic-backend/contracts v0.0.0
+	github.com/HiIamJeff67/notegic-backend/shared v0.0.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/google/uuid v1.6.0
@@ -88,6 +88,6 @@ require (
 	gorm.io/gorm v1.30.0 // indirect
 )
 
-replace github.com/HiIamJeff67/notezy-backend/contracts => ../../contracts
+replace github.com/HiIamJeff67/notegic-backend/contracts => ../../contracts
 
-replace github.com/HiIamJeff67/notezy-backend/shared => ../../shared
+replace github.com/HiIamJeff67/notegic-backend/shared => ../../shared

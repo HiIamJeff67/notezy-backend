@@ -748,7 +748,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="2yWr2NP0Gx7aHbWXJZu6-33" parent="WIyWlLk6GJQsqaUBKTNV-1" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;Name Field of BillingPlan&lt;/h1&gt;&lt;p&gt;對 Name 做 Switch其中有一些 Name 是要去 Upgrade 使用者的 Plan 升級後的 Plan 是用 PlanLimitation 當中的限制， 或是之後可以擴展更多不同功能在 Name 當中， 讓 Name 同樣也可以 Switch 到對應的服務再去執行即可。&lt;/p&gt;&lt;p&gt;假設 BillingPlan 除了支援一些 Notezy 會員月費跟年費付款以外還有訂閱某個喜愛的創作者（Notezy 平台外部共同開發者），並且想每個月給他贊助以獲取該開發者提供的開源功能，那就可以再透過建立其他 BillingPlan 的 names 來讓我們 Switch 到該選項時去做對應邏輯。&lt;/p&gt;" vertex="1">
+        <mxCell id="2yWr2NP0Gx7aHbWXJZu6-33" parent="WIyWlLk6GJQsqaUBKTNV-1" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;Name Field of BillingPlan&lt;/h1&gt;&lt;p&gt;對 Name 做 Switch其中有一些 Name 是要去 Upgrade 使用者的 Plan 升級後的 Plan 是用 PlanLimitation 當中的限制， 或是之後可以擴展更多不同功能在 Name 當中， 讓 Name 同樣也可以 Switch 到對應的服務再去執行即可。&lt;/p&gt;&lt;p&gt;假設 BillingPlan 除了支援一些 Notegic 會員月費跟年費付款以外還有訂閱某個喜愛的創作者（Notegic 平台外部共同開發者），並且想每個月給他贊助以獲取該開發者提供的開源功能，那就可以再透過建立其他 BillingPlan 的 names 來讓我們 Switch 到該選項時去做對應邏輯。&lt;/p&gt;" vertex="1">
           <mxGeometry height="200" width="320" x="-260" y="-1690" as="geometry" />
         </mxCell>
         <mxCell id="0Imp699l8MhBtgTEHsY9-10" parent="WIyWlLk6GJQsqaUBKTNV-1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Station" vertex="1">

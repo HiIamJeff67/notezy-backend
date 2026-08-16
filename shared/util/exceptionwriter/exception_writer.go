@@ -12,16 +12,16 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
-	metrics "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/metrics"
-	traces "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/traces"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
+	metrics "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/metrics"
+	traces "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/traces"
 )
 
 func IncrementMeter(exception *exceptions.Exception, ctx *gin.Context, names ...string) {
-	if metrics.NotezyMeter == nil {
+	if metrics.NotegicMeter == nil {
 		return
 	}
 
@@ -30,10 +30,10 @@ func IncrementMeter(exception *exceptions.Exception, ctx *gin.Context, names ...
 		if name == "server.responses.failed.total" {
 			isTotalCounted = true
 		}
-		metrics.NotezyMeter.Count(ctx, name, 1)
+		metrics.NotegicMeter.Count(ctx, name, 1)
 	}
 	if !isTotalCounted {
-		metrics.NotezyMeter.Count(ctx, "server.responses.failed.total", 1)
+		metrics.NotegicMeter.Count(ctx, "server.responses.failed.total", 1)
 	}
 }
 
@@ -74,8 +74,8 @@ func ResponseWithJSON(exception *exceptions.Exception, ctx *gin.Context, names .
 	IncrementMeter(publicException, ctx, names...)
 	if exception != nil &&
 		exception.HTTPStatusCode() >= http.StatusInternalServerError &&
-		traces.NotezyTracer != nil {
-		traces.NotezyTracer.RecordError(ctx, exception)
+		traces.NotegicTracer != nil {
+		traces.NotegicTracer.RecordError(ctx, exception)
 	}
 
 	ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.ClientResponse[any]{
@@ -90,8 +90,8 @@ func SafelyResponseWithJSON(exception *exceptions.Exception, ctx *gin.Context, n
 	IncrementMeter(publicException, ctx, names...)
 	if exception != nil &&
 		exception.HTTPStatusCode() >= http.StatusInternalServerError &&
-		traces.NotezyTracer != nil {
-		traces.NotezyTracer.RecordError(ctx, exception)
+		traces.NotegicTracer != nil {
+		traces.NotegicTracer.RecordError(ctx, exception)
 	}
 
 	ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.ClientResponse[any]{
@@ -106,8 +106,8 @@ func SafelyAbortAndResponseWithJSON(exception *exceptions.Exception, ctx *gin.Co
 	IncrementMeter(publicException, ctx, names...)
 	if exception != nil &&
 		exception.HTTPStatusCode() >= http.StatusInternalServerError &&
-		traces.NotezyTracer != nil {
-		traces.NotezyTracer.RecordError(ctx, exception)
+		traces.NotegicTracer != nil {
+		traces.NotegicTracer.RecordError(ctx, exception)
 	}
 
 	ctx.AbortWithStatusJSON(publicException.HTTPStatusCode(), gatewaycontract.ClientResponse[any]{
@@ -158,14 +158,14 @@ func ToPublic(ctx context.Context, exception *exceptions.Exception) *exceptions.
 	if exception == nil {
 		return exceptions.InternalServerError()
 	}
-	if logs.NotezyLogger != nil {
-		if err := logs.NotezyLogger.JSON(
+	if logs.NotegicLogger != nil {
+		if err := logs.NotegicLogger.JSON(
 			ctx,
 			slog.LevelError,
 			exception.String(),
 			exception,
 		); err != nil {
-			logs.NotezyLogger.Error(
+			logs.NotegicLogger.Error(
 				ctx,
 				err,
 				"failed to marshal exception for logging",

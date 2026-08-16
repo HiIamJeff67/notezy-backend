@@ -5,19 +5,19 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+	cookies "github.com/HiIamJeff67/notegic-backend/shared/cookies"
 
-	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	enumcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 
-	binders "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/binders"
-	controllers "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/controllers"
-	interceptors "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/interceptors"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/middlewares"
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
+	binders "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/binders"
+	controllers "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/controllers"
+	interceptors "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/interceptors"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/middlewares"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
 )
 
 type RoutineTaskRecordRouteDependencies struct {
-	CoreClient                *coreadapters.CoreAdapter
+	CoreAdapter               *coreadapters.CoreAdapter
 	AccessTokenCookieHandler  *cookies.CookieHandler
 	RefreshTokenCookieHandler *cookies.CookieHandler
 	RateLimiters              RateLimiters
@@ -27,13 +27,13 @@ func configureDevelopmentRoutineTaskRecordRoutes(
 	router *gin.RouterGroup,
 	deps RoutineTaskRecordRouteDependencies,
 ) {
-	coreClient, accessTokenCookieHandler, refreshTokenCookieHandler, rateLimiters := deps.CoreClient, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.RateLimiters
+	coreAdapter, accessTokenCookieHandler, refreshTokenCookieHandler, rateLimiters := deps.CoreAdapter, deps.AccessTokenCookieHandler, deps.RefreshTokenCookieHandler, deps.RateLimiters
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
 
 	routineTaskRecordBinder := binders.NewRoutineTaskRecordBinder()
-	routineTaskRecordController := controllers.NewRoutineTaskRecordController(coreClient)
+	routineTaskRecordController := controllers.NewRoutineTaskRecordController(coreAdapter)
 
 	routineTaskRecordRouterGroup := router.Group("/routine-task-records")
 	defaultMiddlewares := []gin.HandlerFunc{

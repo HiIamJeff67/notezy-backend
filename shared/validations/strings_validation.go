@@ -9,8 +9,8 @@ import (
 
 	"github.com/go-playground/validator/v10" // make sure we use the version 10
 
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	stringutil "github.com/HiIamJeff67/notezy-backend/shared/lib/strings"
+	constants "github.com/HiIamJeff67/notegic-backend/shared/constants"
+	stringutil "github.com/HiIamJeff67/notegic-backend/shared/lib/strings"
 )
 
 var urlWhiteList = []string{"http", "https", "mailto", "tel", "ws"}

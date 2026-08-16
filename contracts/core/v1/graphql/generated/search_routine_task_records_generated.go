@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -57,7 +57,7 @@ func (ec *executionContext) _SearchRoutineTaskRecordConnection_searchEdges(ctx c
 	}
 	res := resTmp.([]*gqlmodels.SearchRoutineTaskRecordEdge)
 	fc.Result = res
-	return ec.marshalNSearchRoutineTaskRecordEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordEdgeᚄ(ctx, field.Selections, res)
+	return ec.marshalNSearchRoutineTaskRecordEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordEdgeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SearchRoutineTaskRecordConnection_searchEdges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -107,7 +107,7 @@ func (ec *executionContext) _SearchRoutineTaskRecordConnection_searchPageInfo(ct
 	}
 	res := resTmp.(*gqlmodels.SearchPageInfo)
 	fc.Result = res
-	return ec.marshalNSearchPageInfo2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchPageInfo(ctx, field.Selections, res)
+	return ec.marshalNSearchPageInfo2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchPageInfo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SearchRoutineTaskRecordConnection_searchPageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -293,7 +293,7 @@ func (ec *executionContext) _SearchRoutineTaskRecordEdge_node(ctx context.Contex
 	}
 	res := resTmp.(*gqlmodels.PrivateRoutineTaskRecord)
 	fc.Result = res
-	return ec.marshalNPrivateRoutineTaskRecord2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPrivateRoutineTaskRecord(ctx, field.Selections, res)
+	return ec.marshalNPrivateRoutineTaskRecord2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPrivateRoutineTaskRecord(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SearchRoutineTaskRecordEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -422,14 +422,14 @@ func (ec *executionContext) unmarshalInputSearchRoutineTaskRecordInput(ctx conte
 			it.First = data
 		case "sortBy":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortBy"))
-			data, err := ec.unmarshalOSearchRoutineTaskRecordSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordSortBy(ctx, v)
+			data, err := ec.unmarshalOSearchRoutineTaskRecordSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordSortBy(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.SortBy = data
 		case "sortOrder":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortOrder"))
-			data, err := ec.unmarshalOSearchSortOrder2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx, v)
+			data, err := ec.unmarshalOSearchSortOrder2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -550,11 +550,11 @@ func (ec *executionContext) _SearchRoutineTaskRecordEdge(ctx context.Context, se
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNSearchRoutineTaskRecordConnection2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordConnection(ctx context.Context, sel ast.SelectionSet, v gqlmodels.SearchRoutineTaskRecordConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchRoutineTaskRecordConnection2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordConnection(ctx context.Context, sel ast.SelectionSet, v gqlmodels.SearchRoutineTaskRecordConnection) graphql.Marshaler {
 	return ec._SearchRoutineTaskRecordConnection(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSearchRoutineTaskRecordConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordConnection(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchRoutineTaskRecordConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchRoutineTaskRecordConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordConnection(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchRoutineTaskRecordConnection) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -564,7 +564,7 @@ func (ec *executionContext) marshalNSearchRoutineTaskRecordConnection2ᚖgithub�
 	return ec._SearchRoutineTaskRecordConnection(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSearchRoutineTaskRecordEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.SearchRoutineTaskRecordEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchRoutineTaskRecordEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.SearchRoutineTaskRecordEdge) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -588,7 +588,7 @@ func (ec *executionContext) marshalNSearchRoutineTaskRecordEdge2ᚕᚖgithubᚗc
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSearchRoutineTaskRecordEdge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordEdge(ctx, sel, v[i])
+			ret[i] = ec.marshalNSearchRoutineTaskRecordEdge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordEdge(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -608,7 +608,7 @@ func (ec *executionContext) marshalNSearchRoutineTaskRecordEdge2ᚕᚖgithubᚗc
 	return ret
 }
 
-func (ec *executionContext) marshalNSearchRoutineTaskRecordEdge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordEdge(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchRoutineTaskRecordEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchRoutineTaskRecordEdge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordEdge(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchRoutineTaskRecordEdge) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -618,12 +618,12 @@ func (ec *executionContext) marshalNSearchRoutineTaskRecordEdge2ᚖgithubᚗcom�
 	return ec._SearchRoutineTaskRecordEdge(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNSearchRoutineTaskRecordInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordInput(ctx context.Context, v any) (gqlmodels.SearchRoutineTaskRecordInput, error) {
+func (ec *executionContext) unmarshalNSearchRoutineTaskRecordInput2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordInput(ctx context.Context, v any) (gqlmodels.SearchRoutineTaskRecordInput, error) {
 	res, err := ec.unmarshalInputSearchRoutineTaskRecordInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOSearchRoutineTaskRecordSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordSortBy(ctx context.Context, v any) (*gqlmodels.SearchRoutineTaskRecordSortBy, error) {
+func (ec *executionContext) unmarshalOSearchRoutineTaskRecordSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordSortBy(ctx context.Context, v any) (*gqlmodels.SearchRoutineTaskRecordSortBy, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -632,7 +632,7 @@ func (ec *executionContext) unmarshalOSearchRoutineTaskRecordSortBy2ᚖgithubᚗ
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOSearchRoutineTaskRecordSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordSortBy(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchRoutineTaskRecordSortBy) graphql.Marshaler {
+func (ec *executionContext) marshalOSearchRoutineTaskRecordSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐSearchRoutineTaskRecordSortBy(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchRoutineTaskRecordSortBy) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	clientgateway "github.com/HiIamJeff67/notezy-backend/internal/clientgateway"
+	clientgateway "github.com/HiIamJeff67/notegic-backend/internal/clientgateway"
 )
 
 func main() {

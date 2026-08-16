@@ -5,7 +5,7 @@ import (
 )
 
 func TestNewConsumerRejectsMissingGroupOrTopics(t *testing.T) {
-	_, err := NewConsumer(ConsumerConfig{}, "notezy.core.lifecycle.v1")
+	_, err := NewConsumer(ConsumerConfig{}, "notegic.core.lifecycle.v1")
 	if err == nil {
 		t.Fatal("expected Kafka consumer group to be required")
 	}
@@ -19,7 +19,7 @@ func TestNewConsumerRejectsMissingGroupOrTopics(t *testing.T) {
 }
 
 func TestDeadLetterTopic(t *testing.T) {
-	if DeadLetterTopic("notezy.core.lifecycle.v1") != "notezy.core.lifecycle.v1.dlq" {
+	if DeadLetterTopic("notegic.core.lifecycle.v1") != "notegic.core.lifecycle.v1.dlq" {
 		t.Fatal("unexpected Kafka dead-letter topic name")
 	}
 }

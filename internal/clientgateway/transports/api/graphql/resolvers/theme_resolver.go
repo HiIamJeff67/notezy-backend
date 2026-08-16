@@ -3,7 +3,7 @@ package resolvers
 import (
 	"context"
 
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
 )
 
 type ThemeResolverInterface interface{}

@@ -13,21 +13,21 @@ import (
 	validator "github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
-	observability "github.com/HiIamJeff67/notezy-backend/shared/platform/observability"
-	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
-	sharedvalidations "github.com/HiIamJeff67/notezy-backend/shared/validations"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
+	observability "github.com/HiIamJeff67/notegic-backend/shared/platform/observability"
+	platformpostgres "github.com/HiIamJeff67/notegic-backend/shared/platform/postgres"
+	sharedvalidations "github.com/HiIamJeff67/notegic-backend/shared/validations"
 
-	configs "github.com/HiIamJeff67/notezy-backend/internal/notification/configs"
-	database "github.com/HiIamJeff67/notezy-backend/internal/notification/data/database"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/notification/data/database/repositories"
-	services "github.com/HiIamJeff67/notezy-backend/internal/notification/services"
-	notificationtransports "github.com/HiIamJeff67/notezy-backend/internal/notification/transports"
-	consumers "github.com/HiIamJeff67/notezy-backend/internal/notification/transports/core/consumers"
-	endpoints "github.com/HiIamJeff67/notezy-backend/internal/notification/transports/gateway/endpoints"
-	routers "github.com/HiIamJeff67/notezy-backend/internal/notification/transports/gateway/routers"
-	validations "github.com/HiIamJeff67/notezy-backend/internal/notification/validations"
-	workers "github.com/HiIamJeff67/notezy-backend/internal/notification/workers"
+	configs "github.com/HiIamJeff67/notegic-backend/internal/notification/configs"
+	database "github.com/HiIamJeff67/notegic-backend/internal/notification/data/database"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/notification/data/database/repositories"
+	services "github.com/HiIamJeff67/notegic-backend/internal/notification/services"
+	notificationtransports "github.com/HiIamJeff67/notegic-backend/internal/notification/transports"
+	consumers "github.com/HiIamJeff67/notegic-backend/internal/notification/transports/core/consumers"
+	endpoints "github.com/HiIamJeff67/notegic-backend/internal/notification/transports/gateway/endpoints"
+	routers "github.com/HiIamJeff67/notegic-backend/internal/notification/transports/gateway/routers"
+	validations "github.com/HiIamJeff67/notegic-backend/internal/notification/validations"
+	workers "github.com/HiIamJeff67/notegic-backend/internal/notification/workers"
 )
 
 type Application struct {
@@ -72,7 +72,7 @@ func (a *Application) loadConfig() configs.Config {
 func (a *Application) initializeObservability() func() {
 	return observability.Initialize(
 		context.Background(),
-		observability.LoadConfig("notezy-notification"),
+		observability.LoadConfig("notegic-notification"),
 	)
 }
 
@@ -92,7 +92,7 @@ func (a *Application) initializeKafka(
 ) *platformkafka.Producer {
 	producer, err := platformkafka.NewProducer(platformkafka.ClientConfig{
 		ConnectionConfig: config,
-		ClientId:         "notezy-notification-producer",
+		ClientId:         "notegic-notification-producer",
 	})
 	if err != nil {
 		_ = database.Disconnect(db)

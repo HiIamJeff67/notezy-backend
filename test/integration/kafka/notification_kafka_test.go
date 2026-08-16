@@ -10,15 +10,15 @@ import (
 
 	"github.com/google/uuid"
 
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	notificationtypescontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/types"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
+	coreeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/events"
+	notificationtypescontract "github.com/HiIamJeff67/notegic-backend/contracts/notification/v1/types"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
 )
 
 func TestCoreNotificationAndUserDeletionKafkaContracts(t *testing.T) {
-	if os.Getenv("NOTEZY_RUN_INTEGRATION") != "1" {
-		t.Skip("set NOTEZY_RUN_INTEGRATION=1 to run Kafka broker integration tests")
+	if os.Getenv("NOTEGIC_RUN_INTEGRATION") != "1" {
+		t.Skip("set NOTEGIC_RUN_INTEGRATION=1 to run Kafka broker integration tests")
 	}
 
 	brokers := configuredKafkaBrokers(t)
@@ -27,7 +27,7 @@ func TestCoreNotificationAndUserDeletionKafkaContracts(t *testing.T) {
 			Brokers:     brokers,
 			DialTimeout: 10 * time.Second,
 		},
-		ClientId: "notezy-test-notification-producer",
+		ClientId: "notegic-test-notification-producer",
 	})
 	if err != nil {
 		t.Fatalf("create Kafka producer: %v", err)
@@ -46,9 +46,9 @@ func TestCoreNotificationAndUserDeletionKafkaContracts(t *testing.T) {
 				Brokers:     brokers,
 				DialTimeout: 10 * time.Second,
 			},
-			ClientId: "notezy-test-notification-consumer",
+			ClientId: "notegic-test-notification-consumer",
 		},
-		ConsumerGroup:       "notezy-test-notification-" + uuid.NewString(),
+		ConsumerGroup:       "notegic-test-notification-" + uuid.NewString(),
 		MaximumAttempts:     2,
 		InitialRetryBackoff: 10 * time.Millisecond,
 		MaximumRetryBackoff: 25 * time.Millisecond,

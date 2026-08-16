@@ -20,17 +20,17 @@ func loadSMTPConfig() (SMTPConfig, error) {
 	if err != nil || port <= 0 {
 		return SMTPConfig{}, fmt.Errorf("SMTP_PORT must be a positive integer")
 	}
-	name := strings.TrimSpace(os.Getenv("NOTEZY_OFFICIAL_NAME"))
-	address := strings.TrimSpace(os.Getenv("NOTEZY_OFFICIAL_GMAIL"))
+	name := strings.TrimSpace(os.Getenv("NOTEGIC_OFFICIAL_NAME"))
+	address := strings.TrimSpace(os.Getenv("NOTEGIC_OFFICIAL_GMAIL"))
 	config := SMTPConfig{
 		Host:     strings.TrimSpace(os.Getenv("SMTP_HOST")),
 		Port:     port,
 		UserName: address,
-		Password: os.Getenv("NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD"),
+		Password: os.Getenv("NOTEGIC_OFFICIAL_GOOGLE_APPLICATION_PASSWORD"),
 		From:     name + " <" + address + ">",
 	}
 	if config.Host == "" || config.UserName == "" || config.Password == "" || name == "" {
-		return SMTPConfig{}, fmt.Errorf("SMTP_HOST, NOTEZY_OFFICIAL_NAME, NOTEZY_OFFICIAL_GMAIL, and NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD are required")
+		return SMTPConfig{}, fmt.Errorf("SMTP_HOST, NOTEGIC_OFFICIAL_NAME, NOTEGIC_OFFICIAL_GMAIL, and NOTEGIC_OFFICIAL_GOOGLE_APPLICATION_PASSWORD are required")
 	}
 
 	return config, nil

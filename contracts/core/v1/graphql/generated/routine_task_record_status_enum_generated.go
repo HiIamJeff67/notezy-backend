@@ -6,7 +6,7 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	"github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -40,15 +40,15 @@ import (
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordStatus(ctx context.Context, v any) (enums.RoutineTaskRecordStatus, error) {
+func (ec *executionContext) unmarshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordStatus(ctx context.Context, v any) (enums.RoutineTaskRecordStatus, error) {
 	tmp, err := graphql.UnmarshalString(v)
-	res := unmarshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordStatus[tmp]
+	res := unmarshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordStatus[tmp]
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordStatus(ctx context.Context, sel ast.SelectionSet, v enums.RoutineTaskRecordStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordStatus(ctx context.Context, sel ast.SelectionSet, v enums.RoutineTaskRecordStatus) graphql.Marshaler {
 	_ = sel
-	res := graphql.MarshalString(marshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordStatus[v])
+	res := graphql.MarshalString(marshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordStatus[v])
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -58,13 +58,13 @@ func (ec *executionContext) marshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIam
 }
 
 var (
-	unmarshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordStatus = map[string]enums.RoutineTaskRecordStatus{
+	unmarshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordStatus = map[string]enums.RoutineTaskRecordStatus{
 		"RoutineTaskRecordStatus_Running": enums.RoutineTaskRecordStatus_Running,
 		"RoutineTaskRecordStatus_Success": enums.RoutineTaskRecordStatus_Success,
 		"RoutineTaskRecordStatus_Failed":  enums.RoutineTaskRecordStatus_Failed,
 		"RoutineTaskRecordStatus_Cancel":  enums.RoutineTaskRecordStatus_Cancel,
 	}
-	marshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordStatus = map[enums.RoutineTaskRecordStatus]string{
+	marshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskRecordStatus = map[enums.RoutineTaskRecordStatus]string{
 		enums.RoutineTaskRecordStatus_Running: "RoutineTaskRecordStatus_Running",
 		enums.RoutineTaskRecordStatus_Success: "RoutineTaskRecordStatus_Success",
 		enums.RoutineTaskRecordStatus_Failed:  "RoutineTaskRecordStatus_Failed",

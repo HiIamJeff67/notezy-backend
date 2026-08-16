@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	emailcontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1"
+	emailcontract "github.com/HiIamJeff67/notegic-backend/contracts/email/v1"
 
-	emailconfig "github.com/HiIamJeff67/notezy-backend/internal/email/configs"
-	emailexceptions "github.com/HiIamJeff67/notezy-backend/internal/email/exceptions"
+	emailconfig "github.com/HiIamJeff67/notegic-backend/internal/email/configs"
+	emailexceptions "github.com/HiIamJeff67/notegic-backend/internal/email/exceptions"
 )
 
 type RendererInterface interface {

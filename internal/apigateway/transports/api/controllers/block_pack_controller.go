@@ -3,11 +3,11 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/block-packs"
 
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/core/adapters"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/core/adapters"
 )
 
 type BlockPackControllerInterface interface {
@@ -29,12 +29,12 @@ type BlockPackControllerInterface interface {
 }
 
 type BlockPackController struct {
-	coreClient *coreadapters.CoreAdapter
+	coreAdapter *coreadapters.CoreAdapter
 }
 
-func NewBlockPackController(coreClient *coreadapters.CoreAdapter) BlockPackControllerInterface {
+func NewBlockPackController(coreAdapter *coreadapters.CoreAdapter) BlockPackControllerInterface {
 	return &BlockPackController{
-		coreClient: coreClient,
+		coreAdapter: coreAdapter,
 	}
 }
 
@@ -44,7 +44,7 @@ func (c *BlockPackController) GetMyBlockPackById(ctx *gin.Context, requestDto *a
 		apicontract.GetMyBlockPackByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetMyBlockPackByIdOperation,
 		"/core/v1/block-packs/get-by-id",
@@ -63,7 +63,7 @@ func (c *BlockPackController) GetMyBlockPackAndItsParentById(ctx *gin.Context, r
 		apicontract.GetMyBlockPackAndItsParentByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetMyBlockPackAndItsParentByIdOperation,
 		"/core/v1/block-packs/get-and-parent-by-id",
@@ -82,7 +82,7 @@ func (c *BlockPackController) GetMyBlockPacksByParentSubShelfId(ctx *gin.Context
 		apicontract.GetMyBlockPacksByParentSubShelfIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetMyBlockPacksByParentSubShelfIdOperation,
 		"/core/v1/block-packs/get-by-parent-sub-shelf-id",
@@ -101,7 +101,7 @@ func (c *BlockPackController) GetAllMyBlockPacksByRootShelfId(ctx *gin.Context, 
 		apicontract.GetAllMyBlockPacksByRootShelfIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetAllMyBlockPacksByRootShelfIdOperation,
 		"/core/v1/block-packs/get-all-by-root-shelf-id",
@@ -120,7 +120,7 @@ func (c *BlockPackController) CreateBlockPack(ctx *gin.Context, requestDto *apic
 		apicontract.CreateBlockPackResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.CreateBlockPackOperation,
 		"/core/v1/block-packs/create",
@@ -139,7 +139,7 @@ func (c *BlockPackController) CreateBlockPacks(ctx *gin.Context, requestDto *api
 		apicontract.CreateBlockPacksResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.CreateBlockPacksOperation,
 		"/core/v1/block-packs/create-many",
@@ -158,7 +158,7 @@ func (c *BlockPackController) UpdateMyBlockPackById(ctx *gin.Context, requestDto
 		apicontract.UpdateMyBlockPackByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.UpdateMyBlockPackByIdOperation,
 		"/core/v1/block-packs/update",
@@ -177,7 +177,7 @@ func (c *BlockPackController) UpdateMyBlockPacksByIds(ctx *gin.Context, requestD
 		apicontract.UpdateMyBlockPacksByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.UpdateMyBlockPacksByIdsOperation,
 		"/core/v1/block-packs/update-many",
@@ -196,7 +196,7 @@ func (c *BlockPackController) MoveMyBlockPackByParentSubShelfId(ctx *gin.Context
 		apicontract.MoveMyBlockPackByParentSubShelfIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.MoveMyBlockPackByParentSubShelfIdOperation,
 		"/core/v1/block-packs/move",
@@ -215,7 +215,7 @@ func (c *BlockPackController) MoveMyBlockPacksByParentSubShelfId(ctx *gin.Contex
 		apicontract.MoveMyBlockPacksByParentSubShelfIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.MoveMyBlockPacksByParentSubShelfIdOperation,
 		"/core/v1/block-packs/move-many",
@@ -234,7 +234,7 @@ func (c *BlockPackController) MoveMyBlockPacksByParentSubShelfIds(ctx *gin.Conte
 		apicontract.MoveMyBlockPacksByParentSubShelfIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.MoveMyBlockPacksByParentSubShelfIdsOperation,
 		"/core/v1/block-packs/move-many-by-parent-sub-shelves",
@@ -253,7 +253,7 @@ func (c *BlockPackController) RestoreMyBlockPackById(ctx *gin.Context, requestDt
 		apicontract.RestoreMyBlockPackByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.RestoreMyBlockPackByIdOperation,
 		"/core/v1/block-packs/restore",
@@ -272,7 +272,7 @@ func (c *BlockPackController) RestoreMyBlockPacksByIds(ctx *gin.Context, request
 		apicontract.RestoreMyBlockPacksByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.RestoreMyBlockPacksByIdsOperation,
 		"/core/v1/block-packs/restore-many",
@@ -291,7 +291,7 @@ func (c *BlockPackController) DeleteMyBlockPackById(ctx *gin.Context, requestDto
 		apicontract.DeleteMyBlockPackByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.DeleteMyBlockPackByIdOperation,
 		"/core/v1/block-packs/delete",
@@ -310,7 +310,7 @@ func (c *BlockPackController) DeleteMyBlockPacksByIds(ctx *gin.Context, requestD
 		apicontract.DeleteMyBlockPacksByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.DeleteMyBlockPacksByIdsOperation,
 		"/core/v1/block-packs/delete-many",

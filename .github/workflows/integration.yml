@@ -1,4 +1,4 @@
-name: Notezy Integration Verification
+name: Notegic Integration Verification
 
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ permissions:
 
 env:
   GOTOOLCHAIN: local
-  NOTEZY_RUN_INTEGRATION: '1'
+  NOTEGIC_RUN_INTEGRATION: '1'
   KAFKA_BROKERS: 127.0.0.1:19094
 
 jobs:

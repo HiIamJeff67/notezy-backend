@@ -3,9 +3,9 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
-	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/ratelimit"
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+	realtimelease "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/data/cache/realtimelease"
+	ratelimit "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/ratelimit"
+	cookies "github.com/HiIamJeff67/notegic-backend/shared/cookies"
 )
 
 func ConfigureRoutes(

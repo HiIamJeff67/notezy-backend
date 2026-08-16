@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
-	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
+	"github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 	"github.com/google/uuid"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -190,7 +190,7 @@ func (ec *executionContext) _PrivateItem_type(ctx context.Context, field graphql
 	}
 	res := resTmp.(enums.ItemType)
 	fc.Result = res
-	return ec.marshalNItemType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐItemType(ctx, field.Selections, res)
+	return ec.marshalNItemType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐItemType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateItem_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -466,7 +466,7 @@ func (ec *executionContext) _PrivateItem(ctx context.Context, sel ast.SelectionS
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNPrivateItem2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPrivateItem(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateItem) graphql.Marshaler {
+func (ec *executionContext) marshalNPrivateItem2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPrivateItem(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateItem) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

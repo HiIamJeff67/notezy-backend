@@ -1,10 +1,10 @@
-module github.com/HiIamJeff67/notezy-backend/test
+module github.com/HiIamJeff67/notegic-backend/test
 
 go 1.26.0
 
 require (
-	github.com/HiIamJeff67/notezy-backend/contracts v0.0.0
-	github.com/HiIamJeff67/notezy-backend/shared v0.0.0
+	github.com/HiIamJeff67/notegic-backend/contracts v0.0.0
+	github.com/HiIamJeff67/notegic-backend/shared v0.0.0
 	github.com/google/uuid v1.6.0
 	github.com/twmb/franz-go v1.21.5
 )
@@ -25,6 +25,6 @@ require (
 	golang.org/x/crypto v0.53.0 // indirect
 )
 
-replace github.com/HiIamJeff67/notezy-backend/contracts => ../contracts
+replace github.com/HiIamJeff67/notegic-backend/contracts => ../contracts
 
-replace github.com/HiIamJeff67/notezy-backend/shared => ../shared
+replace github.com/HiIamJeff67/notegic-backend/shared => ../shared

@@ -3,13 +3,13 @@ package senders
 import (
 	"context"
 
-	emaileventscontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1/events"
+	emaileventscontract "github.com/HiIamJeff67/notegic-backend/contracts/email/v1/events"
 
-	emailrenderers "github.com/HiIamJeff67/notezy-backend/internal/email/renderers"
-	emailtypes "github.com/HiIamJeff67/notezy-backend/internal/email/types"
+	emailrenderers "github.com/HiIamJeff67/notegic-backend/internal/email/renderers"
+	emailtypes "github.com/HiIamJeff67/notegic-backend/internal/email/types"
 )
 
-const welcomeEmailSubject = "Welcome to Notezy - Thanks for the Registration"
+const welcomeEmailSubject = "Welcome to Notegic - Thanks for the Registration"
 
 type WelcomeEmailSenderInterface interface {
 	Send(context.Context, emaileventscontract.SendWelcomeEmailRequestDto) error

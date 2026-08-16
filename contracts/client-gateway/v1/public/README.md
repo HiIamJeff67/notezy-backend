@@ -1,4 +1,4 @@
-# Notezy ClientGateway v1 public contract
+# Notegic ClientGateway v1 public contract
 
 This directory contains the versioned contract for the web/client surface exposed by ClientGateway.
 

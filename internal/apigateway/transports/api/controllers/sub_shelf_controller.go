@@ -3,11 +3,11 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/sub-shelves"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/sub-shelves"
 
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/core/adapters"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/core/adapters"
 )
 
 type SubShelfControllerInterface interface {
@@ -29,12 +29,12 @@ type SubShelfControllerInterface interface {
 }
 
 type SubShelfController struct {
-	coreClient *coreadapters.CoreAdapter
+	coreAdapter *coreadapters.CoreAdapter
 }
 
-func NewSubShelfController(coreClient *coreadapters.CoreAdapter) SubShelfControllerInterface {
+func NewSubShelfController(coreAdapter *coreadapters.CoreAdapter) SubShelfControllerInterface {
 	return &SubShelfController{
-		coreClient: coreClient,
+		coreAdapter: coreAdapter,
 	}
 }
 
@@ -44,7 +44,7 @@ func (c *SubShelfController) GetMySubShelfById(ctx *gin.Context, requestDto *api
 		apicontract.GetMySubShelfByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetMySubShelfByIdOperation,
 		"/core/v1/sub-shelves/get-by-id",
@@ -63,7 +63,7 @@ func (c *SubShelfController) GetMySubShelvesByPrevSubShelfId(ctx *gin.Context, r
 		apicontract.GetMySubShelvesByPrevSubShelfIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetMySubShelvesByPrevSubShelfIdOperation,
 		"/core/v1/sub-shelves/get-by-prev-sub-shelf-id",
@@ -82,7 +82,7 @@ func (c *SubShelfController) GetAllMySubShelvesByRootShelfId(ctx *gin.Context, r
 		apicontract.GetAllMySubShelvesByRootShelfIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetAllMySubShelvesByRootShelfIdOperation,
 		"/core/v1/sub-shelves/get-all-by-root-shelf-id",
@@ -101,7 +101,7 @@ func (c *SubShelfController) GetMySubShelvesAndItemsByPrevSubShelfId(ctx *gin.Co
 		apicontract.GetMySubShelvesAndItemsByPrevSubShelfIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.GetMySubShelvesAndItemsByPrevSubShelfIdOperation,
 		"/core/v1/sub-shelves/get-and-items-by-prev-sub-shelf-id",
@@ -120,7 +120,7 @@ func (c *SubShelfController) CreateSubShelfByRootShelfId(ctx *gin.Context, reque
 		apicontract.CreateSubShelfByRootShelfIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.CreateSubShelfByRootShelfIdOperation,
 		"/core/v1/sub-shelves/create",
@@ -139,7 +139,7 @@ func (c *SubShelfController) CreateSubShelvesByRootShelfIds(ctx *gin.Context, re
 		apicontract.CreateSubShelvesByRootShelfIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.CreateSubShelvesByRootShelfIdsOperation,
 		"/core/v1/sub-shelves/create-many",
@@ -158,7 +158,7 @@ func (c *SubShelfController) UpdateMySubShelfById(ctx *gin.Context, requestDto *
 		apicontract.UpdateMySubShelfByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.UpdateMySubShelfByIdOperation,
 		"/core/v1/sub-shelves/update",
@@ -177,7 +177,7 @@ func (c *SubShelfController) UpdateMySubShelvesByIds(ctx *gin.Context, requestDt
 		apicontract.UpdateMySubShelvesByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.UpdateMySubShelvesByIdsOperation,
 		"/core/v1/sub-shelves/update-many",
@@ -196,7 +196,7 @@ func (c *SubShelfController) MoveMySubShelfByRootShelfId(ctx *gin.Context, reque
 		apicontract.MoveMySubShelfByRootShelfIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.MoveMySubShelfByRootShelfIdOperation,
 		"/core/v1/sub-shelves/move",
@@ -215,7 +215,7 @@ func (c *SubShelfController) MoveMySubShelvesByRootShelfId(ctx *gin.Context, req
 		apicontract.MoveMySubShelvesByRootShelfIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.MoveMySubShelvesByRootShelfIdOperation,
 		"/core/v1/sub-shelves/move-many",
@@ -234,7 +234,7 @@ func (c *SubShelfController) MoveMySubShelvesByRootShelfIds(ctx *gin.Context, re
 		apicontract.MoveMySubShelvesByRootShelfIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.MoveMySubShelvesByRootShelfIdsOperation,
 		"/core/v1/sub-shelves/move-many-by-root-shelves",
@@ -253,7 +253,7 @@ func (c *SubShelfController) RestoreMySubShelfById(ctx *gin.Context, requestDto 
 		apicontract.RestoreMySubShelfByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.RestoreMySubShelfByIdOperation,
 		"/core/v1/sub-shelves/restore",
@@ -272,7 +272,7 @@ func (c *SubShelfController) RestoreMySubShelvesByIds(ctx *gin.Context, requestD
 		apicontract.RestoreMySubShelvesByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.RestoreMySubShelvesByIdsOperation,
 		"/core/v1/sub-shelves/restore-many",
@@ -291,7 +291,7 @@ func (c *SubShelfController) DeleteMySubShelfById(ctx *gin.Context, requestDto *
 		apicontract.DeleteMySubShelfByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.DeleteMySubShelfByIdOperation,
 		"/core/v1/sub-shelves/delete",
@@ -310,7 +310,7 @@ func (c *SubShelfController) DeleteMySubShelvesByIds(ctx *gin.Context, requestDt
 		apicontract.DeleteMySubShelvesByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.DeleteMySubShelvesByIdsOperation,
 		"/core/v1/sub-shelves/delete-many",

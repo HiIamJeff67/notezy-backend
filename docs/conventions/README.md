@@ -1,4 +1,4 @@
-# Notezy Backend Conventions
+# Notegic Backend Conventions
 
 This directory is the shared baseline for Codex and developers changing the
 backend. The existing codebase is the source of truth. Items marked as

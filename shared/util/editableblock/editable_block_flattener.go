@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	blocknote "github.com/HiIamJeff67/notezy-backend/contracts/types/blocknote"
+	blocknote "github.com/HiIamJeff67/notegic-backend/contracts/types/blocknote"
 )
 
 type editableBlockFlattenItem struct {

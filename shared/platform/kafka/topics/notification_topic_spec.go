@@ -3,7 +3,7 @@ package topics
 import (
 	"time"
 
-	notificationeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/events"
+	notificationeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/notification/v1/events"
 )
 
 func NotificationTopicSpec() TopicSpec {

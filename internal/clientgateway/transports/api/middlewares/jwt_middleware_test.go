@@ -8,10 +8,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
+	cookies "github.com/HiIamJeff67/notegic-backend/shared/cookies"
+	sharedtokens "github.com/HiIamJeff67/notegic-backend/shared/tokens"
 
-	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+	sharedcontexts "github.com/HiIamJeff67/notegic-backend/shared/lib/contexts"
 )
 
 func newTestCookieHandlers() (*cookies.CookieHandler, *cookies.CookieHandler) {
@@ -35,8 +35,8 @@ func TestJWTMiddlewareExtractsAccessTokenSubjectWithoutDataStore(t *testing.T) {
 	accessToken, err := sharedtokens.GenerateAccessToken(
 		"83bdeac1-02de-42fe-a7a8-4e1a83174866",
 		sharedtokens.AccessTokenClaims{
-			Name:      "notezy",
-			Email:     "notezy@example.com",
+			Name:      "notegic",
+			Email:     "notegic@example.com",
 			UserAgent: "test-agent",
 		},
 	)
@@ -71,8 +71,8 @@ func TestJWTMiddlewareFallsBackToRefreshTokenSubject(t *testing.T) {
 	refreshToken, err := sharedtokens.GenerateRefreshToken(
 		"83bdeac1-02de-42fe-a7a8-4e1a83174866",
 		sharedtokens.RefreshTokenClaims{
-			Name:      "notezy",
-			Email:     "notezy@example.com",
+			Name:      "notegic",
+			Email:     "notegic@example.com",
 			UserAgent: "test-agent",
 		},
 	)

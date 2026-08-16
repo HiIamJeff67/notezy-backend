@@ -18,8 +18,8 @@ ignore_patterns = [
 ]
 
 words = [
-    "notezy",
-    "notezyDB",
+    "notegic",
+    "notegicDB",
     "trancate",
     "endless",
     "modcache",

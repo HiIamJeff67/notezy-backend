@@ -6,10 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/blocks"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
 
-	blockservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/blocks"
+	blockservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/blocks"
 )
 
 type BlockEndpointInterface interface {

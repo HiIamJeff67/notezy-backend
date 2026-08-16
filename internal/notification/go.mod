@@ -1,10 +1,10 @@
-module github.com/HiIamJeff67/notezy-backend/internal/notification
+module github.com/HiIamJeff67/notegic-backend/internal/notification
 
 go 1.26.0
 
 require (
-	github.com/HiIamJeff67/notezy-backend/contracts v0.0.0
-	github.com/HiIamJeff67/notezy-backend/shared v0.0.0
+	github.com/HiIamJeff67/notegic-backend/contracts v0.0.0
+	github.com/HiIamJeff67/notegic-backend/shared v0.0.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/google/uuid v1.6.0
@@ -82,6 +82,6 @@ require (
 	gorm.io/driver/postgres v1.5.11 // indirect
 )
 
-replace github.com/HiIamJeff67/notezy-backend/contracts => ../../contracts
+replace github.com/HiIamJeff67/notegic-backend/contracts => ../../contracts
 
-replace github.com/HiIamJeff67/notezy-backend/shared => ../../shared
+replace github.com/HiIamJeff67/notegic-backend/shared => ../../shared

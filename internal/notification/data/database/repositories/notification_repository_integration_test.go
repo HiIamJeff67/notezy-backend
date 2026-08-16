@@ -11,10 +11,10 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	notificationtypescontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/types"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/notification/data/database/schemas"
+	coreeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/events"
+	notificationtypescontract "github.com/HiIamJeff67/notegic-backend/contracts/notification/v1/types"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/notification/data/database/schemas"
 )
 
 func TestNotificationRepositoryDeleteTombstoneSuppressesDelayedRequests(t *testing.T) {

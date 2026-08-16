@@ -8,7 +8,7 @@ Gateway-to-worker boundary. Public connection framing is specified by
 [Realtime Protocol Design](realtime-protocol.md); HTTP ticket behavior is
 specified by [Realtime Editor API Design](../api-route-design/realtime-editor-api.md).
 
-Notezy's BlockPack collaboration document is shared by BlockNote, the public
+Notegic's BlockPack collaboration document is shared by BlockNote, the public
 Realtime Gateway, the Node Yjs worker, Go persistence, and Block projection.
 No implementation may independently change room, fragment, schema, or sequence
 semantics.
@@ -21,7 +21,7 @@ semantics.
 | channel id | BlockPack UUID |
 | room name | `block-pack:{blockPackId}` |
 | Y.XmlFragment name | `document-store` |
-| document schema id | `notezy.blocknote` |
+| document schema id | `notegic.blocknote` |
 | initial document schema version | `1` |
 
 Go constants: `YjsBlockPackRoomPrefix`、`YjsBlockPackFragmentName`、`YjsBlockPackSchemaId`、`YjsBlockPackSchemaVersion`。
@@ -128,7 +128,7 @@ projection payload 最小欄位：
 
 ```json
 {
-  "schemaId": "notezy.blocknote",
+  "schemaId": "notegic.blocknote",
   "schemaVersion": 1,
   "projectedSequence": 42,
   "blocks": []

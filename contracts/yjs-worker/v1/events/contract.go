@@ -3,14 +3,14 @@ package adapterseventscontract
 import (
 	"github.com/google/uuid"
 
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 )
 
 const (
-	YjsWorkerCoreCommandTopic            eventcontract.Topic = "notezy.adapters.core.command.v1"
-	CoreYjsWorkerReplyTopic              eventcontract.Topic = "notezy.core.adapters.reply.v1"
-	YjsWorkerCoreMaintenanceCommandTopic eventcontract.Topic = "notezy.core.adapters.maintenance-command.v1"
-	CoreYjsWorkerMaintenanceResultTopic  eventcontract.Topic = "notezy.adapters.core.maintenance-result.v1"
+	YjsWorkerCoreCommandTopic            eventcontract.Topic = "notegic.adapters.core.command.v1"
+	CoreYjsWorkerReplyTopic              eventcontract.Topic = "notegic.core.adapters.reply.v1"
+	YjsWorkerCoreMaintenanceCommandTopic eventcontract.Topic = "notegic.core.adapters.maintenance-command.v1"
+	CoreYjsWorkerMaintenanceResultTopic  eventcontract.Topic = "notegic.adapters.core.maintenance-result.v1"
 )
 
 const (

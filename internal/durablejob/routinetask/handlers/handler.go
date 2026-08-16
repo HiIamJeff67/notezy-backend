@@ -10,10 +10,10 @@ import (
 	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 
-	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
-	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	routinetasktypes "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1/types/routine-tasks"
+	enums "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 
-	durablejobexceptions "github.com/HiIamJeff67/notezy-backend/internal/durablejob/exceptions"
+	durablejobexceptions "github.com/HiIamJeff67/notegic-backend/internal/durablejob/exceptions"
 )
 
 type PurposeHandler struct {

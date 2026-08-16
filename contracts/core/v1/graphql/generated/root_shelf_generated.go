@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
-	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
+	"github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 	"github.com/google/uuid"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -147,7 +147,7 @@ func (ec *executionContext) _PrivateRootShelf_permission(ctx context.Context, fi
 	}
 	res := resTmp.(enums.AccessControlPermission)
 	fc.Result = res
-	return ec.marshalNAccessControlPermission2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐAccessControlPermission(ctx, field.Selections, res)
+	return ec.marshalNAccessControlPermission2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐAccessControlPermission(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateRootShelf_permission(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -452,7 +452,7 @@ func (ec *executionContext) _PrivateRootShelf_owner(ctx context.Context, field g
 	}
 	res := resTmp.(*gqlmodels.PublicUser)
 	fc.Result = res
-	return ec.marshalNPublicUser2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPublicUser(ctx, field.Selections, res)
+	return ec.marshalNPublicUser2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPublicUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateRootShelf_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -514,7 +514,7 @@ func (ec *executionContext) _PrivateRootShelf_sharers(ctx context.Context, field
 	}
 	res := resTmp.([]*gqlmodels.PublicUser)
 	fc.Result = res
-	return ec.marshalNPublicUser2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPublicUserᚄ(ctx, field.Selections, res)
+	return ec.marshalNPublicUser2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPublicUserᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateRootShelf_sharers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -699,7 +699,7 @@ func (ec *executionContext) _PrivateRootShelf(ctx context.Context, sel ast.Selec
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNPrivateRootShelf2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPrivateRootShelf(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateRootShelf) graphql.Marshaler {
+func (ec *executionContext) marshalNPrivateRootShelf2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋcoreᚋv1ᚋgraphqlᚋmodelsᚐPrivateRootShelf(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateRootShelf) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

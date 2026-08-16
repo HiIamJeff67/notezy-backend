@@ -3,7 +3,7 @@ package topics
 import (
 	"time"
 
-	emaileventscontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1/events"
+	emaileventscontract "github.com/HiIamJeff67/notegic-backend/contracts/email/v1/events"
 )
 
 func CoreEmailRequestTopicSpec() TopicSpec {

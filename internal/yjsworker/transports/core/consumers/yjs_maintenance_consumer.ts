@@ -57,7 +57,7 @@ function newKafka(): Kafka {
     .filter(Boolean);
 
   return new Kafka({
-    clientId: process.env.KAFKA_CLIENT_ID ?? "notezy-yjs-worker",
+    clientId: process.env.KAFKA_CLIENT_ID ?? "notegic-yjs-worker",
     brokers,
     logLevel: logLevel.NOTHING,
   });
@@ -78,7 +78,7 @@ export class YjsMaintenanceConsumer {
   ) {
     const kafka = newKafka();
     this.consumer = kafka.consumer({
-      groupId: "notezy-yjs-worker-maintenance-v1",
+      groupId: "notegic-yjs-worker-maintenance-v1",
     });
     this.producer = kafka.producer();
     this.dispatcher = dispatcher;

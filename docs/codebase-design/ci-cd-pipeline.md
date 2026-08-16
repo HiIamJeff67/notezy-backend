@@ -34,8 +34,8 @@ immutable images through `infra/staging/deploy.sh`, and checks every runtime's
 `CLIENT_GATEWAY_IMAGE`, `API_GATEWAY_IMAGE`, `CORE_IMAGE`, `DURABLE_JOB_IMAGE`, `EMAIL_IMAGE`,
 `REALTIME_GATEWAY_IMAGE`, and `YJS_WORKER_IMAGE`, so promotion does not rebuild
 images. The staging runner may provide plaintext settings in
-`/etc/notezy/staging.env` for compatibility, or provide an encrypted
-`/etc/notezy/staging.env.enc` plus an age identity and set
+`/etc/notegic/staging.env` for compatibility, or provide an encrypted
+`/etc/notegic/staging.env.enc` plus an age identity and set
 `COMPOSE_ENCRYPTED_ENV_FILE`, `SOPS_CONFIG_FILE`, and `SOPS_AGE_KEY_FILE`.
 The deployment and smoke scripts verify the private key path, decrypt the
 latter into a temporary file, and remove it on exit. Secrets must not be
@@ -49,7 +49,7 @@ The root `Jenkinsfile` is the delivery pipeline for a self-hosted agent:
 1. checkout, format, vet, unit, race, and generated-contract gates;
 2. an optional production container build;
 3. promotion of immutable images and the same smoke script on an agent labeled
-   `notezy-staging`, controlled by the `DEPLOY_STAGING` and `IMAGE_TAG`
+   `notegic-staging`, controlled by the `DEPLOY_STAGING` and `IMAGE_TAG`
    parameters;
 4. optional integration tests controlled by `RUN_INTEGRATION`. Tests share
    `infra/docker/docker-compose.integration.yaml` with GitHub Actions, and the
@@ -81,14 +81,14 @@ The staging runner's delivery commands are:
 
 ```sh
 IMAGE_REGISTRY=ghcr.io/ORG/REPO IMAGE_TAG=TAG \
-COMPOSE_ENCRYPTED_ENV_FILE=/etc/notezy/secrets/envs/.env.staging.enc \
-SOPS_CONFIG_FILE=/etc/notezy/sops/.sops.yaml \
-SOPS_AGE_KEY_FILE=/etc/notezy/sops/age/keys-staging.txt \
+COMPOSE_ENCRYPTED_ENV_FILE=/etc/notegic/secrets/envs/.env.staging.enc \
+SOPS_CONFIG_FILE=/etc/notegic/sops/.sops.yaml \
+SOPS_AGE_KEY_FILE=/etc/notegic/sops/age/keys-staging.txt \
 make staging-deploy
 
-COMPOSE_ENCRYPTED_ENV_FILE=/etc/notezy/secrets/envs/.env.staging.enc \
-SOPS_CONFIG_FILE=/etc/notezy/sops/.sops.yaml \
-SOPS_AGE_KEY_FILE=/etc/notezy/sops/age/keys-staging.txt \
+COMPOSE_ENCRYPTED_ENV_FILE=/etc/notegic/secrets/envs/.env.staging.enc \
+SOPS_CONFIG_FILE=/etc/notegic/sops/.sops.yaml \
+SOPS_AGE_KEY_FILE=/etc/notegic/sops/age/keys-staging.txt \
 make staging-smoke
 ```
 

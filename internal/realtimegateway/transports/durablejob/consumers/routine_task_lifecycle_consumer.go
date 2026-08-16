@@ -9,13 +9,13 @@ import (
 
 	"github.com/google/uuid"
 
-	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	durablejobeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1/events"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
+	realtimelease "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/data/cache/realtimelease"
 )
 
 type RoutineTaskLifecycleConsumer struct {
@@ -61,8 +61,8 @@ func (c *RoutineTaskLifecycleConsumer) run(ctx context.Context) {
 		if ctx.Err() != nil {
 			return
 		}
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(
+		if logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(
 				ctx,
 				err,
 				"RealtimeGateway DurableJob RoutineTask lifecycle consumer stopped",

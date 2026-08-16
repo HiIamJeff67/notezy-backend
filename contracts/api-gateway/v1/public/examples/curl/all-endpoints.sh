@@ -3,7 +3,7 @@ set -euo pipefail
 
 api_gateway_base_url="${API_GATEWAY_BASE_URL:-http://localhost/api/development/v1}"
 api_key="${API_KEY:-}"
-user_agent="${USER_AGENT:-NotezyCurlExample/1.0}"
+user_agent="${USER_AGENT:-NotegicCurlExample/1.0}"
 id="${AVATAR_ID:-1}"
 userPublicId="${USERPUBLICID:-00000000-0000-4000-8000-000000000001}"
 stationId="${STATIONID:-00000000-0000-4000-8000-000000000001}"

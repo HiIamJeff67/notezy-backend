@@ -14,7 +14,7 @@ Start the development stack in the background and wait for its health checks:
 make compose-up
 ```
 
-`make compose-up` decrypts `secrets/envs/.env.enc` with SOPS into a mode
+`make compose-up` decrypts `.env.enc` with SOPS into a mode
 `0600` temporary file, passes that file to Docker Compose, and removes it when
 Compose exits. Raw `docker compose up` does not invoke SOPS; it only reads the
 root `.env` file and bypasses the encrypted environment flow.
@@ -30,8 +30,8 @@ Inspect status and logs with:
 
 ```sh
 docker compose ps
-docker compose logs -f notezy-client-gateway
-docker compose logs -f notezy-api-gateway
+docker compose logs -f notegic-client-gateway
+docker compose logs -f notegic-api-gateway
 ```
 
 ### Hot reload
@@ -61,13 +61,13 @@ its Compose network and lifecycle. The file currently sets explicit
 distinct `DOCKER_*_SERVICE_NAME` values if both stacks must run simultaneously:
 
 ```sh
-COMPOSE_PROJECT_NAME=notezy-prod-local \
+COMPOSE_PROJECT_NAME=notegic-prod-local \
 COMPOSE_FILE=infra/docker/docker-compose.prod.yaml \
 COMPOSE_ENCRYPTED_ENV_FILE=secrets/envs/.env.production.enc \
 make compose-up
 
 docker compose \
-  --project-name notezy-prod-local \
+  --project-name notegic-prod-local \
   --project-directory . \
   --env-file .env \
   -f infra/docker/docker-compose.prod.yaml \
@@ -86,7 +86,7 @@ environment contains all required settings:
 
 ```sh
 COMPOSE_FILE=infra/docker/docker-compose.prod.yaml \
-COMPOSE_PROJECT_NAME=notezy-prod-local \
+COMPOSE_PROJECT_NAME=notegic-prod-local \
 COMPOSE_ENCRYPTED_ENV_FILE=secrets/envs/.env.production.enc \
 SOPS_CONFIG_FILE=.sops.yaml \
 make staging-smoke
@@ -95,7 +95,7 @@ make staging-smoke
 Clean up the production-like stack with the same project name and file:
 
 ```sh
-COMPOSE_PROJECT_NAME=notezy-prod-local \
+COMPOSE_PROJECT_NAME=notegic-prod-local \
 COMPOSE_FILE=infra/docker/docker-compose.prod.yaml \
 COMPOSE_ENCRYPTED_ENV_FILE=secrets/envs/.env.production.enc \
 make compose-down

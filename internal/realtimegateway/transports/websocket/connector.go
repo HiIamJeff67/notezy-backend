@@ -6,9 +6,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	constants "github.com/HiIamJeff67/notegic-backend/shared/constants"
 
-	realtimetypes "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/types"
+	realtimetypes "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/types"
 )
 
 type Connector struct {

@@ -1,6 +1,6 @@
 package config
 
-import emailcontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1"
+import emailcontract "github.com/HiIamJeff67/notegic-backend/contracts/email/v1"
 
 type RendererConfig struct {
 	TemplatePath string
@@ -16,15 +16,15 @@ type RendererConfigs struct {
 func loadRendererConfigs() RendererConfigs {
 	return RendererConfigs{
 		Welcome: RendererConfig{
-			TemplatePath: "internal/email/templates/welcome_email_template.html",
+			TemplatePath: "templates/welcome_email_template.html",
 			ContentType:  emailcontract.EmailContentType_HTML,
 		},
 		Validation: RendererConfig{
-			TemplatePath: "internal/email/templates/validation_email_template.html",
+			TemplatePath: "templates/validation_email_template.html",
 			ContentType:  emailcontract.EmailContentType_HTML,
 		},
 		SecurityAlert: RendererConfig{
-			TemplatePath: "internal/email/templates/security_alert_email_template.html",
+			TemplatePath: "templates/security_alert_email_template.html",
 			ContentType:  emailcontract.EmailContentType_HTML,
 		},
 	}

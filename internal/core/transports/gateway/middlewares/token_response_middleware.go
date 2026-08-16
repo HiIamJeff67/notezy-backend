@@ -6,10 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/shared/util/responsewriter"
+	sharedcontexts "github.com/HiIamJeff67/notegic-backend/shared/lib/contexts"
+	responsewriter "github.com/HiIamJeff67/notegic-backend/shared/util/responsewriter"
 
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
 )
 
 func TokenResponseMiddleware() gin.HandlerFunc {

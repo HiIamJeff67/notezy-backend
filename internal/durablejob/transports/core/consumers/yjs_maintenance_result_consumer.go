@@ -9,16 +9,16 @@ import (
 
 	"github.com/google/uuid"
 
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
-	yjsworkereventscontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1/events"
+	coreeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/events"
+	durablejobeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/durable-job/v1/events"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
+	yjsworkereventscontract "github.com/HiIamJeff67/notegic-backend/contracts/yjs-worker/v1/events"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
-	metrics "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/metrics"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
+	metrics "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/metrics"
 
-	corestrategies "github.com/HiIamJeff67/notezy-backend/internal/durablejob/transports/core/strategies"
+	corestrategies "github.com/HiIamJeff67/notegic-backend/internal/durablejob/transports/core/strategies"
 )
 
 type YjsMaintenanceResultConsumer struct {
@@ -42,16 +42,16 @@ func (c *YjsMaintenanceResultConsumer) Start(ctx context.Context) func() {
 		durablejobeventscontract.DurableJobCoreYjsMaintenanceResultTopic.String(),
 	)
 	if err != nil {
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(ctx, err, "failed to create Yjs maintenance result consumer")
+		if logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(ctx, err, "failed to create Yjs maintenance result consumer")
 		}
 		return func() {}
 	}
 
 	workerCtx, cancel := context.WithCancel(ctx)
 	go func() {
-		if err := consumer.Run(workerCtx, c.consume); err != nil && workerCtx.Err() == nil && logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(workerCtx, err, "Yjs maintenance result consumer stopped")
+		if err := consumer.Run(workerCtx, c.consume); err != nil && workerCtx.Err() == nil && logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(workerCtx, err, "Yjs maintenance result consumer stopped")
 		}
 	}()
 
@@ -106,8 +106,8 @@ func (c *YjsMaintenanceResultConsumer) consume(
 				c.retryHint(ctx, request.Hint)
 			}
 		}
-		if metrics.NotezyMeter != nil {
-			metrics.NotezyMeter.Count(ctx, "yjs.maintenance.result.success", 1)
+		if metrics.NotegicMeter != nil {
+			metrics.NotegicMeter.Count(ctx, "yjs.maintenance.result.success", 1)
 		}
 		return nil
 	}
@@ -115,11 +115,11 @@ func (c *YjsMaintenanceResultConsumer) consume(
 	if request, exists := c.strategy.Fail(result.RequestId); exists && request.Attempt < c.strategy.Config.MaximumRequestAttempts {
 		c.retryHint(ctx, request.Hint)
 	}
-	if metrics.NotezyMeter != nil {
-		metrics.NotezyMeter.Count(ctx, "yjs.maintenance.result.failure", 1)
+	if metrics.NotegicMeter != nil {
+		metrics.NotegicMeter.Count(ctx, "yjs.maintenance.result.failure", 1)
 	}
-	if logs.NotezyLogger != nil {
-		logs.NotezyLogger.Error(ctx, errors.New(result.Error), "Yjs maintenance request failed")
+	if logs.NotegicLogger != nil {
+		logs.NotegicLogger.Error(ctx, errors.New(result.Error), "Yjs maintenance request failed")
 	}
 
 	return nil
@@ -132,8 +132,8 @@ func (c *YjsMaintenanceResultConsumer) retryHint(ctx context.Context, hint coree
 		select {
 		case <-ctx.Done():
 		case <-timer.C:
-			if err := c.strategy.Enqueue(hint); err != nil && logs.NotezyLogger != nil {
-				logs.NotezyLogger.Error(ctx, err, "failed to requeue Yjs maintenance hint")
+			if err := c.strategy.Enqueue(hint); err != nil && logs.NotegicLogger != nil {
+				logs.NotegicLogger.Error(ctx, err, "failed to requeue Yjs maintenance hint")
 			}
 		}
 	}()

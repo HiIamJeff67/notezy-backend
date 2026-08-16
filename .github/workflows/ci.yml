@@ -1,4 +1,4 @@
-name: Notezy CI
+name: Notegic CI
 
 on:
   pull_request:
@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: notezy-ci-${{ github.workflow }}-${{ github.ref }}
+  group: notegic-ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -166,7 +166,7 @@ jobs:
           file: ${{ matrix.dockerfile }}
           target: ${{ matrix.target }}
           push: false
-          tags: notezy-ci-${{ matrix.runtime }}:${{ github.sha }}
+          tags: notegic-ci-${{ matrix.runtime }}:${{ github.sha }}
 
   publish-images:
     name: Publish tagged images
@@ -222,4 +222,4 @@ jobs:
           file: ${{ matrix.dockerfile }}
           target: ${{ matrix.target }}
           push: true
-          tags: ${{ steps.image-repository.outputs.registry }}/notezy-${{ matrix.runtime }}:${{ github.ref_name }}
+          tags: ${{ steps.image-repository.outputs.registry }}/notegic-${{ matrix.runtime }}:${{ github.ref_name }}

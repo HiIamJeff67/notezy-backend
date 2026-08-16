@@ -13,27 +13,27 @@ import (
 	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	constants "github.com/HiIamJeff67/notegic-backend/shared/constants"
+	types "github.com/HiIamJeff67/notegic-backend/shared/types"
 
-	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	searchcursor "github.com/HiIamJeff67/notegic-backend/shared/lib/searchcursor"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/block-packs"
+	coreeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/events"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
-	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
-	scopes "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/scopes"
-	blockpacksql "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/sqls/block_pack"
-	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/core/exceptions"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
+	data "github.com/HiIamJeff67/notegic-backend/internal/core/data/database"
+	inputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
+	scopes "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/scopes"
+	blockpacksql "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/sqls/block_pack"
+	apiexceptions "github.com/HiIamJeff67/notegic-backend/internal/core/exceptions"
 )
 
 type BlockPackServiceInterface interface {
@@ -201,8 +201,8 @@ func (s *BlockPackService) GetMyBlockPackAndItsParentById(
 			return nil, apiexceptions.NewBlockPackException().NotFound().WithOrigin(err)
 		}
 
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(ctx, err, "Failed to scan BlockPack and its parent response")
+		if logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(ctx, err, "Failed to scan BlockPack and its parent response")
 		}
 
 		return nil, exceptions.New(

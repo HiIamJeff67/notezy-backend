@@ -30,8 +30,8 @@ test("merges a Yjs update burst into the same document state", () => {
   sourceDocument.on("update", (update: Uint8Array) => updates.push(update));
 
   const map = sourceDocument.getMap<string>("document-store");
-  map.set("title", "Notezy");
-  map.set("title", "Notezy realtime");
+  map.set("title", "Notegic");
+  map.set("title", "Notegic realtime");
   map.set("status", "draft");
 
   const sequentialDocument = new Y.Doc();

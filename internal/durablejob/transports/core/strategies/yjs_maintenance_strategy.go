@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	durablejobconfig "github.com/HiIamJeff67/notezy-backend/internal/durablejob/configs"
+	coreeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/events"
+	durablejobconfig "github.com/HiIamJeff67/notegic-backend/internal/durablejob/configs"
 )
 
 type YjsMaintenanceStrategy struct {

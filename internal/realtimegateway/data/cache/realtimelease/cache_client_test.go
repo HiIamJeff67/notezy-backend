@@ -10,9 +10,9 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/google/uuid"
 
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	constants "github.com/HiIamJeff67/notegic-backend/shared/constants"
 
-	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
+	platformredis "github.com/HiIamJeff67/notegic-backend/shared/platform/redis"
 )
 
 func newTestRealtimeLeaseCacheClient(t *testing.T, redisClient *redis.Client) *RealtimeLeaseCacheClient {

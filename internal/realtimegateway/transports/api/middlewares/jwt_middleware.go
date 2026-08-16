@@ -7,9 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
-	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
+	cookies "github.com/HiIamJeff67/notegic-backend/shared/cookies"
+	sharedcontexts "github.com/HiIamJeff67/notegic-backend/shared/lib/contexts"
+	sharedtokens "github.com/HiIamJeff67/notegic-backend/shared/tokens"
 )
 
 func JWTMiddleware(

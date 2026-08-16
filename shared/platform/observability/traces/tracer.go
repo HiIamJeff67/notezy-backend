@@ -24,7 +24,7 @@ func NewTracer(tracer trace.Tracer) TracerInterface {
 }
 
 var (
-	NotezyTracer TracerInterface
+	NotegicTracer TracerInterface
 )
 
 func (t *Tracer) Start(

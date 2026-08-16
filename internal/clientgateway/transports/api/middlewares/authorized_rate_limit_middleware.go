@@ -7,22 +7,22 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+	sharedcontexts "github.com/HiIamJeff67/notegic-backend/shared/lib/contexts"
 
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	gatewayconfig "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/configs"
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/contexts"
-	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/ratelimit"
+	gatewayconfig "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/configs"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/contexts"
+	ratelimit "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/ratelimit"
 )
 
 func InitAuthorizedRateLimiter(config gatewayconfig.RateLimitConfig) *ratelimit.HybridRateLimiter {
 	limiter := ratelimit.NewHybridRateLimiter(config, true)
-	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Authorized rate limiter initialized with rate: %v, burst: %d, user limit: %d, window: %v", config.RateLimit, config.Burst, config.UserLimit, config.WindowDuration))
+	logs.NotegicLogger.Info(context.Background(), fmt.Sprintf("Authorized rate limiter initialized with rate: %v, burst: %d, user limit: %d, window: %v", config.RateLimit, config.Burst, config.UserLimit, config.WindowDuration))
 	return limiter
 }
 
@@ -57,7 +57,7 @@ func AuthorizedRateLimitMiddleware(rateLimiter *ratelimit.HybridRateLimiter) gin
 		allowed, remaining := rateLimiter.AllowByUserId(*userId)
 		if !allowed {
 			setRateLimitHeaders(ctx, remaining, rateLimiter)
-			logs.NotezyLogger.Debug(ctx.Request.Context(), fmt.Sprintf("Rate limit exceeded for user: %s", userId.String()))
+			logs.NotegicLogger.Debug(ctx.Request.Context(), fmt.Sprintf("Rate limit exceeded for user: %s", userId.String()))
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.New(
 				"PermissionDeniedDueToTooManyRequests",
 				"Auth",

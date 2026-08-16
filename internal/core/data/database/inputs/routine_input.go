@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
 )
 
 type CreateRoutineInput struct {

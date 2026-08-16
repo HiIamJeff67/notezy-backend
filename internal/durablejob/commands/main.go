@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	durablejob "github.com/HiIamJeff67/notezy-backend/internal/durablejob"
+	durablejob "github.com/HiIamJeff67/notegic-backend/internal/durablejob"
 )
 
 func main() {

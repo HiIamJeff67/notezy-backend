@@ -6,8 +6,8 @@ import (
 
 	"github.com/go-playground/validator/v10" // make sure we use the version 10
 
-	blocknote "github.com/HiIamJeff67/notezy-backend/contracts/types/blocknote"
-	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	blocknote "github.com/HiIamJeff67/notegic-backend/contracts/types/blocknote"
+	enums "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 )
 
 func RegisterShelfBlockValidation(validate *validator.Validate) {

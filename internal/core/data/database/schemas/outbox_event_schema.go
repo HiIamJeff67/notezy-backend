@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 )
 
 type OutboxEvent struct {

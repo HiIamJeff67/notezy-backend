@@ -85,13 +85,13 @@ pipeline {
                 expression { params.DEPLOY_STAGING }
             }
             agent {
-                label 'notezy-staging'
+                label 'notegic-staging'
             }
             steps {
                 checkout scm
                 withCredentials([
                     usernamePassword(
-                        credentialsId: 'notezy-ghcr',
+                        credentialsId: 'notegic-ghcr',
                         usernameVariable: 'GHCR_USERNAME',
                         passwordVariable: 'GHCR_TOKEN'
                     )
@@ -99,7 +99,7 @@ pipeline {
                     sh '''
                         set -eu
                         test -n "${IMAGE_TAG}"
-                        : "${COMPOSE_ENV_FILE:=/etc/notezy/staging.env}"
+                        : "${COMPOSE_ENV_FILE:=/etc/notegic/staging.env}"
                         echo "${GHCR_TOKEN}" | docker login ghcr.io --username "${GHCR_USERNAME}" --password-stdin
                         make staging-deploy
                         make staging-smoke

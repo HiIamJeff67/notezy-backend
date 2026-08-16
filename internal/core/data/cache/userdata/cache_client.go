@@ -12,14 +12,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
-	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
+	platformredis "github.com/HiIamJeff67/notegic-backend/shared/platform/redis"
 
-	coreconfig "github.com/HiIamJeff67/notezy-backend/internal/core/configs"
-	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/userdata/inputs"
-	redislibraries "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/userdata/libraries"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
+	coreconfig "github.com/HiIamJeff67/notegic-backend/internal/core/configs"
+	cacheinputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/cache/userdata/inputs"
+	redislibraries "github.com/HiIamJeff67/notegic-backend/internal/core/data/cache/userdata/libraries"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
 )
 
 type UserDataCache struct {
@@ -292,7 +292,7 @@ func (s *UserDataCacheClient) Get(identifier string) (*UserDataCache, *exception
 		).WithOrigin(err)
 	}
 
-	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully got cached user data from server %d", serverNumber))
+	logs.NotegicLogger.Debug(context.Background(), fmt.Sprintf("Successfully got cached user data from server %d", serverNumber))
 	return &userDataCache, nil
 }
 
@@ -343,7 +343,7 @@ func (s *UserDataCacheClient) Set(identifier string, userDataCache UserDataCache
 		).WithOrigin(err)
 	}
 
-	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully set cached user data in server %d", serverNumber))
+	logs.NotegicLogger.Debug(context.Background(), fmt.Sprintf("Successfully set cached user data in server %d", serverNumber))
 	return nil
 }
 
@@ -393,7 +393,7 @@ func (s *UserDataCacheClient) Update(identifier string, input cacheinputs.Update
 		).WithOrigin(err)
 	}
 
-	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully updated cached user data in server %d", serverNumber))
+	logs.NotegicLogger.Debug(context.Background(), fmt.Sprintf("Successfully updated cached user data in server %d", serverNumber))
 	return nil
 }
 
@@ -414,6 +414,6 @@ func (s *UserDataCacheClient) Delete(identifier string) *exceptions.Exception {
 		).WithOrigin(err)
 	}
 
-	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully deleted cached user data from server %d", serverNumber))
+	logs.NotegicLogger.Debug(context.Background(), fmt.Sprintf("Successfully deleted cached user data from server %d", serverNumber))
 	return nil
 }

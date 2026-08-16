@@ -8,22 +8,22 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-infos"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/user-infos"
+	gqlmodels "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/graphql/models"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
-	userdata "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/userdata"
-	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/userdata/inputs"
-	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
+	userdata "github.com/HiIamJeff67/notegic-backend/internal/core/data/cache/userdata"
+	cacheinputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/cache/userdata/inputs"
+	data "github.com/HiIamJeff67/notegic-backend/internal/core/data/database"
+	inputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
 )
 
 type UserInfoServiceInterface interface {
@@ -175,8 +175,8 @@ func (s *UserInfoService) UpdateMyInfo(
 	exception = s.userDataCacheClient.Update(user.Name, cacheinputs.UpdateUserDataCacheInput{
 		AvatarURL: requestDto.Body.Values.AvatarURL,
 	})
-	if exception != nil && logs.NotezyLogger != nil {
-		logs.NotezyLogger.Error(
+	if exception != nil && logs.NotegicLogger != nil {
+		logs.NotegicLogger.Error(
 			ctx,
 			exception.Origin(),
 			exception.String(),

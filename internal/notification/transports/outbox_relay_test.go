@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/notification/data/database/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/notification/data/database/schemas"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/notification/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/notification/data/database/schemas"
 )
 
 type notificationRepositoryStub struct {

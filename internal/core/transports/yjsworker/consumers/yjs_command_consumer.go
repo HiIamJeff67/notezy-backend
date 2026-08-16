@@ -10,18 +10,18 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
-	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1"
-	yjsworkereventscontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1/events"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/blocks"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
+	yjsworkercontract "github.com/HiIamJeff67/notegic-backend/contracts/yjs-worker/v1"
+	yjsworkereventscontract "github.com/HiIamJeff67/notegic-backend/contracts/yjs-worker/v1/events"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
-	blockservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/blocks"
+	inputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
+	blockservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/blocks"
 )
 
 type YjsCommandConsumer struct {
@@ -50,8 +50,8 @@ func NewYjsCommandConsumer(
 func (c *YjsCommandConsumer) Start(ctx context.Context) func() {
 	consumer, err := platformkafka.NewConsumer(c.kafkaConfig, yjsworkereventscontract.YjsWorkerCoreCommandTopic.String())
 	if err != nil {
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(ctx, err, "Failed to create YjsWorker command consumer")
+		if logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(ctx, err, "Failed to create YjsWorker command consumer")
 		}
 
 		return func() {}
@@ -59,8 +59,8 @@ func (c *YjsCommandConsumer) Start(ctx context.Context) func() {
 
 	workerCtx, cancel := context.WithCancel(ctx)
 	go func() {
-		if err := consumer.Run(workerCtx, c.consume); err != nil && workerCtx.Err() == nil && logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(workerCtx, err, "YjsWorker command consumer stopped")
+		if err := consumer.Run(workerCtx, c.consume); err != nil && workerCtx.Err() == nil && logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(workerCtx, err, "YjsWorker command consumer stopped")
 		}
 	}()
 

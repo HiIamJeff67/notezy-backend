@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	gatewaystatus "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/status"
+	gatewaystatus "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/status"
 	gin "github.com/gin-gonic/gin"
 )
 

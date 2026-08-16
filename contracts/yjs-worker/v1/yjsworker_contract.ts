@@ -3,7 +3,7 @@
 
 export const YjsBlockPackRoomPrefix = "block-pack";
 export const YjsBlockPackFragmentName = "document-store";
-export const YjsBlockPackSchemaId = "notezy.blocknote";
+export const YjsBlockPackSchemaId = "notegic.blocknote";
 export const YjsBlockPackSchemaVersion = 1;
 export const BlockPackDocumentQuotaPolicyVersion = 1;
 export const YjsCompactionUpdateThreshold = 500;
@@ -16,9 +16,9 @@ export type BlockPackQuotaPolicy = {
   maximumBlockCount: number;
 };
 
-export const YjsWorkerCoreCommandTopic = "notezy.adapters.core.command.v1";
-export const CoreYjsWorkerReplyTopic = "notezy.core.adapters.reply.v1";
+export const YjsWorkerCoreCommandTopic = "notegic.adapters.core.command.v1";
+export const CoreYjsWorkerReplyTopic = "notegic.core.adapters.reply.v1";
 export const CoreYjsWorkerMaintenanceCommandTopic =
-  "notezy.core.adapters.maintenance-command.v1";
+  "notegic.core.adapters.maintenance-command.v1";
 export const YjsWorkerCoreMaintenanceResultTopic =
-  "notezy.adapters.core.maintenance-result.v1";
+  "notegic.adapters.core.maintenance-result.v1";

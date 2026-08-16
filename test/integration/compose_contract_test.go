@@ -16,12 +16,12 @@ func TestComposeRuntimeBoundaries(t *testing.T) {
 
 	composeText := string(compose)
 	for _, serviceName := range []string{
-		"  notezy-client-gateway:",
-		"  notezy-core:",
-		"  notezy-realtime-gateway:",
-		"  notezy-durable-job:",
-		"  notezy-email:",
-		"  notezy-yjs-worker:",
+		"  notegic-client-gateway:",
+		"  notegic-core:",
+		"  notegic-realtime-gateway:",
+		"  notegic-durable-job:",
+		"  notegic-email:",
+		"  notegic-yjs-worker:",
 	} {
 		if !strings.Contains(composeText, serviceName) {
 			t.Errorf("docker compose is missing runtime service %q", strings.TrimSpace(serviceName))

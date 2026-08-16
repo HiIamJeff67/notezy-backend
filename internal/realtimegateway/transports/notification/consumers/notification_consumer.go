@@ -9,13 +9,13 @@ import (
 
 	"github.com/google/uuid"
 
-	notificationeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	notificationeventscontract "github.com/HiIamJeff67/notegic-backend/contracts/notification/v1/events"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	realtimeleasecache "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
+	realtimeleasecache "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/data/cache/realtimelease"
 )
 
 type NotificationConsumer struct {
@@ -61,8 +61,8 @@ func (c *NotificationConsumer) run(ctx context.Context) {
 		if ctx.Err() != nil {
 			return
 		}
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(ctx, err, "RealtimeGateway notification consumer stopped")
+		if logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(ctx, err, "RealtimeGateway notification consumer stopped")
 		}
 		select {
 		case <-ctx.Done():

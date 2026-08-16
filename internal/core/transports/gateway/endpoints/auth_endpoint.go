@@ -6,10 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/auth"
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/auth"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
 
-	authservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/auth"
+	authservices "github.com/HiIamJeff67/notegic-backend/internal/core/services/auth"
 )
 
 type AuthEndpointInterface interface {

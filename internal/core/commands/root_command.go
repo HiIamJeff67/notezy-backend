@@ -8,12 +8,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 )
 
 var rootCommand = &cobra.Command{
 	Use:   "core",
-	Short: "Run the Notezy Core service or its maintenance commands.",
+	Short: "Run the Notegic Core service or its maintenance commands.",
 	Run: func(_ *cobra.Command, _ []string) {
 		ctx, stop := signal.NotifyContext(
 			context.Background(),
@@ -41,7 +41,7 @@ func init() {
 
 func Execute() {
 	if len(os.Args) > 1 {
-		logs.NotezyLogger = logs.NewCommandLineInterfaceLogger()
+		logs.NotegicLogger = logs.NewCommandLineInterfaceLogger()
 	}
 	if err := rootCommand.Execute(); err != nil {
 		panic(err)

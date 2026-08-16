@@ -1,5 +1,5 @@
 services:
-  notezy-redis:
+  notegic-redis:
     container_name: ${DOCKER_REDIS_SERVICE_NAME}
     # restart: always
     image: redis:7.2.3-alpine
@@ -17,7 +17,7 @@ services:
           exec redis-server --appendonly yes
         fi
     networks:
-      notezy-backend-net:
+      notegic-backend-net:
         ipv4_address: 172.30.0.13
     volumes:
       - redis-data:/data
@@ -27,7 +27,7 @@ services:
       timeout: 5s
       retries: 6
 
-  notezy-db:
+  notegic-db:
     # should be the same as DB_HOST(hosting service)
     container_name: ${DOCKER_DB_SERVICE_NAME}
     # restart: always
@@ -39,7 +39,7 @@ services:
     ports:
       - "${DB_PORT}:${DOCKER_DB_PORT}"
     networks:
-      notezy-backend-net:
+      notegic-backend-net:
         ipv4_address: 172.30.0.12
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -49,36 +49,36 @@ services:
       timeout: 5s
       retries: 6
 
-  notezy-notification-db:
-    container_name: ${DOCKER_NOTIFICATION_DB_SERVICE_NAME:-notezy-notification-db}
+  notegic-notification-db:
+    container_name: ${DOCKER_NOTIFICATION_DB_SERVICE_NAME:-notegic-notification-db}
     image: postgres:16
     environment:
-      POSTGRES_DB: ${NOTIFICATION_DB_NAME:-notezy_notification}
-      POSTGRES_USER: ${NOTIFICATION_DB_USER:-notezy_notification}
-      POSTGRES_PASSWORD: ${NOTIFICATION_DB_PASSWORD:-notezy_notification}
+      POSTGRES_DB: ${NOTIFICATION_DB_NAME:-notegic_notification}
+      POSTGRES_USER: ${NOTIFICATION_DB_USER:-notegic_notification}
+      POSTGRES_PASSWORD: ${NOTIFICATION_DB_PASSWORD:-notegic_notification}
     ports:
       - "${NOTIFICATION_DB_HOST_PORT:-55433}:5432"
     networks:
-      notezy-backend-net:
+      notegic-backend-net:
         ipv4_address: 172.30.0.24
     volumes:
       - notification-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${NOTIFICATION_DB_USER:-notezy_notification} -d ${NOTIFICATION_DB_NAME:-notezy_notification}"]
+      test: ["CMD-SHELL", "pg_isready -U ${NOTIFICATION_DB_USER:-notegic_notification} -d ${NOTIFICATION_DB_NAME:-notegic_notification}"]
       interval: 10s
       timeout: 5s
       retries: 6
 
-  notezy-kafka:
-    container_name: ${DOCKER_KAFKA_SERVICE_NAME:-notezy-kafka}
+  notegic-kafka:
+    container_name: ${DOCKER_KAFKA_SERVICE_NAME:-notegic-kafka}
     image: apache/kafka:4.0.0
     environment:
       KAFKA_CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@notezy-kafka:9093
-      KAFKA_LISTENERS: PLAINTEXT://notezy-kafka:9092,CONTROLLER://notezy-kafka:9093,PLAINTEXT_HOST://0.0.0.0:9094
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://notezy-kafka:9092,PLAINTEXT_HOST://localhost:${KAFKA_HOST_PORT:-9094}
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@notegic-kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://notegic-kafka:9092,CONTROLLER://notegic-kafka:9093,PLAINTEXT_HOST://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://notegic-kafka:9092,PLAINTEXT_HOST://localhost:${KAFKA_HOST_PORT:-9094}
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
@@ -90,32 +90,32 @@ services:
     ports:
       - "${KAFKA_HOST_PORT:-9094}:9094"
     networks:
-      notezy-backend-net:
+      notegic-backend-net:
         ipv4_address: 172.30.0.23
     volumes:
       - kafka-data:/tmp/kraft-combined-logs
     healthcheck:
-      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server notezy-kafka:9092 --list >/dev/null 2>&1"]
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server notegic-kafka:9092 --list >/dev/null 2>&1"]
       interval: 10s
       timeout: 5s
       retries: 12
       start_period: 30s
 
-  notezy-kafka-init:
-    container_name: ${DOCKER_KAFKA_INIT_SERVICE_NAME:-notezy-kafka-init}
-    image: notezy-kafka-init:latest
+  notegic-kafka-init:
+    container_name: ${DOCKER_KAFKA_INIT_SERVICE_NAME:-notegic-kafka-init}
+    image: notegic-kafka-init:latest
     build:
       context: .
       dockerfile: internal/cli/Dockerfile
       target: dev
     command: ["go", "run", "./internal/cli", "kafka", "topics", "ensure"]
-    working_dir: /notezy-backend
+    working_dir: /notegic-backend
     volumes:
-      - .:/notezy-backend
-      - /notezy-backend/tmp
+      - .:/notegic-backend
+      - /notegic-backend/tmp
       - ./secrets/kafka:/run/secrets/kafka:ro
     environment:
-      KAFKA_BROKERS: notezy-kafka:9092
+      KAFKA_BROKERS: notegic-kafka:9092
       KAFKA_DIAL_TIMEOUT: ${KAFKA_DIAL_TIMEOUT:-3s}
       KAFKA_TLS_ENABLED: ${KAFKA_TLS_ENABLED:-false}
       KAFKA_TLS_CA_FILE: ${KAFKA_TLS_CA_FILE:-/run/secrets/kafka/ca.pem}
@@ -126,27 +126,27 @@ services:
       KAFKA_SASL_USERNAME: ${KAFKA_SASL_USERNAME:-}
       KAFKA_SASL_PASSWORD: ${KAFKA_SASL_PASSWORD:-}
     networks:
-      - notezy-backend-net
+      - notegic-backend-net
     depends_on:
-      notezy-kafka:
+      notegic-kafka:
         condition: service_healthy
     restart: "no"
 
-  notezy-client-gateway:
-    container_name: ${DOCKER_CLIENT_GATEWAY_SERVICE_NAME:-notezy-client-gateway}
-    image: ${DOCKER_CLIENT_GATEWAY_SERVICE_NAME:-notezy-client-gateway}:latest
+  notegic-client-gateway:
+    container_name: ${DOCKER_CLIENT_GATEWAY_SERVICE_NAME:-notegic-client-gateway}
+    image: ${DOCKER_CLIENT_GATEWAY_SERVICE_NAME:-notegic-client-gateway}:latest
     # restart: always
     build:
       context: .
       dockerfile: internal/clientgateway/Dockerfile
       target: dev
     networks:
-      notezy-backend-net:
+      notegic-backend-net:
         ipv4_address: 172.30.0.11
     volumes:
-      - .:/notezy-backend
-      - /notezy-backend/tmp
-    working_dir: /notezy-backend/internal/clientgateway
+      - .:/notegic-backend
+      - /notegic-backend/tmp
+    working_dir: /notegic-backend/internal/clientgateway
     command: ["air", "-c", ".air.toml"]
     # env_file: .env # this will allowed all the environment variables from .env file be callable in our backend codespace
     environment:
@@ -161,11 +161,11 @@ services:
       CORE_DELEGATION_SECRET: ${CORE_DELEGATION_SECRET}
       CORE_DELEGATION_AUDIENCE: ${CORE_DELEGATION_AUDIENCE}
       CORE_DELEGATION_ISSUER: ${CORE_DELEGATION_ISSUER}
-      CORE_BASE_URL: http://notezy-core:7778
+      CORE_BASE_URL: http://notegic-core:7778
       CORE_CLIENT_TIMEOUT: ${CORE_CLIENT_TIMEOUT:-10s}
-      NOTIFICATION_BASE_URL: http://notezy-notification:7781
+      NOTIFICATION_BASE_URL: http://notegic-notification:7781
       NOTIFICATION_CLIENT_TIMEOUT: ${NOTIFICATION_CLIENT_TIMEOUT:-10s}
-      OTEL_SERVICE_NAME: notezy-client-gateway
+      OTEL_SERVICE_NAME: notegic-client-gateway
       OTEL_SERVICE_VERSION: ${OTEL_SERVICE_VERSION:-development}
       OTEL_DEPLOYMENT_ENVIRONMENT: development
       OTEL_EXPORTER_OTLP_GRPC_ENDPOINT: ${DOCKER_OTEL_COLLECTOR_SERVICE_NAME}:${DOCKER_OTEL_COLLECTOR_GRPC_PORT}
@@ -179,29 +179,29 @@ services:
       retries: 6
       start_period: 10s
     depends_on:
-      notezy-core:
+      notegic-core:
         condition: service_healthy
-      notezy-notification:
+      notegic-notification:
         condition: service_healthy
-      notezy-redis:
+      notegic-redis:
         condition: service_healthy
-      notezy-otel-collector:
+      notegic-otel-collector:
         condition: service_started
 
-  notezy-api-gateway:
-    container_name: ${DOCKER_API_GATEWAY_SERVICE_NAME:-notezy-api-gateway}
-    image: ${DOCKER_API_GATEWAY_SERVICE_NAME:-notezy-api-gateway}:latest
+  notegic-api-gateway:
+    container_name: ${DOCKER_API_GATEWAY_SERVICE_NAME:-notegic-api-gateway}
+    image: ${DOCKER_API_GATEWAY_SERVICE_NAME:-notegic-api-gateway}:latest
     build:
       context: .
       dockerfile: internal/apigateway/Dockerfile
       target: dev
     networks:
-      notezy-backend-net:
+      notegic-backend-net:
         ipv4_address: 172.30.0.26
     volumes:
-      - .:/notezy-backend
-      - /notezy-backend/tmp
-    working_dir: /notezy-backend/internal/apigateway
+      - .:/notegic-backend
+      - /notegic-backend/tmp
+    working_dir: /notegic-backend/internal/apigateway
     command: ["go", "run", "./commands"]
     environment:
       REDIS_HOST: ${DOCKER_REDIS_SERVICE_NAME}
@@ -213,9 +213,9 @@ services:
       CORE_DELEGATION_SECRET: ${CORE_DELEGATION_SECRET}
       CORE_DELEGATION_AUDIENCE: ${CORE_DELEGATION_AUDIENCE}
       CORE_DELEGATION_ISSUER: ${CORE_DELEGATION_ISSUER}
-      CORE_BASE_URL: http://notezy-core:7778
+      CORE_BASE_URL: http://notegic-core:7778
       CORE_CLIENT_TIMEOUT: ${CORE_CLIENT_TIMEOUT:-10s}
-      OTEL_SERVICE_NAME: notezy-api-gateway
+      OTEL_SERVICE_NAME: notegic-api-gateway
       OTEL_SERVICE_VERSION: ${OTEL_SERVICE_VERSION:-development}
       OTEL_DEPLOYMENT_ENVIRONMENT: development
       OTEL_EXPORTER_OTLP_GRPC_ENDPOINT: ${DOCKER_OTEL_COLLECTOR_SERVICE_NAME}:${DOCKER_OTEL_COLLECTOR_GRPC_PORT}
@@ -229,27 +229,27 @@ services:
       retries: 6
       start_period: 10s
     depends_on:
-      notezy-core:
+      notegic-core:
         condition: service_healthy
-      notezy-redis:
+      notegic-redis:
         condition: service_healthy
-      notezy-otel-collector:
+      notegic-otel-collector:
         condition: service_started
 
-  notezy-core:
-    container_name: ${DOCKER_CORE_SERVICE_NAME:-notezy-core}
-    image: ${DOCKER_CORE_SERVICE_NAME:-notezy-core}:latest
+  notegic-core:
+    container_name: ${DOCKER_CORE_SERVICE_NAME:-notegic-core}
+    image: ${DOCKER_CORE_SERVICE_NAME:-notegic-core}:latest
     build:
       context: .
       dockerfile: internal/core/Dockerfile
       target: dev
     command: ["air", "-c", ".air.toml"]
     networks:
-      notezy-backend-net:
+      notegic-backend-net:
         ipv4_address: 172.30.0.20
     volumes:
-      - .:/notezy-backend
-      - /notezy-backend/tmp
+      - .:/notegic-backend
+      - /notegic-backend/tmp
     environment:
       DB_HOST: ${DB_HOST}
       DB_USER: ${DB_USER}
@@ -262,9 +262,9 @@ services:
       REDIS_INIT_DB: ${REDIS_INIT_DB:-0}
       CORE_USER_DATA_CACHE_EXPIRES_IN: ${CORE_USER_DATA_CACHE_EXPIRES_IN:-1h}
       CORE_QUOTA_CYCLE_WORKER_INTERVAL: ${CORE_QUOTA_CYCLE_WORKER_INTERVAL:-24h}
-      KAFKA_BROKERS: notezy-kafka:9092
-      KAFKA_CLIENT_ID: notezy-core
-      KAFKA_CONSUMER_GROUP: notezy-core
+      KAFKA_BROKERS: notegic-kafka:9092
+      KAFKA_CLIENT_ID: notegic-core
+      KAFKA_CONSUMER_GROUP: notegic-core
       KAFKA_DIAL_TIMEOUT: ${KAFKA_DIAL_TIMEOUT:-3s}
       KAFKA_TLS_ENABLED: ${KAFKA_TLS_ENABLED:-false}
       KAFKA_TLS_CA_FILE: ${KAFKA_TLS_CA_FILE:-/run/secrets/kafka/ca.pem}
@@ -283,7 +283,7 @@ services:
       CORE_DELEGATION_ISSUER: ${CORE_DELEGATION_ISSUER}
       REALTIME_TICKET_PRIVATE_KEY_BASE64: ${REALTIME_TICKET_PRIVATE_KEY_BASE64}
       STORAGE_KEY_SALT: ${STORAGE_KEY_SALT}
-      YJS_DOCUMENT_INITIALIZATION_WORKER_URL: http://notezy-yjs-worker:8787/core/yjs-document-initialization/v1
+      YJS_DOCUMENT_INITIALIZATION_WORKER_URL: http://notegic-yjs-worker:8787/core/yjs-document-initialization/v1
       YJS_DOCUMENT_INITIALIZATION_WORKER_TIMEOUT: ${YJS_DOCUMENT_INITIALIZATION_WORKER_TIMEOUT:-30s}
       KAFKA_CONSUMER_MAXIMUM_ATTEMPTS: ${KAFKA_CONSUMER_MAXIMUM_ATTEMPTS:-3}
       KAFKA_CONSUMER_INITIAL_RETRY_BACKOFF: ${KAFKA_CONSUMER_INITIAL_RETRY_BACKOFF:-250ms}
@@ -299,7 +299,7 @@ services:
       OAUTH_GOOGLE_CLIENT_ID: ${OAUTH_GOOGLE_CLIENT_ID}
       OAUTH_GOOGLE_CLIENT_SECRET: ${OAUTH_GOOGLE_CLIENT_SECRET}
       OAUTH_GOOGLE_REDIRECT_URL: ${OAUTH_GOOGLE_REDIRECT_URL}
-      OTEL_SERVICE_NAME: notezy-core
+      OTEL_SERVICE_NAME: notegic-core
       OTEL_SERVICE_VERSION: ${OTEL_SERVICE_VERSION:-development}
       OTEL_DEPLOYMENT_ENVIRONMENT: development
       OTEL_EXPORTER_OTLP_GRPC_ENDPOINT: ${DOCKER_OTEL_COLLECTOR_SERVICE_NAME}:${DOCKER_OTEL_COLLECTOR_GRPC_PORT}
@@ -312,43 +312,43 @@ services:
       retries: 6
       start_period: 90s
     depends_on:
-      notezy-db:
+      notegic-db:
         condition: service_healthy
-      notezy-redis:
+      notegic-redis:
         condition: service_healthy
-      notezy-yjs-worker:
+      notegic-yjs-worker:
         condition: service_healthy
-      notezy-kafka:
+      notegic-kafka:
         condition: service_healthy
-      notezy-kafka-init:
+      notegic-kafka-init:
         condition: service_completed_successfully
-      notezy-otel-collector:
+      notegic-otel-collector:
         condition: service_started
 
-  notezy-realtime-gateway:
-    container_name: ${DOCKER_REALTIME_GATEWAY_SERVICE_NAME:-notezy-realtime-gateway}
-    image: ${DOCKER_REALTIME_GATEWAY_SERVICE_NAME:-notezy-realtime-gateway}:latest
+  notegic-realtime-gateway:
+    container_name: ${DOCKER_REALTIME_GATEWAY_SERVICE_NAME:-notegic-realtime-gateway}
+    image: ${DOCKER_REALTIME_GATEWAY_SERVICE_NAME:-notegic-realtime-gateway}:latest
     build:
       context: .
       dockerfile: internal/realtimegateway/Dockerfile
       target: dev
     command: ["air", "-c", ".air.toml"]
     networks:
-      notezy-backend-net:
+      notegic-backend-net:
         ipv4_address: 172.30.0.21
     volumes:
-      - .:/notezy-backend
-      - /notezy-backend/tmp
+      - .:/notegic-backend
+      - /notegic-backend/tmp
       - ./secrets/kafka:/run/secrets/kafka:ro
-    working_dir: /notezy-backend/internal/realtimegateway
+    working_dir: /notegic-backend/internal/realtimegateway
     environment:
       REDIS_HOST: ${DOCKER_REDIS_SERVICE_NAME}
       REDIS_PORT: ${DOCKER_REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       REDIS_INIT_DB: ${REDIS_INIT_DB:-0}
-      KAFKA_BROKERS: notezy-kafka:9092
-      KAFKA_CLIENT_ID: notezy-realtime-gateway
-      KAFKA_CONSUMER_GROUP: notezy-realtimegateway-lifecycle-v1
+      KAFKA_BROKERS: notegic-kafka:9092
+      KAFKA_CLIENT_ID: notegic-realtime-gateway
+      KAFKA_CONSUMER_GROUP: notegic-realtimegateway-lifecycle-v1
       KAFKA_DIAL_TIMEOUT: ${KAFKA_DIAL_TIMEOUT:-3s}
       KAFKA_TLS_ENABLED: ${KAFKA_TLS_ENABLED:-false}
       KAFKA_TLS_CA_FILE: ${KAFKA_TLS_CA_FILE:-/run/secrets/kafka/ca.pem}
@@ -362,7 +362,7 @@ services:
       KAFKA_CONSUMER_INITIAL_RETRY_BACKOFF: ${KAFKA_CONSUMER_INITIAL_RETRY_BACKOFF:-250ms}
       KAFKA_CONSUMER_MAXIMUM_RETRY_BACKOFF: ${KAFKA_CONSUMER_MAXIMUM_RETRY_BACKOFF:-5s}
       KAFKA_CONSUMER_MAXIMUM_POLL_RECORDS: ${KAFKA_CONSUMER_MAXIMUM_POLL_RECORDS:-100}
-      CORE_BASE_URL: http://notezy-core:7778
+      CORE_BASE_URL: http://notegic-core:7778
       CORE_DELEGATION_SECRET: ${CORE_DELEGATION_SECRET}
       CORE_DELEGATION_AUDIENCE: ${CORE_DELEGATION_AUDIENCE}
       CORE_DELEGATION_ISSUER: ${CORE_DELEGATION_ISSUER}
@@ -373,7 +373,7 @@ services:
       REALTIME_GATEWAY_LISTEN_ADDRESS: ${REALTIME_GATEWAY_LISTEN_ADDRESS:-0.0.0.0:7779}
       GIN_TRUSTED_PROXIES: ${GIN_TRUSTED_PROXIES}
       ALLOWED_DOMAINS: ${ALLOWED_DOMAINS}
-      OTEL_SERVICE_NAME: notezy-realtime-gateway
+      OTEL_SERVICE_NAME: notegic-realtime-gateway
       OTEL_SERVICE_VERSION: ${OTEL_SERVICE_VERSION:-development}
       OTEL_DEPLOYMENT_ENVIRONMENT: development
       OTEL_EXPORTER_OTLP_GRPC_ENDPOINT: ${DOCKER_OTEL_COLLECTOR_SERVICE_NAME}:${DOCKER_OTEL_COLLECTOR_GRPC_PORT}
@@ -386,42 +386,42 @@ services:
       retries: 6
       start_period: 10s
     depends_on:
-      notezy-core:
+      notegic-core:
         condition: service_healthy
-      notezy-yjs-worker:
+      notegic-yjs-worker:
         condition: service_healthy
-      notezy-redis:
+      notegic-redis:
         condition: service_healthy
-      notezy-kafka:
+      notegic-kafka:
         condition: service_healthy
-      notezy-kafka-init:
+      notegic-kafka-init:
         condition: service_completed_successfully
-      notezy-otel-collector:
+      notegic-otel-collector:
         condition: service_started
 
-  notezy-durable-job:
-    container_name: ${DOCKER_DURABLE_JOB_SERVICE_NAME:-notezy-durable-job}
-    image: ${DOCKER_DURABLE_JOB_SERVICE_NAME:-notezy-durable-job}:latest
+  notegic-durable-job:
+    container_name: ${DOCKER_DURABLE_JOB_SERVICE_NAME:-notegic-durable-job}
+    image: ${DOCKER_DURABLE_JOB_SERVICE_NAME:-notegic-durable-job}:latest
     build:
       context: .
       dockerfile: internal/durablejob/Dockerfile
       target: dev
     command: ["air", "-c", ".air.toml"]
     networks:
-      notezy-backend-net:
+      notegic-backend-net:
         ipv4_address: 172.30.0.22
     volumes:
-      - .:/notezy-backend
-      - /notezy-backend/tmp
+      - .:/notegic-backend
+      - /notegic-backend/tmp
       - ./secrets/kafka:/run/secrets/kafka:ro
-    working_dir: /notezy-backend/internal/durablejob
+    working_dir: /notegic-backend/internal/durablejob
     environment:
       DB_HOST: ${DB_HOST}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       DOCKER_DB_PORT: ${DOCKER_DB_PORT}
-      KAFKA_BROKERS: notezy-kafka:9092
+      KAFKA_BROKERS: notegic-kafka:9092
       KAFKA_DIAL_TIMEOUT: ${KAFKA_DIAL_TIMEOUT:-3s}
       KAFKA_TLS_ENABLED: ${KAFKA_TLS_ENABLED:-false}
       KAFKA_TLS_CA_FILE: ${KAFKA_TLS_CA_FILE:-/run/secrets/kafka/ca.pem}
@@ -440,7 +440,7 @@ services:
       DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_DISPATCH_BATCH: ${DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_DISPATCH_BATCH:-32}
       DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_DISPATCH_WORKERS: ${DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_DISPATCH_WORKERS:-8}
       DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_REQUEST_ATTEMPTS: ${DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_REQUEST_ATTEMPTS:-3}
-      OTEL_SERVICE_NAME: notezy-durable-job
+      OTEL_SERVICE_NAME: notegic-durable-job
       OTEL_SERVICE_VERSION: ${OTEL_SERVICE_VERSION:-development}
       OTEL_DEPLOYMENT_ENVIRONMENT: development
       OTEL_EXPORTER_OTLP_GRPC_ENDPOINT: ${DOCKER_OTEL_COLLECTOR_SERVICE_NAME}:${DOCKER_OTEL_COLLECTOR_GRPC_PORT}
@@ -453,41 +453,41 @@ services:
       retries: 6
       start_period: 10s
     depends_on:
-      notezy-db:
+      notegic-db:
         condition: service_healthy
-      notezy-core:
+      notegic-core:
         condition: service_healthy
-      notezy-yjs-worker:
+      notegic-yjs-worker:
         condition: service_healthy
-      notezy-kafka-init:
+      notegic-kafka-init:
         condition: service_completed_successfully
-      notezy-otel-collector:
+      notegic-otel-collector:
         condition: service_started
 
-  notezy-email:
-    container_name: ${DOCKER_EMAIL_SERVICE_NAME:-notezy-email}
-    image: ${DOCKER_EMAIL_SERVICE_NAME:-notezy-email}:latest
+  notegic-email:
+    container_name: ${DOCKER_EMAIL_SERVICE_NAME:-notegic-email}
+    image: ${DOCKER_EMAIL_SERVICE_NAME:-notegic-email}:latest
     build:
       context: .
       dockerfile: internal/email/Dockerfile
       target: dev
     command: ["air", "-c", ".air.toml"]
     networks:
-      notezy-backend-net:
+      notegic-backend-net:
         ipv4_address: 172.30.0.19
     volumes:
-      - .:/notezy-backend
-      - /notezy-backend/tmp
+      - .:/notegic-backend
+      - /notegic-backend/tmp
       - ./secrets/kafka:/run/secrets/kafka:ro
-    working_dir: /notezy-backend/internal/email
+    working_dir: /notegic-backend/internal/email
     environment:
       EMAIL_LISTEN_ADDRESS: 0.0.0.0:8081
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
-      NOTEZY_OFFICIAL_NAME: ${NOTEZY_OFFICIAL_NAME}
-      NOTEZY_OFFICIAL_GMAIL: ${NOTEZY_OFFICIAL_GMAIL}
-      NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD: ${NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD}
-      KAFKA_BROKERS: notezy-kafka:9092
+      NOTEGIC_OFFICIAL_NAME: ${NOTEGIC_OFFICIAL_NAME}
+      NOTEGIC_OFFICIAL_GMAIL: ${NOTEGIC_OFFICIAL_GMAIL}
+      NOTEGIC_OFFICIAL_GOOGLE_APPLICATION_PASSWORD: ${NOTEGIC_OFFICIAL_GOOGLE_APPLICATION_PASSWORD}
+      KAFKA_BROKERS: notegic-kafka:9092
       KAFKA_DIAL_TIMEOUT: ${KAFKA_DIAL_TIMEOUT:-3s}
       KAFKA_TLS_ENABLED: ${KAFKA_TLS_ENABLED:-false}
       KAFKA_TLS_CA_FILE: ${KAFKA_TLS_CA_FILE:-/run/secrets/kafka/ca.pem}
@@ -501,7 +501,7 @@ services:
       KAFKA_CONSUMER_INITIAL_RETRY_BACKOFF: ${KAFKA_CONSUMER_INITIAL_RETRY_BACKOFF:-250ms}
       KAFKA_CONSUMER_MAXIMUM_RETRY_BACKOFF: ${KAFKA_CONSUMER_MAXIMUM_RETRY_BACKOFF:-5s}
       KAFKA_CONSUMER_MAXIMUM_POLL_RECORDS: ${KAFKA_CONSUMER_MAXIMUM_POLL_RECORDS:-100}
-      OTEL_SERVICE_NAME: notezy-email
+      OTEL_SERVICE_NAME: notegic-email
       OTEL_SERVICE_VERSION: ${OTEL_SERVICE_VERSION:-development}
       OTEL_DEPLOYMENT_ENVIRONMENT: development
       OTEL_EXPORTER_OTLP_GRPC_ENDPOINT: ${DOCKER_OTEL_COLLECTOR_SERVICE_NAME}:${DOCKER_OTEL_COLLECTOR_GRPC_PORT}
@@ -514,40 +514,40 @@ services:
       retries: 6
       start_period: 10s
     depends_on:
-      notezy-otel-collector:
+      notegic-otel-collector:
         condition: service_started
-      notezy-kafka:
+      notegic-kafka:
         condition: service_healthy
-      notezy-kafka-init:
+      notegic-kafka-init:
         condition: service_completed_successfully
 
-  notezy-notification:
-    container_name: ${DOCKER_NOTIFICATION_SERVICE_NAME:-notezy-notification}
-    image: ${DOCKER_NOTIFICATION_SERVICE_NAME:-notezy-notification}:latest
+  notegic-notification:
+    container_name: ${DOCKER_NOTIFICATION_SERVICE_NAME:-notegic-notification}
+    image: ${DOCKER_NOTIFICATION_SERVICE_NAME:-notegic-notification}:latest
     build:
       context: .
       dockerfile: internal/notification/Dockerfile
       target: dev
     command: ["air", "-c", ".air.toml"]
     networks:
-      notezy-backend-net:
+      notegic-backend-net:
         ipv4_address: 172.30.0.25
     volumes:
-      - .:/notezy-backend
-      - /notezy-backend/tmp
+      - .:/notegic-backend
+      - /notegic-backend/tmp
       - ./secrets/kafka:/run/secrets/kafka:ro
-    working_dir: /notezy-backend/internal/notification
+    working_dir: /notegic-backend/internal/notification
     environment:
       NOTIFICATION_LISTEN_ADDRESS: 0.0.0.0:7781
-      NOTIFICATION_DB_HOST: notezy-notification-db
-      NOTIFICATION_DB_USER: ${NOTIFICATION_DB_USER:-notezy_notification}
-      NOTIFICATION_DB_PASSWORD: ${NOTIFICATION_DB_PASSWORD:-notezy_notification}
-      NOTIFICATION_DB_NAME: ${NOTIFICATION_DB_NAME:-notezy_notification}
+      NOTIFICATION_DB_HOST: notegic-notification-db
+      NOTIFICATION_DB_USER: ${NOTIFICATION_DB_USER:-notegic_notification}
+      NOTIFICATION_DB_PASSWORD: ${NOTIFICATION_DB_PASSWORD:-notegic_notification}
+      NOTIFICATION_DB_NAME: ${NOTIFICATION_DB_NAME:-notegic_notification}
       NOTIFICATION_DB_PORT: 5432
       CORE_DELEGATION_SECRET: ${CORE_DELEGATION_SECRET}
       CORE_DELEGATION_AUDIENCE: ${CORE_DELEGATION_AUDIENCE}
       CORE_DELEGATION_ISSUER: ${CORE_DELEGATION_ISSUER}
-      KAFKA_BROKERS: notezy-kafka:9092
+      KAFKA_BROKERS: notegic-kafka:9092
       KAFKA_DIAL_TIMEOUT: ${KAFKA_DIAL_TIMEOUT:-3s}
       KAFKA_TLS_ENABLED: ${KAFKA_TLS_ENABLED:-false}
       KAFKA_TLS_CA_FILE: ${KAFKA_TLS_CA_FILE:-/run/secrets/kafka/ca.pem}
@@ -557,7 +557,7 @@ services:
       KAFKA_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM:-}
       KAFKA_SASL_USERNAME: ${KAFKA_SASL_USERNAME:-}
       KAFKA_SASL_PASSWORD: ${KAFKA_SASL_PASSWORD:-}
-      NOTIFICATION_KAFKA_CONSUMER_GROUP: notezy-notification-core-v1
+      NOTIFICATION_KAFKA_CONSUMER_GROUP: notegic-notification-core-v1
       NOTIFICATION_KAFKA_MAXIMUM_ATTEMPTS: ${KAFKA_CONSUMER_MAXIMUM_ATTEMPTS:-3}
       NOTIFICATION_KAFKA_INITIAL_RETRY_BACKOFF: ${KAFKA_CONSUMER_INITIAL_RETRY_BACKOFF:-250ms}
       NOTIFICATION_KAFKA_MAXIMUM_RETRY_BACKOFF: ${KAFKA_CONSUMER_MAXIMUM_RETRY_BACKOFF:-5s}
@@ -570,7 +570,7 @@ services:
       NOTIFICATION_OUTBOX_RETENTION: ${NOTIFICATION_OUTBOX_RETENTION:-168h}
       NOTIFICATION_OUTBOX_CLEANUP_INTERVAL: ${NOTIFICATION_OUTBOX_CLEANUP_INTERVAL:-1h}
       NOTIFICATION_RETENTION: ${NOTIFICATION_RETENTION:-720h}
-      OTEL_SERVICE_NAME: notezy-notification
+      OTEL_SERVICE_NAME: notegic-notification
       OTEL_SERVICE_VERSION: ${OTEL_SERVICE_VERSION:-development}
       OTEL_DEPLOYMENT_ENVIRONMENT: development
       OTEL_EXPORTER_OTLP_GRPC_ENDPOINT: ${DOCKER_OTEL_COLLECTOR_SERVICE_NAME}:${DOCKER_OTEL_COLLECTOR_GRPC_PORT}
@@ -583,16 +583,16 @@ services:
       retries: 6
       start_period: 10s
     depends_on:
-      notezy-notification-db:
+      notegic-notification-db:
         condition: service_healthy
-      notezy-kafka:
+      notegic-kafka:
         condition: service_healthy
-      notezy-kafka-init:
+      notegic-kafka-init:
         condition: service_completed_successfully
-      notezy-otel-collector:
+      notegic-otel-collector:
         condition: service_started
 
-  notezy-yjs-worker:
+  notegic-yjs-worker:
     image: ${DOCKER_YJS_WORKER_SERVICE_NAME}:latest
     build:
       context: .
@@ -607,15 +607,15 @@ services:
       NODE_ENV: development
       YJS_WORKER_HOST: 0.0.0.0
       YJS_WORKER_PORT: ${DOCKER_YJS_WORKER_PORT}
-      KAFKA_BROKERS: notezy-kafka:9092
-      KAFKA_CLIENT_ID: notezy-yjs-worker
+      KAFKA_BROKERS: notegic-kafka:9092
+      KAFKA_CLIENT_ID: notegic-yjs-worker
       YJS_WORKER_COMMAND_TIMEOUT_MILLISECONDS: ${YJS_WORKER_COMMAND_TIMEOUT_MILLISECONDS:-10000}
-      OTEL_SERVICE_NAME: notezy-yjs-worker
+      OTEL_SERVICE_NAME: notegic-yjs-worker
       OTEL_SERVICE_VERSION: ${OTEL_SERVICE_VERSION:-development}
       OTEL_DEPLOYMENT_ENVIRONMENT: development
       OTEL_EXPORTER_OTLP_ENDPOINT: http://${DOCKER_OTEL_COLLECTOR_SERVICE_NAME}:${DOCKER_OTEL_COLLECTOR_HTTP_PORT}
     networks:
-      - notezy-backend-net
+      - notegic-backend-net
     expose:
       - "${DOCKER_YJS_WORKER_PORT}"
     healthcheck:
@@ -624,32 +624,32 @@ services:
       timeout: 5s
       retries: 6
     depends_on:
-      notezy-kafka:
+      notegic-kafka:
         condition: service_healthy
-      notezy-kafka-init:
+      notegic-kafka-init:
         condition: service_completed_successfully
-      notezy-otel-collector:
+      notegic-otel-collector:
         condition: service_started
 
-  notezy-nginx:
+  notegic-nginx:
     image: nginx:1.27-alpine
     container_name: ${DOCKER_NGINX_SERVICE_NAME}
     ports:
       - "${NGINX_HTTP_PORT}:${DOCKER_NGINX_HTTP_PORT}"
     networks:
-      notezy-backend-net:
+      notegic-backend-net:
         ipv4_address: 172.30.0.10
     volumes:
       - ./infra/nginx/default.dev.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      notezy-client-gateway:
+      notegic-client-gateway:
         condition: service_healthy
-      notezy-api-gateway:
+      notegic-api-gateway:
         condition: service_healthy
-      notezy-realtime-gateway:
+      notegic-realtime-gateway:
         condition: service_healthy
 
-  notezy-loki:
+  notegic-loki:
     container_name: ${DOCKER_LOKI_SERVICE_NAME}
     image: grafana/loki:latest
     command: ["-config.file=/etc/loki.yaml", "-config.expand-env=true"]
@@ -658,7 +658,7 @@ services:
     environment:
       DOCKER_LOKI_PORT: ${DOCKER_LOKI_PORT}
     networks:
-      notezy-backend-net:
+      notegic-backend-net:
         ipv4_address: 172.30.0.14
     volumes:
       - ./infra/monitor/loki-config.dev.yaml:/etc/loki.yaml
@@ -673,7 +673,7 @@ services:
     #   timeout: 5s
     #   retries: 12
 
-  notezy-tempo:
+  notegic-tempo:
     container_name: ${DOCKER_TEMPO_SERVICE_NAME}
     image: grafana/tempo:2.9.1
     command: ["-config.file=/etc/tempo.yaml", "-config.expand-env=true"]
@@ -687,16 +687,16 @@ services:
     ports:
       - "${TEMPO_PORT}:${DOCKER_TEMPO_PORT}"
     networks:
-      notezy-backend-net:
+      notegic-backend-net:
         ipv4_address: 172.30.0.15
     volumes:
       - ./infra/monitor/tempo-config.dev.yaml:/etc/tempo.yaml
       - tempo-data:/var/tempo
     depends_on:
-      notezy-mimir:
+      notegic-mimir:
         condition: service_started
 
-  notezy-mimir-init:
+  notegic-mimir-init:
     image: busybox:1.37.0
     command:
       - sh
@@ -713,7 +713,7 @@ services:
       - mimir-data:/data/mimir
     restart: "no"
 
-  notezy-mimir:
+  notegic-mimir:
     container_name: ${DOCKER_MIMIR_SERVICE_NAME}
     image: grafana/mimir:latest
     command:
@@ -728,10 +728,10 @@ services:
     ports:
       - "${MIMIR_PORT}:${DOCKER_MIMIR_PORT}"
     depends_on:
-      notezy-mimir-init:
+      notegic-mimir-init:
         condition: service_completed_successfully
     networks:
-      notezy-backend-net:
+      notegic-backend-net:
         ipv4_address: 172.30.0.16
     # healthcheck:
     #   test:
@@ -744,7 +744,7 @@ services:
     #   retries: 6
     #   start_period: 30s
 
-  notezy-otel-collector:
+  notegic-otel-collector:
     container_name: ${DOCKER_OTEL_COLLECTOR_SERVICE_NAME}
     image: otel/opentelemetry-collector-contrib:latest
     environment:
@@ -758,19 +758,19 @@ services:
       - "${OTEL_COLLECTOR_GRPC_PORT}:${DOCKER_OTEL_COLLECTOR_GRPC_PORT}" # OTLP gRPC
       - "${OTEL_COLLECTOR_HTTP_PORT}:${DOCKER_OTEL_COLLECTOR_HTTP_PORT}" # OTLP HTTP
     networks:
-      notezy-backend-net:
+      notegic-backend-net:
         ipv4_address: 172.30.0.17
     volumes:
       - ./infra/monitor/otel-collector-config.dev.yaml:/etc/otelcol-contrib/config.yaml
     depends_on:
-      notezy-loki:
+      notegic-loki:
         condition: service_started
-      notezy-mimir:
+      notegic-mimir:
         condition: service_started
-      notezy-tempo:
+      notegic-tempo:
         condition: service_started
 
-  notezy-grafana:
+  notegic-grafana:
     container_name: ${DOCKER_GRAFANA_SERVICE_NAME}
     image: grafana/grafana:latest
     environment:
@@ -785,19 +785,19 @@ services:
     ports:
       - "${GRAFANA_PORT}:${DOCKER_GRAFANA_PORT}"
     networks:
-      notezy-backend-net:
+      notegic-backend-net:
         ipv4_address: 172.30.0.18
     volumes:
       - ./infra/monitor/grafana/datasources.dev.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
       - ./infra/monitor/grafana/dashboards.dev.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
       - ./infra/monitor/grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
-      - notezy-loki
-      - notezy-tempo
-      - notezy-mimir
+      - notegic-loki
+      - notegic-tempo
+      - notegic-mimir
 
 networks:
-  notezy-backend-net:
+  notegic-backend-net:
     driver: bridge
     ipam:
       config:
@@ -805,20 +805,20 @@ networks:
 
 volumes:
   redis-data:
-    name: notezy-backend-redis-data
+    name: notegic-backend-redis-data
   # api-data:
-  #   name: notezy-backend-api-data
+  #   name: notegic-backend-api-data
   postgres-data:
-    name: notezy-backend-postgres-data
+    name: notegic-backend-postgres-data
   postgres-test-data:
-    name: notezy-backend-postgres-test-data
+    name: notegic-backend-postgres-test-data
   notification-postgres-data:
-    name: notezy-backend-notification-postgres-data
+    name: notegic-backend-notification-postgres-data
   kafka-data:
-    name: notezy-backend-kafka-data
+    name: notegic-backend-kafka-data
   loki-data:
-    name: notezy-backend-loki-data
+    name: notegic-backend-loki-data
   tempo-data:
-    name: notezy-backend-tempo-data
+    name: notegic-backend-tempo-data
   mimir-data:
-    name: notezy-backend-mimir-data
+    name: notegic-backend-mimir-data

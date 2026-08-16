@@ -56,12 +56,12 @@ one-BlockPack `BlockPackAccessRevoked` events.
 
 ## Topic and ordering strategy
 
-The initial topic is `notezy.core.lifecycle.v1`.
+The initial topic is `notegic.core.lifecycle.v1`.
 
 | Property | Rule |
 | --- | --- |
 | Producer | Core only. |
-| Consumer group | A runtime-specific group, for example `notezy-realtimegateway-lifecycle-v1`. |
+| Consumer group | A runtime-specific group, for example `notegic-realtimegateway-lifecycle-v1`. |
 | Partition key | `aggregateId.String()` exactly; it is copied into `kafkaKey`. |
 | Ordering | Kafka ordering is guaranteed only for the same aggregate key/partition. No cross-aggregate ordering is assumed. |
 | Partitions | Deploy with 12 production partitions initially; increase only by adding partitions and never rely on cross-key order. |
@@ -91,10 +91,10 @@ awareness, presence, Redis leases, or WebSocket frames.
 Yjs persistence is a separate, versioned Kafka boundary in
 [`contracts/yjs-worker/v1`](../../contracts/yjs-worker/v1/). YjsWorker produces
 an `EventEnvelope` carrying a `CommandEnvelope` to
-`notezy.yjsworker.core.command.v1`, keyed by `blockPackId`. Core consumes it
-with the `notezy-core-yjsworker-v1` group and writes a matching reply envelope
+`notegic.yjsworker.core.command.v1`, keyed by `blockPackId`. Core consumes it
+with the `notegic-core-yjsworker-v1` group and writes a matching reply envelope
 to its transactional outbox. The outbox relay publishes the reply to
-`notezy.core.yjsworker.reply.v1`, again keyed by the same BlockPack ID.
+`notegic.core.yjsworker.reply.v1`, again keyed by the same BlockPack ID.
 
 The command family is `LoadYjsDocument`, `AppendYjsUpdate`,
 `LoadCompactableYjsDocument`, `ApplyCompactedYjsDocument`, and
@@ -123,17 +123,17 @@ each runtime's public contract independent from its database or implementation
 packages.
 
 Core writes `YjsMaintenanceHint` to
-`notezy.core.durablejob.yjs-maintenance-hint.v1` in the same transaction as a
+`notegic.core.durablejob.yjs-maintenance-hint.v1` in the same transaction as a
 new BlockPack Yjs document or accepted update. DurableJob coalesces and
 prioritizes those hints by BlockPack partition key, then publishes a compact or
-project request to `notezy.durablejob.core.yjs-maintenance-request.v1`.
+project request to `notegic.durablejob.core.yjs-maintenance-request.v1`.
 
 Core consumes that request and forwards a minimal maintenance command to the
-Yjs Worker on `notezy.core.yjsworker.maintenance-command.v1`. The worker reads
+Yjs Worker on `notegic.core.yjsworker.maintenance-command.v1`. The worker reads
 and computes against Core through the existing command/reply boundary; it does
 not receive a snapshot in the maintenance event. The result is published on
-`notezy.yjsworker.core.maintenance-result.v1`, Core forwards it to
-`notezy.core.durablejob.yjs-maintenance-result.v1`, and DurableJob uses it to
+`notegic.yjsworker.core.maintenance-result.v1`, Core forwards it to
+`notegic.core.durablejob.yjs-maintenance-result.v1`, and DurableJob uses it to
 complete or boundedly retry the strategy item. All five topics use the
 BlockPack UUID as the key and have local DLQ counterparts.
 
@@ -258,7 +258,7 @@ than silently discarding it. DLQ delivery contains the original topic,
 partition, offset, key, unmodified source bytes, event ID when decodable,
 classification, attempt count, and failure timestamp.
 
-The initial dead-letter topic is `notezy.core.lifecycle.v1.dlq`, configured
+The initial dead-letter topic is `notegic.core.lifecycle.v1.dlq`, configured
 with 30-day delete retention. After the cause has been corrected, operators
 inspect the DLQ record, verify its original envelope is now compatible, and
 re-publish its preserved `key` and `value` to `sourceTopic`. This re-drive goes
@@ -277,8 +277,8 @@ Core authentication workflows enqueue one of the operation-specific
 `SendWelcomeEmailRequestDto`, `SendValidationEmailRequestDto`, or
 `SendSecurityAlertEmailRequestDto` DTOs in Core's transactional outbox.
 `OutboxRelay` publishes the envelope to
-`notezy.core.email.request.v1`; Email consumes it with the
-`notezy-email-core-v1` group and hands the operation to its local email worker
+`notegic.core.email.request.v1`; Email consumes it with the
+`notegic-email-core-v1` group and hands the operation to its local email worker
 manager. Email owns SMTP, templates, retries, and delivery-side failures. The
 Core process no longer calls Email's business HTTP endpoints; Email's HTTP
 transport now exposes only `/startedz` and `/healthz`.

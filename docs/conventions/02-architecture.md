@@ -226,7 +226,7 @@ append/update/reset mutation methods in Core.
   independent Node/TypeScript package environment.
 - `shared` is the root-level cross-runtime utility layer. It may depend on
   contracts and the minimum common application support it genuinely needs;
-  portable `shared/lib` never imports a Notezy package.
+  portable `shared/lib` never imports a Notegic package.
 - `shared/cookies`, `shared/tokens`, and `contracts/types/exceptions` are shared semantic
   boundaries that remain at the root of `shared`; reusable implementation
   utilities belong under `shared/util/` (`editableblock`, `exceptionwriter`,

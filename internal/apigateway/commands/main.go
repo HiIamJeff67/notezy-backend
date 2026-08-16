@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	apigateway "github.com/HiIamJeff67/notezy-backend/internal/apigateway"
+	apigateway "github.com/HiIamJeff67/notegic-backend/internal/apigateway"
 )
 
 func main() {

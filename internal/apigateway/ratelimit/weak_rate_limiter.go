@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	gatewayconfig "github.com/HiIamJeff67/notezy-backend/internal/apigateway/configs"
+	gatewayconfig "github.com/HiIamJeff67/notegic-backend/internal/apigateway/configs"
 )
 
 // The weak rate limiter is an implementation of Leaky Bucket algorithm

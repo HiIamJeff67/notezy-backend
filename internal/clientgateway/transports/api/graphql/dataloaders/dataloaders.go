@@ -3,7 +3,7 @@ package dataloaders
 import (
 	"time"
 
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/core/adapters"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/core/adapters"
 )
 
 const (
@@ -18,10 +18,10 @@ type Dataloaders struct {
 	BadgeDataLoader    BadgeDataloaderInterface
 }
 
-func NewDataloaders(coreClient *coreadapters.CoreAdapter) Dataloaders {
+func NewDataloaders(coreAdapter *coreadapters.CoreAdapter) Dataloaders {
 	return Dataloaders{
-		UserDataLoader:     NewUserDataloader(coreClient),
-		UserInfoDataLoader: NewUserInfoDataloader(coreClient),
-		BadgeDataLoader:    NewBadgeDataloader(coreClient),
+		UserDataLoader:     NewUserDataloader(coreAdapter),
+		UserInfoDataLoader: NewUserInfoDataloader(coreAdapter),
+		BadgeDataLoader:    NewBadgeDataloader(coreAdapter),
 	}
 }

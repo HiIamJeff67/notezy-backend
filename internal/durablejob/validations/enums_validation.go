@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-playground/validator/v10" // make sure we use the version 10
 
-	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	enums "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 )
 
 var (
@@ -29,15 +29,15 @@ var (
 		string(enums.BillingIntervalUnit_Year),
 	}
 	allBillingPlanNameStrings = []string{
-		string(enums.BillingPlanName_NotezyMonthlyFreePlan),
-		string(enums.BillingPlanName_NotezyMonthlyProPlan),
-		string(enums.BillingPlanName_NotezyYearlyProPlan),
-		string(enums.BillingPlanName_NotezyMonthlyPremiumPlan),
-		string(enums.BillingPlanName_NotezyYearlyPremiumPlan),
-		string(enums.BillingPlanName_NotezyMonthlyUltimatePlan),
-		string(enums.BillingPlanName_NotezyYearlyUltimatePlan),
-		string(enums.BillingPlanName_NotezyMonthlyEnterprisePlan),
-		string(enums.BillingPlanName_NotezyYearlyEnterprisePlan),
+		string(enums.BillingPlanName_NotegicMonthlyFreePlan),
+		string(enums.BillingPlanName_NotegicMonthlyProPlan),
+		string(enums.BillingPlanName_NotegicYearlyProPlan),
+		string(enums.BillingPlanName_NotegicMonthlyPremiumPlan),
+		string(enums.BillingPlanName_NotegicYearlyPremiumPlan),
+		string(enums.BillingPlanName_NotegicMonthlyUltimatePlan),
+		string(enums.BillingPlanName_NotegicYearlyUltimatePlan),
+		string(enums.BillingPlanName_NotegicMonthlyEnterprisePlan),
+		string(enums.BillingPlanName_NotegicYearlyEnterprisePlan),
 	}
 	allBillingPlanStatusStrings = []string{
 		string(enums.BillingPlanStatus_Created),

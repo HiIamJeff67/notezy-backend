@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	durablejobroutinetask "github.com/HiIamJeff67/notezy-backend/internal/durablejob/routinetask"
+	durablejobroutinetask "github.com/HiIamJeff67/notegic-backend/internal/durablejob/routinetask"
 )
 
 func TestRoutineTaskResultProducerRejectsUnsupportedResultKind(t *testing.T) {

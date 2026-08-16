@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	realtimegatewaystatus "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/status"
+	realtimegatewaystatus "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/transports/status"
 	gin "github.com/gin-gonic/gin"
 )
 

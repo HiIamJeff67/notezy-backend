@@ -8,13 +8,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	sharedtokens "github.com/HiIamJeff67/notegic-backend/shared/tokens"
 
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
 )
 
 func DelegationMiddleware(expectedOperation string) gin.HandlerFunc {

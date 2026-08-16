@@ -9,13 +9,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	types "github.com/HiIamJeff67/notegic-backend/shared/types"
 
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/shared/util/responsewriter"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
+	responsewriter "github.com/HiIamJeff67/notegic-backend/shared/util/responsewriter"
 
-	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/ratelimit"
+	ratelimit "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/ratelimit"
 )
 
 // use reusable buffer pool for timeout response writer to storing the current response of the handlers
@@ -120,7 +120,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 
 			return
 		case <-timeoutCtx.Done():
-			// logs.NotezyLogger.Alert(context.Background(), nil, "Timeout (timeoutCtx.Done())")
+			// logs.NotegicLogger.Alert(context.Background(), nil, "Timeout (timeoutCtx.Done())")
 			writer.Mutex.Lock()
 			writer.IsTimeout = true
 			writer.FreeBuffer() // clear the buffer, this will destroy the context field stored by other middlewares
@@ -161,7 +161,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 
 			return
 		case <-time.After(timeout):
-			// logs.NotezyLogger.Alert(context.Background(), nil, "Timeout (time.After)")
+			// logs.NotegicLogger.Alert(context.Background(), nil, "Timeout (time.After)")
 			writer.Mutex.Lock()
 			writer.IsTimeout = true
 			writer.FreeBuffer() // clear the buffer, this will destroy the context field stored by other middlewares

@@ -19,8 +19,8 @@ func writeRealtimeArtifacts(root string) {
 		"exception": map[string]any{"$ref": "#/components/schemas/Exception"},
 	}}
 	openAPI := map[string]any{
-		"openapi": "3.1.0", "info": map[string]any{"title": "Notezy RealtimeGateway HTTP API", "version": "1.0.0", "description": "Versioned HTTP surface emitted directly by RealtimeGateway. The WebSocket protocol is defined by asyncapi/asyncapi.json."},
-		"servers": []any{map[string]any{"url": "http://localhost/realtime/development/v1"}, map[string]any{"url": "https://api.notezy.app/realtime/development/v1"}},
+		"openapi": "3.1.0", "info": map[string]any{"title": "Notegic RealtimeGateway HTTP API", "version": "1.0.0", "description": "Versioned HTTP surface emitted directly by RealtimeGateway. The WebSocket protocol is defined by asyncapi/asyncapi.json."},
+		"servers": []any{map[string]any{"url": "http://localhost/realtime/development/v1"}, map[string]any{"url": "https://api.notegic.app/realtime/development/v1"}},
 		"paths": map[string]any{
 			"/block-pack/{block-pack-id}/participants": map[string]any{"get": map[string]any{
 				"operationId": "getRealtimeBlockPackParticipants", "summary": "Get active BlockPack participants", "tags": []string{"Presence"},
@@ -35,8 +35,8 @@ func writeRealtimeArtifacts(root string) {
 	}
 	writeJSON(filepath.Join(base, "openapi", "openapi.json"), openAPI)
 	writeJSON(filepath.Join(base, "asyncapi", "asyncapi.json"), realtimeAsyncAPI(participant))
-	writeJSON(filepath.Join(base, "postman", "Notezy-RealtimeGateway-v1.postman_collection.json"), realtimePostman())
-	writeJSON(filepath.Join(base, "postman", "Notezy-RealtimeGateway-v1.postman_environment.example.json"), postmanEnvironment())
+	writeJSON(filepath.Join(base, "postman", "notegic-realtime-gateway-v1.postman_collection.json"), realtimePostman())
+	writeJSON(filepath.Join(base, "postman", "notegic-realtime-gateway-v1.postman_environment.example.json"), postmanEnvironment())
 	writeText(filepath.Join(base, "examples", "control-frames.json"), realtimeControlExamples())
 	writeText(filepath.Join(base, "examples", "websocket-browser.js"), realtimeBrowserExample())
 	writeRealtimeRules(base)
@@ -44,10 +44,10 @@ func writeRealtimeArtifacts(root string) {
 
 func realtimeAsyncAPI(participant map[string]any) map[string]any {
 	return map[string]any{
-		"asyncapi": "3.0.0", "info": map[string]any{"title": "Notezy RealtimeGateway WebSocket API", "version": "1.0.0", "description": "Public multiplexed RealtimeGateway protocol. Text frames are JSON; binary frames use the documented six-byte header."},
+		"asyncapi": "3.0.0", "info": map[string]any{"title": "Notegic RealtimeGateway WebSocket API", "version": "1.0.0", "description": "Public multiplexed RealtimeGateway protocol. Text frames are JSON; binary frames use the documented six-byte header."},
 		"servers": map[string]any{
 			"local":      map[string]any{"host": "localhost", "pathname": "/realtime/development/v1", "protocol": "ws", "description": "Local development", "security": []any{map[string]any{"$ref": "#/components/securitySchemes/connectionTicket"}}},
-			"hostedBeta": map[string]any{"host": "api.notezy.app", "pathname": "/realtime/development/v1", "protocol": "wss", "description": "Hosted Beta", "security": []any{map[string]any{"$ref": "#/components/securitySchemes/connectionTicket"}}},
+			"hostedBeta": map[string]any{"host": "api.notegic.app", "pathname": "/realtime/development/v1", "protocol": "wss", "description": "Hosted Beta", "security": []any{map[string]any{"$ref": "#/components/securitySchemes/connectionTicket"}}},
 		},
 		"channels": map[string]any{"realtime": map[string]any{
 			"address": "/realtime/development/v1",
@@ -134,7 +134,7 @@ func frameSchema(frameType string, extra map[string]any, required []string) map[
 
 func realtimePostman() map[string]any {
 	return map[string]any{
-		"info": map[string]any{"_postman_id": "b6353bbc-7456-49f5-b94d-a6948906cb98", "name": "Notezy RealtimeGateway v1", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json", "description": "RealtimeGateway HTTP presence request. Use the included browser WebSocket example for the multiplex protocol."},
+		"info": map[string]any{"_postman_id": "b6353bbc-7456-49f5-b94d-a6948906cb98", "name": "Notegic RealtimeGateway v1", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json", "description": "RealtimeGateway HTTP presence request. Use the included browser WebSocket example for the multiplex protocol."},
 		"item": []any{map[string]any{
 			"name":    "Get active BlockPack participants",
 			"request": map[string]any{"method": "GET", "header": []any{map[string]any{"key": "User-Agent", "value": "{{userAgent}}"}, map[string]any{"key": "X-Request-Id", "value": "postman-presence-1"}}, "url": map[string]any{"raw": "{{realtimeBaseUrl}}/block-pack/{{blockPackId}}/participants", "host": []string{"{{realtimeBaseUrl}}"}}},
@@ -203,7 +203,7 @@ socket.addEventListener("error", (error) => console.error("websocket error", err
 }
 
 func writeRealtimeRules(base string) {
-	writeText(filepath.Join(base, "README.md"), `# Notezy RealtimeGateway v1 public contract
+	writeText(filepath.Join(base, "README.md"), `# Notegic RealtimeGateway v1 public contract
 
 This directory specifies every versioned endpoint emitted directly by RealtimeGateway v1 for realtime clients. It is a runtime-specific public contract, separate from the APIGateway integration contract.
 

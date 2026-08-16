@@ -10,21 +10,21 @@ test-e2e:
 	go test ./test/e2e/...
 
 view-databases:
-	docker compose -f ../../docker-compose.yaml exec -T notezy-core go -C internal/core run ./commands viewDatabases
+	docker compose -f ../../docker-compose.yaml exec -T notegic-core go -C internal/core run ./commands viewDatabases
 
 view-enums:
-	docker compose -f ../../docker-compose.yaml exec -T notezy-core go -C internal/core run ./commands viewAllEnums
+	docker compose -f ../../docker-compose.yaml exec -T notegic-core go -C internal/core run ./commands viewAllEnums
 
 psql:
-	docker exec -it notezy-db psql -U jeff -d notezy-db
+	docker exec -it notegic-db psql -U jeff -d notegic-db
 
 migrate:
-	docker compose -f ../../docker-compose.yaml exec -T notezy-core go -C internal/core run ./commands migrateDB
+	docker compose -f ../../docker-compose.yaml exec -T notegic-core go -C internal/core run ./commands migrateDB
 
 seed:
-	docker compose -f ../../docker-compose.yaml exec -T notezy-core go -C internal/core run ./commands seedDB
+	docker compose -f ../../docker-compose.yaml exec -T notegic-core go -C internal/core run ./commands seedDB
 
 clear-db:
-	docker exec -i notezy-db psql -U jeff -d notezy-db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+	docker exec -i notegic-db psql -U jeff -d notegic-db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 
 remigrate-db: clear-db migrate

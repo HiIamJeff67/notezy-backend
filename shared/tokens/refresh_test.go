@@ -8,8 +8,8 @@ func TestRefreshTokenRoundTrip(t *testing.T) {
 	token, err := GenerateRefreshToken(
 		"83bdeac1-02de-42fe-a7a8-4e1a83174866",
 		RefreshTokenClaims{
-			Name:      "notezy",
-			Email:     "notezy@example.com",
+			Name:      "notegic",
+			Email:     "notegic@example.com",
 			UserAgent: "test-agent",
 		},
 	)
@@ -21,7 +21,7 @@ func TestRefreshTokenRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse refresh token: %v", err)
 	}
-	if claims.Name != "notezy" || claims.Email != "notezy@example.com" || claims.UserAgent != "test-agent" {
+	if claims.Name != "notegic" || claims.Email != "notegic@example.com" || claims.UserAgent != "test-agent" {
 		t.Fatalf("unexpected refresh token claims: %#v", claims)
 	}
 	if claims.Subject != "83bdeac1-02de-42fe-a7a8-4e1a83174866" {

@@ -64,7 +64,7 @@ APIGateway 沿用 `UnauthorizedRateLimitMiddleware()`。主要 partition 永遠�
 
 ClientGateway 與 APIGateway 各自擁有自己的 route registration、Core adapter、Redis cache、rate limiter、configuration、transport 與 tests：ClientGateway 使用 JWT cookie flow；APIGateway 以 `KeyMiddleware()` 設定 API source，再由 Core API-key middleware 完成 cache/DB fallback。APIGateway 是獨立 module，command 位於 `internal/apigateway/commands/`，使用 `API_GATEWAY_LISTEN_ADDRESS`，不 import ClientGateway runtime source。
 
-本地 Compose 會讓 ClientGateway 綁定 `7777`、APIGateway 綁定 `7780`；目前 Nginx 的預設 `/` upstream 仍指向 ClientGateway，API service 可透過獨立 port/host 配置接入。正式環境若要使用不同網域，應在 Nginx/Ingress 以 host rule 將該網域導向 `notezy-api-gateway:7780`。
+本地 Compose 會讓 ClientGateway 綁定 `7777`、APIGateway 綁定 `7780`；目前 Nginx 的預設 `/` upstream 仍指向 ClientGateway，API service 可透過獨立 port/host 配置接入。正式環境若要使用不同網域，應在 Nginx/Ingress 以 host rule 將該網域導向 `notegic-api-gateway:7780`。
 
 現有 `Reposition` helper 已支援把 fronts、shared/default middlewares 與 route-specific backs 依序組合；兩個 gateway 的 route 已完成 `Reposition` 命名遷移。
 

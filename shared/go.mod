@@ -1,10 +1,10 @@
-module github.com/HiIamJeff67/notezy-backend/shared
+module github.com/HiIamJeff67/notegic-backend/shared
 
 go 1.26.0
 
 require (
 	github.com/99designs/gqlgen v0.17.76
-	github.com/HiIamJeff67/notezy-backend/contracts v0.0.0
+	github.com/HiIamJeff67/notegic-backend/contracts v0.0.0
 	github.com/comail/colog v0.0.0-20160416085026-fba8e7b1f46c
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/validator/v10 v10.27.0
@@ -80,4 +80,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/HiIamJeff67/notezy-backend/contracts => ../contracts
+replace github.com/HiIamJeff67/notegic-backend/contracts => ../contracts

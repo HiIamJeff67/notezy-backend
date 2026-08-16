@@ -9,16 +9,16 @@ import (
 	"sync/atomic"
 	"time"
 
-	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
-	observability "github.com/HiIamJeff67/notezy-backend/shared/platform/observability"
+	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
+	observability "github.com/HiIamJeff67/notegic-backend/shared/platform/observability"
 
-	durablejobconfig "github.com/HiIamJeff67/notezy-backend/internal/durablejob/configs"
-	routinetask "github.com/HiIamJeff67/notezy-backend/internal/durablejob/routinetask"
-	coreconsumers "github.com/HiIamJeff67/notezy-backend/internal/durablejob/transports/core/consumers"
-	coreproducers "github.com/HiIamJeff67/notezy-backend/internal/durablejob/transports/core/producers"
-	corestrategies "github.com/HiIamJeff67/notezy-backend/internal/durablejob/transports/core/strategies"
-	realtimegatewayproducers "github.com/HiIamJeff67/notezy-backend/internal/durablejob/transports/realtimegateway/producers"
-	status "github.com/HiIamJeff67/notezy-backend/internal/durablejob/transports/status"
+	durablejobconfig "github.com/HiIamJeff67/notegic-backend/internal/durablejob/configs"
+	routinetask "github.com/HiIamJeff67/notegic-backend/internal/durablejob/routinetask"
+	coreconsumers "github.com/HiIamJeff67/notegic-backend/internal/durablejob/transports/core/consumers"
+	coreproducers "github.com/HiIamJeff67/notegic-backend/internal/durablejob/transports/core/producers"
+	corestrategies "github.com/HiIamJeff67/notegic-backend/internal/durablejob/transports/core/strategies"
+	realtimegatewayproducers "github.com/HiIamJeff67/notegic-backend/internal/durablejob/transports/realtimegateway/producers"
+	status "github.com/HiIamJeff67/notegic-backend/internal/durablejob/transports/status"
 )
 
 type Application struct {
@@ -71,7 +71,7 @@ func (a *Application) loadKafkaConnectionConfig() platformkafka.ConnectionConfig
 func (a *Application) initializeObservability() func() {
 	return observability.Initialize(
 		context.Background(),
-		observability.LoadConfig("notezy-durable-job"),
+		observability.LoadConfig("notegic-durable-job"),
 	)
 }
 
@@ -81,7 +81,7 @@ func (a *Application) initializeKafka(
 ) *platformkafka.Producer {
 	kafkaProducer, err := platformkafka.NewProducer(platformkafka.ClientConfig{
 		ConnectionConfig: config,
-		ClientId:         "notezy-durable-job",
+		ClientId:         "notegic-durable-job",
 	})
 	if err != nil {
 		shutdownObservability()
@@ -115,7 +115,7 @@ func (a *Application) initializeWorkers(
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
 				ConnectionConfig: kafkaConnection,
-				ClientId:         "notezy-durable-job-routine-task",
+				ClientId:         "notegic-durable-job-routine-task",
 			},
 			ConsumerGroup:       durablejobconfig.RoutineTaskConsumerGroup,
 			MaximumAttempts:     config.KafkaConsumer.MaximumAttempts,
@@ -138,7 +138,7 @@ func (a *Application) initializeWorkers(
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
 				ConnectionConfig: kafkaConnection,
-				ClientId:         "notezy-durable-job-yjs-maintenance",
+				ClientId:         "notegic-durable-job-yjs-maintenance",
 			},
 			ConsumerGroup:       durablejobconfig.YjsMaintenanceHintConsumerGroup,
 			MaximumAttempts:     config.KafkaConsumer.MaximumAttempts,
@@ -153,7 +153,7 @@ func (a *Application) initializeWorkers(
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
 				ConnectionConfig: kafkaConnection,
-				ClientId:         "notezy-durable-job-yjs-maintenance-result",
+				ClientId:         "notegic-durable-job-yjs-maintenance-result",
 			},
 			ConsumerGroup:       durablejobconfig.YjsMaintenanceResultConsumerGroup,
 			MaximumAttempts:     config.KafkaConsumer.MaximumAttempts,

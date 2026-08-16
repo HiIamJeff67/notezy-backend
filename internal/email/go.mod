@@ -1,10 +1,10 @@
-module github.com/HiIamJeff67/notezy-backend/internal/email
+module github.com/HiIamJeff67/notegic-backend/internal/email
 
 go 1.26.0
 
 require (
-	github.com/HiIamJeff67/notezy-backend/contracts v0.0.0
-	github.com/HiIamJeff67/notezy-backend/shared v0.0.0
+	github.com/HiIamJeff67/notegic-backend/contracts v0.0.0
+	github.com/HiIamJeff67/notegic-backend/shared v0.0.0
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/google/uuid v1.6.0
 	github.com/spf13/cobra v1.9.1
@@ -52,6 +52,6 @@ require (
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 )
 
-replace github.com/HiIamJeff67/notezy-backend/contracts => ../../contracts
+replace github.com/HiIamJeff67/notegic-backend/contracts => ../../contracts
 
-replace github.com/HiIamJeff67/notezy-backend/shared => ../../shared
+replace github.com/HiIamJeff67/notegic-backend/shared => ../../shared

@@ -1,6 +1,6 @@
 package apicontract
 
-import coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
+import coreapicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api"
 
 type VisualizeMyTotalCountRequestDto struct {
 	coreapicontract.RequestDto[

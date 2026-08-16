@@ -9,11 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
+	sharedcontexts "github.com/HiIamJeff67/notegic-backend/shared/lib/contexts"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 
-	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/ratelimit"
+	ratelimit "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/ratelimit"
 )
 
 func AuthorizedRateLimitMiddleware(rateLimiter *ratelimit.HybridRateLimiter) gin.HandlerFunc {

@@ -1,27 +1,27 @@
 FROM golang:1.26-alpine AS base
 
-WORKDIR /notezy-backend
+WORKDIR /notegic-backend
 
 RUN apk add --no-cache git
 
 COPY contracts/go.mod contracts/go.sum contracts/
 COPY shared/go.mod shared/go.sum shared/
 COPY internal/realtimegateway/go.mod internal/realtimegateway/go.sum internal/realtimegateway/
-WORKDIR /notezy-backend/internal/realtimegateway
+WORKDIR /notegic-backend/internal/realtimegateway
 RUN go mod download
-WORKDIR /notezy-backend
+WORKDIR /notegic-backend
 
 COPY . .
 
 FROM base AS dev
 
-WORKDIR /notezy-backend/internal/realtimegateway
+WORKDIR /notegic-backend/internal/realtimegateway
 
 RUN go install github.com/air-verse/air@latest
 
 FROM base AS builder
 
-WORKDIR /notezy-backend/internal/realtimegateway
+WORKDIR /notegic-backend/internal/realtimegateway
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /out/realtimegateway ./commands
 

@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	realtimegateway "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway"
+	realtimegateway "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway"
 )
 
 func main() {

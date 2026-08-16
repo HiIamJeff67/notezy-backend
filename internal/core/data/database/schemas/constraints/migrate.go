@@ -1,10 +1,10 @@
 package constraints
 
 import (
-	blockconstraints "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/constraints/block_constraints"
-	routineconstraints "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/constraints/routine_constraints"
-	userquotaconstraints "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/constraints/user_quota_constraints"
-	userstobillingplansconstraints "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/constraints/users_to_billing_plans_constraints"
+	blockconstraints "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/constraints/block_constraints"
+	routineconstraints "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/constraints/routine_constraints"
+	userquotaconstraints "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/constraints/user_quota_constraints"
+	userstobillingplansconstraints "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/constraints/users_to_billing_plans_constraints"
 )
 
 var MigratingConstraintSQLs = []string{

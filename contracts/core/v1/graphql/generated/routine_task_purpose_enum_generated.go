@@ -6,7 +6,7 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	"github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -40,15 +40,15 @@ import (
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNRoutineTaskPurpose2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskPurpose(ctx context.Context, v any) (enums.RoutineTaskPurpose, error) {
+func (ec *executionContext) unmarshalNRoutineTaskPurpose2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskPurpose(ctx context.Context, v any) (enums.RoutineTaskPurpose, error) {
 	tmp, err := graphql.UnmarshalString(v)
-	res := unmarshalNRoutineTaskPurpose2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskPurpose[tmp]
+	res := unmarshalNRoutineTaskPurpose2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskPurpose[tmp]
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNRoutineTaskPurpose2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskPurpose(ctx context.Context, sel ast.SelectionSet, v enums.RoutineTaskPurpose) graphql.Marshaler {
+func (ec *executionContext) marshalNRoutineTaskPurpose2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskPurpose(ctx context.Context, sel ast.SelectionSet, v enums.RoutineTaskPurpose) graphql.Marshaler {
 	_ = sel
-	res := graphql.MarshalString(marshalNRoutineTaskPurpose2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskPurpose[v])
+	res := graphql.MarshalString(marshalNRoutineTaskPurpose2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskPurpose[v])
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -58,7 +58,7 @@ func (ec *executionContext) marshalNRoutineTaskPurpose2githubᚗcomᚋHiIamJeff6
 }
 
 var (
-	unmarshalNRoutineTaskPurpose2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskPurpose = map[string]enums.RoutineTaskPurpose{
+	unmarshalNRoutineTaskPurpose2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskPurpose = map[string]enums.RoutineTaskPurpose{
 		"RoutineTaskPurpose_CreateRootShelf": enums.RoutineTaskPurpose_CreateRootShelf,
 		"RoutineTaskPurpose_UpdateRootShelf": enums.RoutineTaskPurpose_UpdateRootShelf,
 		"RoutineTaskPurpose_ResetRootShelf":  enums.RoutineTaskPurpose_ResetRootShelf,
@@ -74,7 +74,7 @@ var (
 		"RoutineTaskPurpose_CreateRoutine":   enums.RoutineTaskPurpose_CreateRoutine,
 		"RoutineTaskPurpose_UpdateRoutine":   enums.RoutineTaskPurpose_UpdateRoutine,
 	}
-	marshalNRoutineTaskPurpose2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskPurpose = map[enums.RoutineTaskPurpose]string{
+	marshalNRoutineTaskPurpose2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐRoutineTaskPurpose = map[enums.RoutineTaskPurpose]string{
 		enums.RoutineTaskPurpose_CreateRootShelf: "RoutineTaskPurpose_CreateRootShelf",
 		enums.RoutineTaskPurpose_UpdateRootShelf: "RoutineTaskPurpose_UpdateRootShelf",
 		enums.RoutineTaskPurpose_ResetRootShelf:  "RoutineTaskPurpose_ResetRootShelf",

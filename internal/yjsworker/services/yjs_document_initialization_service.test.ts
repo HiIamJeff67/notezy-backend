@@ -5,10 +5,10 @@ import * as Y from "yjs";
 
 import { BlockPackProjector } from "./block_pack_projector.js";
 import { YjsDocumentInitializationService } from "./yjs_document_initialization_service.js";
-import type { NotezyBlock } from "../types/blocknote_schema.js";
+import type { NotegicBlock } from "../types/blocknote_schema.js";
 
 test("YjsDocumentInitializationService preserves initial BlockNote content", () => {
-  const blocks: NotezyBlock[] = [
+  const blocks: NotegicBlock[] = [
     {
       id: "c58c8cba-74b3-46e6-a758-16530edc9a01",
       type: "paragraph",

@@ -10,7 +10,7 @@ import (
 
 	"golang.org/x/oauth2"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 )
 
 type OAuthServiceInterface interface {

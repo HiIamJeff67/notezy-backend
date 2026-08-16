@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Notezy adopts a staged migration rather than a one-time domain/database split. `Core` remains the synchronous owner of the current user, shelf, block, routine, and station workflows until a later bounded-context decision proves a separate runtime and database are warranted.
+Notegic adopts a staged migration rather than a one-time domain/database split. `Core` remains the synchronous owner of the current user, shelf, block, routine, and station workflows until a later bounded-context decision proves a separate runtime and database are warranted.
 
 ## Target ownership
 
@@ -154,11 +154,11 @@ apigateway -> contracts + shared + own edge implementation
 clientgateway -X-> service data/repository
 internal/<runtime>/* -> contracts + shared + own data
 internal/<runtime>/* -X-> another runtime's source
-shared/lib -X-> all Notezy packages
+shared/lib -X-> all Notegic packages
 shared/platform -X-> domain business packages
 ```
 
-`shared/lib` is portable: it may use the standard library and a necessary third-party library, but never imports a Notezy package. `shared/util` contains reusable application-facing utilities such as `editableblock`, `exceptionwriter`, and `responsewriter`; unlike `shared/lib`, these utilities may depend on shared application packages. Shared parsers return ordinary Go `error`; application boundaries map those errors to service exceptions.
+`shared/lib` is portable: it may use the standard library and a necessary third-party library, but never imports a Notegic package. `shared/util` contains reusable application-facing utilities such as `editableblock`, `exceptionwriter`, and `responsewriter`; unlike `shared/lib`, these utilities may depend on shared application packages. Shared parsers return ordinary Go `error`; application boundaries map those errors to service exceptions.
 
 ## Shared contract types
 

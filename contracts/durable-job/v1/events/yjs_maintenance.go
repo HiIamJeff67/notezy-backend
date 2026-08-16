@@ -3,7 +3,7 @@ package durablejobeventscontract
 import (
 	"github.com/google/uuid"
 
-	yjsworkereventscontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1/events"
+	yjsworkereventscontract "github.com/HiIamJeff67/notegic-backend/contracts/yjs-worker/v1/events"
 )
 
 type YjsMaintenanceRequestData struct {

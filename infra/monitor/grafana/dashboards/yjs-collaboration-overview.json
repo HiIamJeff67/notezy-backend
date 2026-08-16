@@ -35,7 +35,7 @@
       },
       "targets": [
         {
-          "expr": "sum(notezy_yjs_worker_active_room_count)",
+          "expr": "sum(notegic_yjs_worker_active_room_count)",
           "refId": "A"
         }
       ],
@@ -73,7 +73,7 @@
       },
       "targets": [
         {
-          "expr": "sum(notezy_yjs_worker_active_subscriber_count)",
+          "expr": "sum(notegic_yjs_worker_active_subscriber_count)",
           "refId": "A"
         }
       ],
@@ -111,7 +111,7 @@
       },
       "targets": [
         {
-          "expr": "sum(notezy_realtime_connector_count)",
+          "expr": "sum(notegic_realtime_connector_count)",
           "refId": "A"
         }
       ],
@@ -170,7 +170,7 @@
       },
       "targets": [
         {
-          "expr": "sum(notezy_yjs_worker_process_heap_bytes)",
+          "expr": "sum(notegic_yjs_worker_process_heap_bytes)",
           "refId": "A"
         }
       ],
@@ -197,7 +197,7 @@
       "id": 5,
       "targets": [
         {
-          "expr": "sum by (operation, outcome) (rate(notezy_yjs_worker_operation_count_total[5m]))",
+          "expr": "sum by (operation, outcome) (rate(notegic_yjs_worker_operation_count_total[5m]))",
           "legendFormat": "{{operation}} {{outcome}}",
           "refId": "A"
         }
@@ -225,12 +225,12 @@
       "id": 6,
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum by (le, operation) (rate(notezy_yjs_operation_duration_bucket[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le, operation) (rate(notegic_yjs_operation_duration_bucket[5m])))",
           "legendFormat": "Go {{operation}}",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le, operation) (rate(notezy_yjs_worker_operation_duration_bucket[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le, operation) (rate(notegic_yjs_worker_operation_duration_bucket[5m])))",
           "legendFormat": "Worker {{operation}}",
           "refId": "B"
         }
@@ -258,7 +258,7 @@
       "id": 7,
       "targets": [
         {
-          "expr": "max(notezy_yjs_worker_event_loop_delay_milliseconds)",
+          "expr": "max(notegic_yjs_worker_event_loop_delay_milliseconds)",
           "refId": "A"
         }
       ],
@@ -285,7 +285,7 @@
       "id": 8,
       "targets": [
         {
-          "expr": "sum by (operation) (rate(notezy_yjs_worker_payload_bytes_total[5m]))",
+          "expr": "sum by (operation) (rate(notegic_yjs_worker_payload_bytes_total[5m]))",
           "legendFormat": "{{operation}}",
           "refId": "A"
         }
@@ -313,22 +313,22 @@
       "id": 9,
       "targets": [
         {
-          "expr": "sum(notezy_yjs_worker_process_heap_bytes)",
+          "expr": "sum(notegic_yjs_worker_process_heap_bytes)",
           "legendFormat": "heap used",
           "refId": "A"
         },
         {
-          "expr": "sum(notezy_yjs_worker_process_rss_bytes)",
+          "expr": "sum(notegic_yjs_worker_process_rss_bytes)",
           "legendFormat": "rss",
           "refId": "B"
         },
         {
-          "expr": "sum(notezy_yjs_worker_process_external_bytes)",
+          "expr": "sum(notegic_yjs_worker_process_external_bytes)",
           "legendFormat": "external",
           "refId": "C"
         },
         {
-          "expr": "sum(notezy_yjs_worker_process_array_buffers_bytes)",
+          "expr": "sum(notegic_yjs_worker_process_array_buffers_bytes)",
           "legendFormat": "array buffers",
           "refId": "D"
         }
@@ -356,12 +356,12 @@
       "id": 10,
       "targets": [
         {
-          "expr": "sum by (direction, frameType) (rate(notezy_realtime_frame_count_total[5m]))",
+          "expr": "sum by (direction, frameType) (rate(notegic_realtime_frame_count_total[5m]))",
           "legendFormat": "{{direction}} {{frameType}}",
           "refId": "A"
         },
         {
-          "expr": "sum by (reason) (rate(notezy_realtime_connection_rejected_count_total[5m]))",
+          "expr": "sum by (reason) (rate(notegic_realtime_connection_rejected_count_total[5m]))",
           "legendFormat": "rejected {{reason}}",
           "refId": "B"
         }
@@ -389,7 +389,7 @@
       "id": 11,
       "targets": [
         {
-          "expr": "sum by (direction, frameType) (rate(notezy_realtime_payload_bytes_total[5m]))",
+          "expr": "sum by (direction, frameType) (rate(notegic_realtime_payload_bytes_total[5m]))",
           "legendFormat": "{{direction}} {{frameType}}",
           "refId": "A"
         }
@@ -417,17 +417,17 @@
       "id": 12,
       "targets": [
         {
-          "expr": "sum(notezy_realtime_channel_count)",
+          "expr": "sum(notegic_realtime_channel_count)",
           "legendFormat": "active channels",
           "refId": "A"
         },
         {
-          "expr": "sum by (outcome) (rate(notezy_realtime_channel_subscription_count_total[5m]))",
+          "expr": "sum by (outcome) (rate(notegic_realtime_channel_subscription_count_total[5m]))",
           "legendFormat": "{{outcome}}",
           "refId": "B"
         },
         {
-          "expr": "sum by (channelType) (rate(notezy_realtime_channel_backpressure_count_total[5m]))",
+          "expr": "sum by (channelType) (rate(notegic_realtime_channel_backpressure_count_total[5m]))",
           "legendFormat": "backpressure {{channelType}}",
           "refId": "C"
         }
@@ -455,12 +455,12 @@
       "id": 13,
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum by (le, queueType, frameType) (rate(notezy_realtime_outbound_queue_depth_bucket[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le, queueType, frameType) (rate(notegic_realtime_outbound_queue_depth_bucket[5m])))",
           "legendFormat": "{{queueType}} {{frameType}}",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le, queueType, frameType) (rate(notezy_realtime_outbound_queue_bytes_bucket[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le, queueType, frameType) (rate(notegic_realtime_outbound_queue_bytes_bucket[5m])))",
           "legendFormat": "{{queueType}} {{frameType}} bytes",
           "refId": "B"
         }
@@ -488,12 +488,12 @@
       "id": 14,
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(notezy_yjs_projection_lag_bucket[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(notegic_yjs_projection_lag_bucket[5m])))",
           "legendFormat": "projection lag",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(notezy_yjs_compaction_age_seconds_bucket[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(notegic_yjs_compaction_age_seconds_bucket[5m])))",
           "legendFormat": "compaction age seconds",
           "refId": "B"
         }
@@ -504,7 +504,7 @@
   ],
   "schemaVersion": 41,
   "tags": [
-    "notezy",
+    "notegic",
     "yjs",
     "realtime"
   ],
@@ -517,6 +517,6 @@
   },
   "timezone": "browser",
   "title": "Yjs Collaboration Overview",
-  "uid": "notezy-yjs-collaboration",
+  "uid": "notegic-yjs-collaboration",
   "version": 1
 }

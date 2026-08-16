@@ -8,13 +8,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/ratelimit"
+	ratelimit "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/ratelimit"
 )
 
 func UnauthorizedRateLimitMiddleware(rateLimiter *ratelimit.HybridRateLimiter) gin.HandlerFunc {
@@ -35,7 +35,7 @@ func UnauthorizedRateLimitMiddleware(rateLimiter *ratelimit.HybridRateLimiter) g
 		allowed, remaining := rateLimiter.AllowByFingerprint(fingerprint)
 		if !allowed {
 			setRateLimitHeaders(ctx, remaining, rateLimiter)
-			logs.NotezyLogger.Debug(ctx.Request.Context(), fmt.Sprintf("Rate limit exceeded for fingerprint: %s", fingerprint))
+			logs.NotegicLogger.Debug(ctx.Request.Context(), fmt.Sprintf("Rate limit exceeded for fingerprint: %s", fingerprint))
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.New(
 				"PermissionDeniedDueToTooManyRequests",
 				"RealtimeGateway",

@@ -6,9 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/clientgateway/transports/api/middlewares"
+	middlewares "github.com/HiIamJeff67/notegic-backend/internal/clientgateway/transports/api/middlewares"
 )
 
 type StaticRouteDependencies struct {
@@ -37,7 +37,7 @@ func configureStaticRoutes(router *gin.RouterGroup, deps StaticRouteDependencies
 				if _, err := os.Stat(filePath); os.IsNotExist(err) {
 					filePath = "./global/images/avatars/userAvatar1.png"
 				}
-				logs.NotezyLogger.Info(ctx.Request.Context(), "download file")
+				logs.NotegicLogger.Info(ctx.Request.Context(), "download file")
 
 				ctx.File(filePath)
 			})

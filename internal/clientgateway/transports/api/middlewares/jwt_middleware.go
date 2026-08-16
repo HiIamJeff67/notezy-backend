@@ -6,10 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
+	cookies "github.com/HiIamJeff67/notegic-backend/shared/cookies"
+	sharedtokens "github.com/HiIamJeff67/notegic-backend/shared/tokens"
 
-	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+	sharedcontexts "github.com/HiIamJeff67/notegic-backend/shared/lib/contexts"
 )
 
 func JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler *cookies.CookieHandler) gin.HandlerFunc {

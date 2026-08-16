@@ -5,11 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	exceptionwriter "github.com/HiIamJeff67/notegic-backend/shared/util/exceptionwriter"
 
-	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/root-shelves"
+	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/root-shelves"
 
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/apigateway/transports/core/adapters"
+	coreadapters "github.com/HiIamJeff67/notegic-backend/internal/apigateway/transports/core/adapters"
 )
 
 type RootShelfControllerInterface interface {
@@ -36,12 +36,12 @@ type RootShelfControllerInterface interface {
 }
 
 type RootShelfController struct {
-	coreClient *coreadapters.CoreAdapter
+	coreAdapter *coreadapters.CoreAdapter
 }
 
-func NewRootShelfController(coreClient *coreadapters.CoreAdapter) RootShelfControllerInterface {
+func NewRootShelfController(coreAdapter *coreadapters.CoreAdapter) RootShelfControllerInterface {
 	return &RootShelfController{
-		coreClient: coreClient,
+		coreAdapter: coreAdapter,
 	}
 }
 
@@ -53,7 +53,7 @@ func (c *RootShelfController) GetMyRootShelfById(ctx *gin.Context, request *apic
 		apicontract.GetMyRootShelfByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.GetMyRootShelfByIdOperation,
 		"/core/v1/root-shelves/get-by-id",
@@ -72,7 +72,7 @@ func (c *RootShelfController) CreateRootShelf(ctx *gin.Context, request *apicont
 		apicontract.CreateRootShelfResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.CreateRootShelfOperation,
 		"/core/v1/root-shelves/create",
@@ -91,7 +91,7 @@ func (c *RootShelfController) CreateRootShelves(ctx *gin.Context, request *apico
 		apicontract.CreateRootShelvesResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.CreateRootShelvesOperation,
 		"/core/v1/root-shelves/create-many",
@@ -110,7 +110,7 @@ func (c *RootShelfController) UpdateMyRootShelfById(ctx *gin.Context, request *a
 		apicontract.UpdateMyRootShelfByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		request,
 		apicontract.UpdateMyRootShelfByIdOperation,
 		"/core/v1/root-shelves/update",
@@ -129,7 +129,7 @@ func (c *RootShelfController) UpdateMyRootShelvesByIds(ctx *gin.Context, request
 		apicontract.UpdateMyRootShelvesByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.UpdateMyRootShelvesByIdsOperation,
 		"/core/v1/root-shelves/update-many",
@@ -148,7 +148,7 @@ func (c *RootShelfController) RestoreMyRootShelfById(ctx *gin.Context, requestDt
 		apicontract.RestoreMyRootShelfByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.RestoreMyRootShelfByIdOperation,
 		"/core/v1/root-shelves/restore",
@@ -167,7 +167,7 @@ func (c *RootShelfController) RestoreMyRootShelvesByIds(ctx *gin.Context, reques
 		apicontract.RestoreMyRootShelvesByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.RestoreMyRootShelvesByIdsOperation,
 		"/core/v1/root-shelves/restore-many",
@@ -186,7 +186,7 @@ func (c *RootShelfController) DeleteMyRootShelfById(ctx *gin.Context, requestDto
 		apicontract.DeleteMyRootShelfByIdResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.DeleteMyRootShelfByIdOperation,
 		"/core/v1/root-shelves/delete",
@@ -205,7 +205,7 @@ func (c *RootShelfController) DeleteMyRootShelvesByIds(ctx *gin.Context, request
 		apicontract.DeleteMyRootShelvesByIdsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.DeleteMyRootShelvesByIdsOperation,
 		"/core/v1/root-shelves/delete-many",
@@ -219,7 +219,7 @@ func (c *RootShelfController) DeleteMyRootShelvesByIds(ctx *gin.Context, request
 }
 
 func (c *RootShelfController) GetMyRootShelfPermission(ctx *gin.Context, requestDto *apicontract.GetMyRootShelfPermissionRequestDto) {
-	response, exception := coreadapters.CallSecurly[apicontract.GetMyRootShelfPermissionRequestDto, apicontract.GetMyRootShelfPermissionResponseDto](ctx, c.coreClient, requestDto, apicontract.GetMyRootShelfPermissionOperation, "/core/v1/root-shelves/permissions/get")
+	response, exception := coreadapters.CallSecurly[apicontract.GetMyRootShelfPermissionRequestDto, apicontract.GetMyRootShelfPermissionResponseDto](ctx, c.coreAdapter, requestDto, apicontract.GetMyRootShelfPermissionOperation, "/core/v1/root-shelves/permissions/get")
 	if exception != nil {
 		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
@@ -229,7 +229,7 @@ func (c *RootShelfController) GetMyRootShelfPermission(ctx *gin.Context, request
 }
 
 func (c *RootShelfController) CreateMyRootShelfPermission(ctx *gin.Context, requestDto *apicontract.CreateMyRootShelfPermissionRequestDto) {
-	response, exception := coreadapters.CallSecurly[apicontract.CreateMyRootShelfPermissionRequestDto, apicontract.CreateMyRootShelfPermissionResponseDto](ctx, c.coreClient, requestDto, apicontract.CreateMyRootShelfPermissionOperation, "/core/v1/root-shelves/permissions/create")
+	response, exception := coreadapters.CallSecurly[apicontract.CreateMyRootShelfPermissionRequestDto, apicontract.CreateMyRootShelfPermissionResponseDto](ctx, c.coreAdapter, requestDto, apicontract.CreateMyRootShelfPermissionOperation, "/core/v1/root-shelves/permissions/create")
 	if exception != nil {
 		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
@@ -241,7 +241,7 @@ func (c *RootShelfController) CreateMyRootShelfPermission(ctx *gin.Context, requ
 func (c *RootShelfController) UpsertMyRootShelfPermission(
 	ctx *gin.Context, requestDto *apicontract.UpsertMyRootShelfPermissionRequestDto,
 ) {
-	response, exception := coreadapters.CallSecurly[apicontract.UpsertMyRootShelfPermissionRequestDto, apicontract.UpsertMyRootShelfPermissionResponseDto](ctx, c.coreClient, requestDto, apicontract.UpsertMyRootShelfPermissionOperation, "/core/v1/root-shelves/permissions/upsert")
+	response, exception := coreadapters.CallSecurly[apicontract.UpsertMyRootShelfPermissionRequestDto, apicontract.UpsertMyRootShelfPermissionResponseDto](ctx, c.coreAdapter, requestDto, apicontract.UpsertMyRootShelfPermissionOperation, "/core/v1/root-shelves/permissions/upsert")
 	if exception != nil {
 		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
@@ -258,7 +258,7 @@ func (c *RootShelfController) UpsertMyRootShelfPermissions(
 		apicontract.UpsertMyRootShelfPermissionsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.UpsertMyRootShelfPermissionsOperation,
 		"/core/v1/root-shelves/permissions/upsert-many",
@@ -272,7 +272,7 @@ func (c *RootShelfController) UpsertMyRootShelfPermissions(
 }
 
 func (c *RootShelfController) UpdateMyRootShelfPermission(ctx *gin.Context, requestDto *apicontract.UpdateMyRootShelfPermissionRequestDto) {
-	response, exception := coreadapters.CallSecurly[apicontract.UpdateMyRootShelfPermissionRequestDto, apicontract.UpdateMyRootShelfPermissionResponseDto](ctx, c.coreClient, requestDto, apicontract.UpdateMyRootShelfPermissionOperation, "/core/v1/root-shelves/permissions/update")
+	response, exception := coreadapters.CallSecurly[apicontract.UpdateMyRootShelfPermissionRequestDto, apicontract.UpdateMyRootShelfPermissionResponseDto](ctx, c.coreAdapter, requestDto, apicontract.UpdateMyRootShelfPermissionOperation, "/core/v1/root-shelves/permissions/update")
 	if exception != nil {
 		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
@@ -289,7 +289,7 @@ func (c *RootShelfController) TransferMyRootShelfOwnership(
 		apicontract.TransferMyRootShelfOwnershipResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.TransferMyRootShelfOwnershipOperation,
 		"/core/v1/root-shelves/ownership/transfer",
@@ -310,7 +310,7 @@ func (c *RootShelfController) DeleteMyRootShelfPermission(
 		apicontract.DeleteMyRootShelfPermissionResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.DeleteMyRootShelfPermissionOperation,
 		"/core/v1/root-shelves/permissions/delete",
@@ -331,7 +331,7 @@ func (c *RootShelfController) DeleteMyRootShelfPermissions(
 		apicontract.DeleteMyRootShelfPermissionsResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.DeleteMyRootShelfPermissionsOperation,
 		"/core/v1/root-shelves/permissions/delete-many",
@@ -350,7 +350,7 @@ func (c *RootShelfController) LeaveMyRootShelf(ctx *gin.Context, requestDto *api
 		apicontract.LeaveMyRootShelfResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.LeaveMyRootShelfOperation,
 		"/core/v1/root-shelves/memberships/leave",
@@ -369,7 +369,7 @@ func (c *RootShelfController) LeaveMyRootShelves(ctx *gin.Context, requestDto *a
 		apicontract.LeaveMyRootShelvesResponseDto,
 	](
 		ctx,
-		c.coreClient,
+		c.coreAdapter,
 		requestDto,
 		apicontract.LeaveMyRootShelvesOperation,
 		"/core/v1/root-shelves/memberships/leave-many",

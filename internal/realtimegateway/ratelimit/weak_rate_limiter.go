@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	realtimeconfig "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/configs"
+	realtimeconfig "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/configs"
 )
 
 // The weak rate limiter is an implementation of Leaky Bucket algorithm

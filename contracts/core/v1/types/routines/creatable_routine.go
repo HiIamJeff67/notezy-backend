@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	enumcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 )
 
 type CreatableRoutine struct {

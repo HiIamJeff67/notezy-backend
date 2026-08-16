@@ -1,6 +1,6 @@
 # 前端 Contract 遷移：Gateway 分流與 RoutineTask 月度額度
 
-> 暫時整合文件。本文比較目前工作區與上一個提交，供 Notezy
+> 暫時整合文件。本文比較目前工作區與上一個提交，供 Notegic
 > frontend 在後端部署這批變更時串接；它不取代正式的 generated contract。
 
 ## 結論

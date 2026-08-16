@@ -6,10 +6,10 @@ import (
 
 	"gorm.io/gorm"
 
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
-	platformpostgres "github.com/HiIamJeff67/notezy-backend/shared/platform/postgres"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
+	platformpostgres "github.com/HiIamJeff67/notegic-backend/shared/platform/postgres"
 
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/notification/data/database/schemas"
+	schemas "github.com/HiIamJeff67/notegic-backend/internal/notification/data/database/schemas"
 )
 
 func Connect(config platformpostgres.Config) (*gorm.DB, error) {
@@ -30,8 +30,8 @@ func Disconnect(db *gorm.DB) error {
 		return nil
 	}
 	if err := platformpostgres.Disconnect(db); err != nil {
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(context.Background(), err, "Failed to close Notification database")
+		if logs.NotegicLogger != nil {
+			logs.NotegicLogger.Error(context.Background(), err, "Failed to close Notification database")
 		}
 		return err
 	}

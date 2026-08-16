@@ -10,16 +10,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
+	sharedtokens "github.com/HiIamJeff67/notegic-backend/shared/tokens"
 
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
-	coremiddlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
+	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
+	coremiddlewares "github.com/HiIamJeff67/notegic-backend/internal/core/transports/gateway/middlewares"
 )
 
 func TestDelegationMiddlewareSetsRoutePermissions(t *testing.T) {
-	t.Setenv("CORE_DELEGATION_AUDIENCE", "notezy-api-test")
-	t.Setenv("CORE_DELEGATION_ISSUER", "notezy-gateway-test")
+	t.Setenv("CORE_DELEGATION_AUDIENCE", "notegic-api-test")
+	t.Setenv("CORE_DELEGATION_ISSUER", "notegic-gateway-test")
 	t.Setenv("CORE_DELEGATION_SECRET", "test-delegation-secret")
 
 	tokenValue, err := sharedtokens.GenerateDelegationToken(sharedtokens.DelegationTokenClaims{
@@ -55,8 +55,8 @@ func TestDelegationMiddlewareSetsRoutePermissions(t *testing.T) {
 }
 
 func TestDelegationAuthenticatedMiddlewareLeavesRoutePermissionsAbsentWhenNotDelegated(t *testing.T) {
-	t.Setenv("CORE_DELEGATION_AUDIENCE", "notezy-api-test")
-	t.Setenv("CORE_DELEGATION_ISSUER", "notezy-gateway-test")
+	t.Setenv("CORE_DELEGATION_AUDIENCE", "notegic-api-test")
+	t.Setenv("CORE_DELEGATION_ISSUER", "notegic-gateway-test")
 	t.Setenv("CORE_DELEGATION_SECRET", "test-delegation-secret")
 
 	tokenValue, err := sharedtokens.GenerateDelegationToken(sharedtokens.DelegationTokenClaims{
@@ -92,8 +92,8 @@ func TestDelegationAuthenticatedMiddlewareLeavesRoutePermissionsAbsentWhenNotDel
 }
 
 func TestDelegationMiddlewarePreservesBodyForEndpointBinding(t *testing.T) {
-	t.Setenv("CORE_DELEGATION_AUDIENCE", "notezy-api-test")
-	t.Setenv("CORE_DELEGATION_ISSUER", "notezy-gateway-test")
+	t.Setenv("CORE_DELEGATION_AUDIENCE", "notegic-api-test")
+	t.Setenv("CORE_DELEGATION_ISSUER", "notegic-gateway-test")
 	t.Setenv("CORE_DELEGATION_SECRET", "test-delegation-secret")
 
 	const operation = "station.update"
@@ -148,8 +148,8 @@ func TestDelegationMiddlewarePreservesBodyForEndpointBinding(t *testing.T) {
 }
 
 func TestDelegationAuthenticatedMiddlewareRequiresUserSubject(t *testing.T) {
-	t.Setenv("CORE_DELEGATION_AUDIENCE", "notezy-api-test")
-	t.Setenv("CORE_DELEGATION_ISSUER", "notezy-gateway-test")
+	t.Setenv("CORE_DELEGATION_AUDIENCE", "notegic-api-test")
+	t.Setenv("CORE_DELEGATION_ISSUER", "notegic-gateway-test")
 	t.Setenv("CORE_DELEGATION_SECRET", "test-delegation-secret")
 
 	tokenValue, err := sharedtokens.GenerateDelegationToken(sharedtokens.DelegationTokenClaims{

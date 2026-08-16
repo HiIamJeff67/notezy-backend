@@ -3,10 +3,10 @@ package options
 import (
 	"gorm.io/gorm"
 
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	types "github.com/HiIamJeff67/notegic-backend/shared/types"
 
-	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
+	data "github.com/HiIamJeff67/notegic-backend/internal/core/data/database"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
 )
 
 const (

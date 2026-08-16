@@ -5,9 +5,9 @@ import (
 
 	"github.com/google/uuid"
 
-	coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
-	coretypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/block-packs"
-	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	coreapicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api"
+	coretypes "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/types/block-packs"
+	enumcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 )
 
 type UpdateMyBlockPackByIdRequestDto struct {

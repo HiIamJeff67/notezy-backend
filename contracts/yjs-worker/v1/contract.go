@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
+	eventcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/events"
 )
 
 const Version = "v1"
