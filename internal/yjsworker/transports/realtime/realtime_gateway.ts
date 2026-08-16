@@ -28,7 +28,10 @@ import {
   parseYjsDocumentState,
   parseYjsUpdateSequence,
 } from "../../types/yjs_document_state.js";
-import { CoreCommandDispatcher } from "../core/dispatchers/core_command_dispatcher.js";
+import {
+  CoreCommandDispatcher,
+  CoreCommandError,
+} from "../core/dispatchers/core_command_dispatcher.js";
 import type { RoomRegistry } from "./room_registry.js";
 import { YjsDebouncer } from "./yjs_debouncer.js";
 
@@ -56,35 +59,39 @@ export class RealtimeGateway {
       telemetry,
       this.resyncRoom.bind(this),
       async (blockPackId, persistenceBatchId, originConnectionId, payload) => {
-        const { reply } = await this.coreCommandDispatcher.dispatchAsync<
-          {
-            persistenceBatchId: string;
-            originConnectionId: string | null;
-            payload: string;
-          },
-          { updateSequence: number }
-        >("AppendYjsUpdate", blockPackId, {
-          persistenceBatchId,
-          originConnectionId,
-          payload: payload.toString("base64"),
-        });
-        this.pendingPersistenceBatches.set(persistenceBatchId, blockPackId);
-        void reply.then(
-          response => {
-            this.handleYjsPersistenceResult(
-              blockPackId,
-              persistenceBatchId,
-              response.updateSequence
-            );
-          },
-          error => {
-            this.handleYjsPersistenceFailure(
-              blockPackId,
-              persistenceBatchId,
-              error
-            );
-          }
-        );
+        const startedAt = performance.now();
+        let commandId: string | null = null;
+        try {
+          const dispatched = await this.coreCommandDispatcher.dispatchAsync<
+            {
+              persistenceBatchId: string;
+              originConnectionId: string | null;
+              payload: string;
+            },
+            { updateSequence: number }
+          >("AppendYjsUpdate", blockPackId, {
+            persistenceBatchId,
+            originConnectionId,
+            payload: payload.toString("base64"),
+          });
+          commandId = dispatched.commandId;
+          this.pendingPersistenceBatches.set(persistenceBatchId, blockPackId);
+          const response = await dispatched.reply;
+          this.pendingPersistenceBatches.delete(persistenceBatchId);
+
+          return response.updateSequence;
+        } catch (error) {
+          this.pendingPersistenceBatches.delete(persistenceBatchId);
+          this.logCoreCommandFailure(
+            "AppendYjsUpdate",
+            blockPackId,
+            commandId,
+            startedAt,
+            error,
+            persistenceBatchId
+          );
+          throw error;
+        }
       },
       this.handleYjsUpdatePersisted.bind(this)
     );
@@ -388,6 +395,29 @@ export class RealtimeGateway {
     this.roomRegistry.scheduleRoomEviction(blockPackId);
   }
 
+  private logCoreCommandFailure(
+    commandType: string,
+    blockPackId: string,
+    commandId: string | null,
+    startedAt: number,
+    error: unknown,
+    persistenceBatchId?: string
+  ): void {
+    const commandError = error instanceof CoreCommandError ? error : null;
+    console.error("[YjsWorker] Core command failed", {
+      blockPackId,
+      commandId: commandError?.commandId ?? commandId,
+      commandType,
+      elapsedMilliseconds: performance.now() - startedAt,
+      isTimeout: commandError?.isTimeout ?? false,
+      errorCode: commandError?.code ?? null,
+      retryable: commandError?.retryable ?? null,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : undefined,
+      persistenceBatchId,
+    });
+  }
+
   private scheduleBlockProjection(
     room: Room,
     blockPackId: string,
@@ -541,13 +571,16 @@ export class RealtimeGateway {
   }
 
   private loadYjsDocument(room: Room, blockPackId: string): void {
-    void this.coreCommandDispatcher
-      .dispatch<Record<string, never>, { found: boolean; payload?: string }>(
-        "LoadYjsDocument",
-        blockPackId,
-        {}
-      )
-      .then(response => {
+    const startedAt = performance.now();
+    void (async () => {
+      let commandId: string | null = null;
+      try {
+        const dispatched = await this.coreCommandDispatcher.dispatchAsync<
+          Record<string, never>,
+          { found: boolean; payload?: string }
+        >("LoadYjsDocument", blockPackId, {});
+        commandId = dispatched.commandId;
+        const response = await dispatched.reply;
         const state =
           response.found && response.payload !== undefined
             ? parseYjsDocumentState(Buffer.from(response.payload, "base64"))
@@ -588,13 +621,27 @@ export class RealtimeGateway {
           }
           this.scheduleBlockProjection(room, blockPackId);
           this.roomRegistry.scheduleRoomEviction(blockPackId);
-        } catch {
+        } catch (error) {
+          this.logCoreCommandFailure(
+            "LoadYjsDocument",
+            blockPackId,
+            commandId,
+            startedAt,
+            error
+          );
           this.resyncRoom(room, blockPackId);
         }
-      })
-      .catch(() => {
+      } catch (error) {
+        this.logCoreCommandFailure(
+          "LoadYjsDocument",
+          blockPackId,
+          commandId,
+          startedAt,
+          error
+        );
         this.resyncRoom(room, blockPackId);
-      });
+      }
+    })();
   }
 
   private handleYjsUpdatePersisted(
@@ -618,66 +665,6 @@ export class RealtimeGateway {
     this.requestYjsCompaction(room, blockPackId);
     this.scheduleBlockProjection(room, blockPackId);
     this.roomRegistry.scheduleRoomEviction(blockPackId);
-  }
-
-  private handleYjsPersistenceResult(
-    blockPackId: string,
-    persistenceBatchId: string,
-    updateSequence: number
-  ): void {
-    if (
-      this.pendingPersistenceBatches.get(persistenceBatchId) !== blockPackId
-    ) {
-      return;
-    }
-    this.pendingPersistenceBatches.delete(persistenceBatchId);
-
-    const room = this.roomRegistry.get(blockPackId);
-    if (
-      room === undefined ||
-      !Number.isSafeInteger(updateSequence) ||
-      updateSequence < 0
-    ) {
-      return;
-    }
-
-    room.lastUpdateSequence = Math.max(room.lastUpdateSequence, updateSequence);
-    this.telemetry.recordOperation({
-      operation: "persistence.batch_confirmed",
-      outcome: "success",
-      durationMilliseconds: 0,
-    });
-  }
-
-  private handleYjsPersistenceFailure(
-    blockPackId: string,
-    persistenceBatchId: string,
-    error: unknown
-  ): void {
-    if (
-      this.pendingPersistenceBatches.get(persistenceBatchId) !== blockPackId
-    ) {
-      return;
-    }
-    this.pendingPersistenceBatches.delete(persistenceBatchId);
-
-    const room = this.roomRegistry.get(blockPackId);
-    if (room === undefined) {
-      return;
-    }
-
-    console.error("Core rejected Yjs persistence batch", {
-      blockPackId,
-      persistenceBatchId,
-      error,
-    });
-    this.telemetry.recordOperation({
-      operation: "persistence.batch_confirmed",
-      outcome: "error",
-      durationMilliseconds: 0,
-      error,
-    });
-    this.resyncRoom(room, blockPackId);
   }
 
   /* ============================== WebSocket connection ============================== */

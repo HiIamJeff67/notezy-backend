@@ -65,6 +65,33 @@ type PendingReply = {
   timeout: NodeJS.Timeout;
 };
 
+export class CoreCommandError extends Error {
+  readonly code: string | null;
+  readonly retryable: boolean | null;
+  readonly isTimeout: boolean;
+  readonly commandId: string | null;
+  readonly commandType: string;
+
+  constructor(
+    message: string,
+    options: {
+      code?: string | null;
+      retryable?: boolean | null;
+      isTimeout?: boolean;
+      commandId?: string | null;
+      commandType: string;
+    }
+  ) {
+    super(message);
+    this.name = "CoreCommandError";
+    this.code = options.code ?? null;
+    this.retryable = options.retryable ?? null;
+    this.isTimeout = options.isTimeout ?? false;
+    this.commandId = options.commandId ?? null;
+    this.commandType = options.commandType;
+  }
+}
+
 type CoreCommand = {
   commandId: string;
   event: EventEnvelope;
@@ -153,6 +180,7 @@ export class CoreCommandProducer {
 export class CoreReplyConsumer {
   private readonly consumer: Consumer;
   private readonly pendingReplies = new Map<string, PendingReply>();
+  private startPromise: Promise<void> | null = null;
   private started = false;
 
   constructor(kafka: Kafka) {
@@ -165,11 +193,37 @@ export class CoreReplyConsumer {
   async start(): Promise<void> {
     if (this.started) return;
 
+    if (this.startPromise !== null) {
+      await this.startPromise;
+
+      return;
+    }
+
+    this.startPromise = this.startConsumer();
+    try {
+      await this.startPromise;
+    } finally {
+      this.startPromise = null;
+    }
+  }
+
+  private async startConsumer(): Promise<void> {
     await this.consumer.connect();
     await this.consumer.subscribe({
       topic: CoreYjsWorkerReplyTopic,
       fromBeginning: false,
     });
+
+    const groupJoined = new Promise<void>(resolve => {
+      const removeListener = this.consumer.on(
+        this.consumer.events.GROUP_JOIN,
+        () => {
+          removeListener();
+          resolve();
+        }
+      );
+    });
+
     await this.consumer.run({
       eachMessage: async ({ message }) => {
         if (message.value === null) return;
@@ -197,7 +251,15 @@ export class CoreReplyConsumer {
         clearTimeout(pendingReply.timeout);
         if (reply.error !== undefined) {
           pendingReply.reject(
-            new Error(`${reply.error.code}: ${reply.error.message}`)
+            new CoreCommandError(
+              `${reply.error.code}: ${reply.error.message}`,
+              {
+                code: reply.error.code,
+                retryable: reply.error.retryable,
+                commandId: reply.commandId,
+                commandType: reply.commandType,
+              }
+            )
           );
 
           return;
@@ -205,6 +267,8 @@ export class CoreReplyConsumer {
         pendingReply.resolve(reply.data);
       },
     });
+
+    await groupJoined;
     this.started = true;
   }
 
@@ -213,7 +277,15 @@ export class CoreReplyConsumer {
       const timeout = setTimeout(
         () => {
           this.pendingReplies.delete(commandId);
-          reject(new Error(`YjsWorker command ${commandType} timed out`));
+          reject(
+            new CoreCommandError(`YjsWorker command ${commandType} timed out`, {
+              code: "Timeout",
+              retryable: true,
+              isTimeout: true,
+              commandId,
+              commandType,
+            })
+          );
         },
         Number(process.env.YJS_WORKER_COMMAND_TIMEOUT_MILLISECONDS ?? 10_000)
       );

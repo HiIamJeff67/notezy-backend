@@ -1,4 +1,4 @@
-<a><img src="global/images/logo/NotegicDocumentationHeaderImage.png" alt="Notegic" /></a>
+<a><img src="global/images/logo/header-image.png" alt="Notegic" /></a>
 
 # Notegic Backend
 

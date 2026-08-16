@@ -25,7 +25,7 @@ export class YjsDebouncer {
     persistenceBatchId: string,
     originConnectionId: string | null,
     payload: Buffer
-  ) => Promise<void>;
+  ) => Promise<number>;
   private readonly persisted: (
     room: Room,
     blockPackId: string,
@@ -41,7 +41,7 @@ export class YjsDebouncer {
       persistenceBatchId: string,
       originConnectionId: string | null,
       payload: Buffer
-    ) => Promise<void>,
+    ) => Promise<number>,
     persisted: (
       room: Room,
       blockPackId: string,
@@ -239,25 +239,6 @@ export class YjsDebouncer {
     return this.completePersistence(room, updateSequence);
   }
 
-  handleBrokerAccepted(
-    room: Room,
-    blockPackId: string,
-    connectionId: string,
-    connectorChannelId: number
-  ): InFlightYjsPersistenceBatch | null {
-    if (
-      room.inFlightPersistenceBatch === null ||
-      room.inFlightPersistenceBatch.connectionId !== connectionId ||
-      room.inFlightPersistenceBatch.connectorChannelId !== connectorChannelId
-    ) {
-      this.resyncRoom(room, blockPackId);
-
-      return null;
-    }
-
-    return this.completePersistence(room, null);
-  }
-
   private completePersistence(
     room: Room,
     updateSequence: number | null
@@ -287,7 +268,7 @@ export class YjsDebouncer {
   handlePersistenceFailure(
     room: Room,
     blockPackId: string,
-    payload: Buffer
+    failure: unknown
   ): void {
     if (room.inFlightPersistenceBatch === null) {
       this.resyncRoom(room, blockPackId);
@@ -295,10 +276,17 @@ export class YjsDebouncer {
       return;
     }
 
-    if (
-      payload[0] ===
-      YjsPersistenceFailureType.YjsPersistenceFailureType_Retryable
-    ) {
+    const isRetryable = Buffer.isBuffer(failure)
+      ? failure[0] ===
+        YjsPersistenceFailureType.YjsPersistenceFailureType_Retryable
+      : !(
+          failure !== null &&
+          typeof failure === "object" &&
+          "retryable" in failure &&
+          (failure as { retryable?: unknown }).retryable === false
+        );
+
+    if (isRetryable) {
       this.telemetry.recordOperation({
         operation: "persistence.batch_persisted",
         outcome: "error",
@@ -309,17 +297,12 @@ export class YjsDebouncer {
       return;
     }
 
-    if (
-      payload[0] ===
-      YjsPersistenceFailureType.YjsPersistenceFailureType_Terminal
-    ) {
-      this.telemetry.recordOperation({
-        operation: "persistence.batch_persisted",
-        outcome: "error",
-        durationMilliseconds: 0,
-      });
-      this.resyncRoom(room, blockPackId);
-    }
+    this.telemetry.recordOperation({
+      operation: "persistence.batch_persisted",
+      outcome: "error",
+      durationMilliseconds: 0,
+    });
+    this.resyncRoom(room, blockPackId);
   }
 
   private sendInFlight(room: Room, blockPackId: string): boolean {
@@ -334,23 +317,22 @@ export class YjsDebouncer {
       batch.originConnectionId,
       batch.payload
     )
-      .then(() => {
-        const persisted = this.handleBrokerAccepted(
+      .then(updateSequence => {
+        if (room.inFlightPersistenceBatch !== batch) return;
+
+        const persisted = this.handlePersisted(
           room,
           blockPackId,
           batch.connectionId,
-          batch.connectorChannelId
+          batch.connectorChannelId,
+          updateSequence
         );
         if (persisted !== null) this.persisted(room, blockPackId, persisted);
       })
-      .catch(() => {
-        this.handlePersistenceFailure(
-          room,
-          blockPackId,
-          Buffer.from([
-            YjsPersistenceFailureType.YjsPersistenceFailureType_Retryable,
-          ])
-        );
+      .catch(error => {
+        if (room.inFlightPersistenceBatch !== batch) return;
+
+        this.handlePersistenceFailure(room, blockPackId, error);
       });
 
     return true;
