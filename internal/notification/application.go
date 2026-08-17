@@ -15,6 +15,7 @@ import (
 
 	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
 	observability "github.com/HiIamJeff67/notegic-backend/shared/platform/observability"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 	platformpostgres "github.com/HiIamJeff67/notegic-backend/shared/platform/postgres"
 	sharedvalidations "github.com/HiIamJeff67/notegic-backend/shared/validations"
 
@@ -149,7 +150,7 @@ func (a *Application) initializeWorkers(
 }
 
 func (a *Application) buildRouter(service services.NotificationServiceInterface) *gin.Engine {
-	router := gin.New()
+	router := logs.WithGinLogger(gin.New())
 	router.GET("/healthz", func(ctx *gin.Context) {
 		if !a.IsReady() {
 			ctx.Status(http.StatusServiceUnavailable)

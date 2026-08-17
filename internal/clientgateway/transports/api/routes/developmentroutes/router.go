@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	cookies "github.com/HiIamJeff67/notegic-backend/shared/cookies"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 
 	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
 
@@ -35,7 +36,7 @@ type APIRouteDependencies struct {
 }
 
 func NewRouter(deps APIRouteDependencies) *gin.Engine {
-	DevelopmentRouter = gin.Default()
+	DevelopmentRouter = logs.WithGinLogger(gin.New())
 	coreAdapter, notificationClient := deps.CoreAdapter, deps.NotificationClient
 	allowedDomains, accessTokenCookieHandler := deps.AllowedDomains, deps.AccessTokenCookieHandler
 	refreshTokenCookieHandler, rateLimiters := deps.RefreshTokenCookieHandler, deps.RateLimiters

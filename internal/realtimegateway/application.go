@@ -19,6 +19,7 @@ import (
 
 	platformkafka "github.com/HiIamJeff67/notegic-backend/shared/platform/kafka"
 	observability "github.com/HiIamJeff67/notegic-backend/shared/platform/observability"
+	logs "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/logs"
 	platformredis "github.com/HiIamJeff67/notegic-backend/shared/platform/redis"
 
 	realtimeconfig "github.com/HiIamJeff67/notegic-backend/internal/realtimegateway/configs"
@@ -134,7 +135,7 @@ func (a *Application) buildRouter(
 	authorizedLimiter *ratelimit.HybridRateLimiter,
 	shutdownObservability func(),
 ) (*gin.Engine, *websockettransport.WebSocketAdapter) {
-	router := gin.Default()
+	router := logs.WithGinLogger(gin.New())
 	if err := router.SetTrustedProxies(config.TrustedProxies); err != nil {
 		unauthorizedLimiter.Stop()
 		authorizedLimiter.Stop()

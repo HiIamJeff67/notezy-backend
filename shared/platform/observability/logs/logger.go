@@ -10,6 +10,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"log/slog"
 	"os"
+	"strings"
 	"time"
 
 	traces "github.com/HiIamJeff67/notegic-backend/shared/platform/observability/traces"
@@ -26,13 +27,29 @@ type LoggerInterface interface {
 
 type Logger struct {
 	logger   *slog.Logger
+	console  *CommandLineInterfaceLogger
 	emitOTel bool
 }
 
 func NewLogger(emitOtel bool) LoggerInterface {
-	return &Logger{
+	logger := &Logger{
 		logger:   slog.New(slog.NewJSONHandler(os.Stdout, nil)),
 		emitOTel: emitOtel,
+	}
+	if ConsoleLoggingEnabled() {
+		logger.console = NewCommandLineInterfaceLogger().(*CommandLineInterfaceLogger)
+	}
+	return logger
+}
+
+func ConsoleLoggingEnabled() bool {
+	switch strings.ToLower(strings.TrimSpace(os.Getenv("NOTEGIC_LOG_FORMAT"))) {
+	case "console", "text":
+		return true
+	case "json":
+		return false
+	default:
+		return strings.EqualFold(strings.TrimSpace(os.Getenv("OTEL_DEPLOYMENT_ENVIRONMENT")), "development")
 	}
 }
 
@@ -73,7 +90,16 @@ func (l *Logger) JSON(
 	}
 
 	attributes = append(attributes, attribute.String("payload", string(marshaledPayload)))
-	l.write(ctx, level, severityFromLevel(level), nil, message, attributes...)
+	if l.console != nil {
+		prettyPayload, err := json.MarshalIndent(payload, "", "  ")
+		if err != nil {
+			return err
+		}
+		l.writeLocal(ctx, level, nil, message+"\n"+string(prettyPayload), attributes...)
+	} else {
+		l.writeLocal(ctx, level, nil, message, attributes...)
+	}
+	l.emitOTelRecord(ctx, level, severityFromLevel(level), message, attributes...)
 
 	return nil
 }
@@ -124,16 +150,46 @@ func (l *Logger) write(
 		)
 	}
 
-	slogAttributes := make([]slog.Attr, 0, len(attributes))
-	otelAttributes := make([]otellog.KeyValue, 0, len(attributes))
-	for _, item := range attributes {
-		slogAttributes = append(slogAttributes, slog.Any(string(item.Key), item.Value.AsInterface()))
-		otelAttributes = append(otelAttributes, otellog.KeyValueFromAttribute(item))
+	l.writeLocal(ctx, level, err, message, attributes...)
+	l.emitOTelRecord(ctx, level, severity, message, attributes...)
+}
+
+func (l *Logger) writeLocal(
+	ctx context.Context,
+	level slog.Level,
+	err error,
+	message string,
+	attributes ...attribute.KeyValue,
+) {
+	if l.console != nil {
+		l.console.write(level.String(), err, message, attributes...)
+		return
 	}
 
+	slogAttributes := make([]slog.Attr, 0, len(attributes))
+	for _, item := range attributes {
+		slogAttributes = append(slogAttributes, slog.Any(string(item.Key), item.Value.AsInterface()))
+	}
 	l.logger.LogAttrs(ctx, level, message, slogAttributes...)
+}
+
+func (l *Logger) emitOTelRecord(
+	ctx context.Context,
+	level slog.Level,
+	severity otellog.Severity,
+	message string,
+	attributes ...attribute.KeyValue,
+) {
 	if !l.emitOTel {
 		return
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	otelAttributes := make([]otellog.KeyValue, 0, len(attributes))
+	for _, item := range attributes {
+		otelAttributes = append(otelAttributes, otellog.KeyValueFromAttribute(item))
 	}
 
 	var record otellog.Record

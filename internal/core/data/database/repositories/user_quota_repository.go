@@ -8,12 +8,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm/clause"
 
 	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
 	inputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/inputs"
 	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
 	schemas "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/schemas/enums"
 )
 
 type UserQuotaRepositoryInterface interface {
@@ -47,16 +49,13 @@ func (r *UserQuotaRepository) GetRoutineTaskCostUnitUsed(
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	var routineTaskCostUnitUsed int64
+	routineTaskCostUnitUsed := []int64{}
 	result := parsedOptions.DB.
 		WithContext(ctx).
 		Model(&schemas.UserQuota{}).
-		Raw(`
-		SELECT COALESCE(routine_task_cost_unit_used, 0)
-		FROM "UserQuotaTable"
-		WHERE user_id = ?
-		`, userId).
-		Scan(&routineTaskCostUnitUsed)
+		Where("user_id = ?", userId).
+		Limit(1).
+		Pluck("routine_task_cost_unit_used", &routineTaskCostUnitUsed)
 	if result.Error != nil {
 		return 0, exceptions.New(
 			"FailedToGet",
@@ -67,8 +66,11 @@ func (r *UserQuotaRepository) GetRoutineTaskCostUnitUsed(
 			true,
 		).WithOrigin(result.Error)
 	}
+	if len(routineTaskCostUnitUsed) == 0 {
+		return 0, nil
+	}
 
-	return routineTaskCostUnitUsed, nil
+	return routineTaskCostUnitUsed[0], nil
 }
 
 func (r *UserQuotaRepository) InitializeMissing(
@@ -109,60 +111,124 @@ func (r *UserQuotaRepository) initializeMissing(
 		)
 	}
 
-	userIdFilter := ""
-	queryArgs := []any{now, now}
+	userQuotaQuery := parsedOptions.DB.
+		WithContext(ctx).
+		Model(&schemas.UserQuota{}).
+		Select("user_id")
 	if len(userIds) > 0 {
-		userIdFilter = "user_table.id IN ? AND "
-		queryArgs = append(queryArgs, userIds)
+		userQuotaQuery = userQuotaQuery.Where("user_id IN ?", userIds)
 	}
 
-	query := fmt.Sprintf(`
-		INSERT INTO "UserQuotaTable" (
-			id,
-			user_id,
-			routine_task_cost_unit_used,
-			cycle_started_at,
-			next_reset_at,
-			updated_at,
-			created_at
-		)
-		SELECT
-			gen_random_uuid(),
-			user_table.id,
-			0,
-			COALESCE(
-				billing.next_billing_date - INTERVAL '30 days',
-				billing.start_date,
-				user_table.created_at
-			),
-			COALESCE(
-				billing.next_billing_date,
-				billing.start_date + INTERVAL '30 days',
-				user_table.created_at + INTERVAL '30 days'
-			),
-			?,
-			?
-		FROM "UserTable" AS user_table
-		LEFT JOIN LATERAL (
-			SELECT start_date, next_billing_date
-			FROM "UsersToBillingPlansTable"
-			WHERE user_id = user_table.id
-				AND status = 'ACTIVE'
-			ORDER BY start_date DESC
-			LIMIT 1
-		) AS billing ON TRUE
-		WHERE %sNOT EXISTS (
-			SELECT 1
-			FROM "UserQuotaTable"
-			WHERE user_id = user_table.id
-		)
-		ON CONFLICT (user_id) DO NOTHING
-	`, userIdFilter)
+	existingUserIds := []uuid.UUID{}
+	if result := userQuotaQuery.Pluck("user_id", &existingUserIds); result.Error != nil {
+		return exceptions.New(
+			"FailedToInitialize",
+			"UserQuota",
+			"InitializeMissing",
+			"Failed to find existing user quotas",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(result.Error)
+	}
+
+	userQuery := parsedOptions.DB.
+		WithContext(ctx).
+		Model(&schemas.User{}).
+		Select("id, created_at")
+	if len(userIds) > 0 {
+		userQuery = userQuery.Where("id IN ?", userIds)
+	}
+	if len(existingUserIds) > 0 {
+		userQuery = userQuery.Where("id NOT IN ?", existingUserIds)
+	}
+
+	users := []schemas.User{}
+	if result := userQuery.Find(&users); result.Error != nil {
+		return exceptions.New(
+			"FailedToInitialize",
+			"UserQuota",
+			"InitializeMissing",
+			"Failed to find users without quotas",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(result.Error)
+	}
+	if len(users) == 0 {
+		return nil
+	}
+
+	usersById := make(map[uuid.UUID]schemas.User, len(users))
+	userIdsToInitialize := make([]uuid.UUID, 0, len(users))
+	for _, user := range users {
+		usersById[user.Id] = user
+		userIdsToInitialize = append(userIdsToInitialize, user.Id)
+	}
+
+	type activeBillingPlan struct {
+		UserId          uuid.UUID  `gorm:"column:user_id"`
+		StartDate       time.Time  `gorm:"column:start_date"`
+		NextBillingDate *time.Time `gorm:"column:next_billing_date"`
+	}
+
+	billingPlans := []activeBillingPlan{}
+	if result := parsedOptions.DB.
+		WithContext(ctx).
+		Model(&schemas.UsersToBillingPlans{}).
+		Select("user_id, start_date, next_billing_date").
+		Where("user_id IN ?", userIdsToInitialize).
+		Where("status = ?", enums.UsersToBillingPlansStatus_Active).
+		Order("start_date DESC").
+		Find(&billingPlans); result.Error != nil {
+		return exceptions.New(
+			"FailedToInitialize",
+			"UserQuota",
+			"InitializeMissing",
+			"Failed to find active billing plans",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(result.Error)
+	}
+
+	latestBillingPlansByUserId := make(map[uuid.UUID]activeBillingPlan, len(billingPlans))
+	for _, billingPlan := range billingPlans {
+		if _, exists := latestBillingPlansByUserId[billingPlan.UserId]; !exists {
+			latestBillingPlansByUserId[billingPlan.UserId] = billingPlan
+		}
+	}
+
+	quotas := make([]schemas.UserQuota, 0, len(users))
+	for _, userId := range userIdsToInitialize {
+		user := usersById[userId]
+		cycleStartedAt := user.CreatedAt
+		nextResetAt := user.CreatedAt.AddDate(0, 0, 30)
+		if billingPlan, exists := latestBillingPlansByUserId[userId]; exists {
+			if billingPlan.NextBillingDate == nil {
+				cycleStartedAt = billingPlan.StartDate
+				nextResetAt = billingPlan.StartDate.AddDate(0, 0, 30)
+			} else {
+				cycleStartedAt = billingPlan.NextBillingDate.AddDate(0, 0, -30)
+				nextResetAt = *billingPlan.NextBillingDate
+			}
+		}
+
+		quotas = append(quotas, schemas.UserQuota{
+			UserId:                  userId,
+			RoutineTaskCostUnitUsed: 0,
+			CycleStartedAt:          cycleStartedAt,
+			NextResetAt:             nextResetAt,
+			UpdatedAt:               now,
+			CreatedAt:               now,
+		})
+	}
 
 	result := parsedOptions.DB.
 		WithContext(ctx).
 		Model(&schemas.UserQuota{}).
-		Exec(query, queryArgs...)
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "user_id"}},
+			DoNothing: true,
+		}).
+		CreateInBatches(&quotas, parsedOptions.BatchSize)
 	if result.Error != nil {
 		return exceptions.New(
 			"FailedToInitialize",
@@ -193,18 +259,18 @@ func (r *UserQuotaRepository) ResetDue(
 		)
 	}
 
+	nextResetAt := now.AddDate(0, 0, 30)
+
 	result := parsedOptions.DB.
 		WithContext(ctx).
 		Model(&schemas.UserQuota{}).
-		Exec(`
-		UPDATE "UserQuotaTable"
-		SET
-			routine_task_cost_unit_used = 0,
-			cycle_started_at = ?,
-			next_reset_at = ? + INTERVAL '30 days',
-			updated_at = ?
-		WHERE next_reset_at <= ?
-		`, now, now, now, now)
+		Where("next_reset_at <= ?", now).
+		Updates(map[string]any{
+			"routine_task_cost_unit_used": 0,
+			"cycle_started_at":            now,
+			"next_reset_at":               nextResetAt,
+			"updated_at":                  now,
+		})
 	if result.Error != nil {
 		return 0, exceptions.New(
 			"FailedToReset",
