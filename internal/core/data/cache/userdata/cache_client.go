@@ -23,22 +23,19 @@ import (
 )
 
 type UserDataCache struct {
-	Id                 uuid.UUID        `json:"id"`
-	PublicId           uuid.UUID        `json:"publicId"`
-	Name               string           `json:"name"`
-	DisplayName        string           `json:"displayName"`
-	Email              string           `json:"email"`
-	AccessToken        string           `json:"accessToken"`
-	CSRFToken          string           `json:"csrfToken"`
-	Role               enums.UserRole   `json:"role"`
-	Plan               enums.UserPlan   `json:"plan"`
-	Status             enums.UserStatus `json:"status"`
-	AvatarURL          string           `json:"avatarURL"`
-	Language           enums.Language   `json:"language"`
-	GeneralSettingCode int64            `json:"generalSettingCode"`
-	PrivacySettingCode int64            `json:"privacySettingCode"`
-	CreatedAt          time.Time        `json:"createdAt"`
-	UpdatedAt          time.Time        `json:"updatedAt"`
+	Id          uuid.UUID        `json:"id"`
+	PublicId    uuid.UUID        `json:"publicId"`
+	Name        string           `json:"name"`
+	DisplayName string           `json:"displayName"`
+	Email       string           `json:"email"`
+	AccessToken string           `json:"accessToken"`
+	CSRFToken   string           `json:"csrfToken"`
+	Role        enums.UserRole   `json:"role"`
+	Plan        enums.UserPlan   `json:"plan"`
+	Status      enums.UserStatus `json:"status"`
+	AvatarURL   string           `json:"avatarURL"`
+	CreatedAt   time.Time        `json:"createdAt"`
+	UpdatedAt   time.Time        `json:"updatedAt"`
 }
 
 type UserDataCacheClient struct {

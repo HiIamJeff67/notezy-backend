@@ -7,6 +7,7 @@ import (
 	validator "github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 
+	enumcontract "github.com/HiIamJeff67/notegic-backend/contracts/types/enums"
 	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
 	apicontract "github.com/HiIamJeff67/notegic-backend/contracts/core/v1/api/user-settings"
@@ -76,9 +77,18 @@ func (s *UserSettingService) GetMySetting(
 	}
 
 	return &apicontract.GetMySettingResponseDto{
-		Language:           *userSetting.Language.ToContractable(),
-		GeneralSettingCode: userSetting.GeneralSettingCode,
-		PrivacySettingCode: userSetting.PrivacySettingCode,
+		Language:             enumcontract.Language(userSetting.Language),
+		Density:              enumcontract.UserSettingDensity(userSetting.Density),
+		StartSurface:         enumcontract.UserSettingStartSurface(userSetting.StartSurface),
+		ReduceMotion:         userSetting.ReduceMotion,
+		LineWrap:             userSetting.LineWrap,
+		QuickInsert:          userSetting.QuickInsert,
+		PrivatePreviews:      userSetting.PrivatePreviews,
+		RoutineNudges:        userSetting.RoutineNudges,
+		SyncNotifications:    userSetting.SyncNotifications,
+		QuietMode:            userSetting.QuietMode,
+		QuietModeStartMinute: userSetting.QuietModeStartMinute,
+		QuietModeEndMinute:   userSetting.QuietModeEndMinute,
 	}, nil
 }
 
@@ -106,14 +116,32 @@ func (s *UserSettingService) UpdateMySetting(
 		value := enums.Language(*requestDto.Body.Values.Language)
 		language = &value
 	}
-
+	var density *enums.UserSettingDensity
+	if requestDto.Body.Values.Density != nil {
+		value := enums.UserSettingDensity(*requestDto.Body.Values.Density)
+		density = &value
+	}
+	var startSurface *enums.UserSettingStartSurface
+	if requestDto.Body.Values.StartSurface != nil {
+		value := enums.UserSettingStartSurface(*requestDto.Body.Values.StartSurface)
+		startSurface = &value
+	}
 	updatedUserSetting, exception := s.userSettingRepository.UpdateOneByUserId(
 		actorUserId,
 		inputs.PartialUpdateUserSettingInput{
 			Values: inputs.UpdateUserSettingInput{
-				Language:           language,
-				GeneralSettingCode: requestDto.Body.Values.GeneralSettingCode,
-				PrivacySettingCode: requestDto.Body.Values.PrivacySettingCode,
+				Language:             language,
+				Density:              density,
+				StartSurface:         startSurface,
+				ReduceMotion:         requestDto.Body.Values.ReduceMotion,
+				LineWrap:             requestDto.Body.Values.LineWrap,
+				QuickInsert:          requestDto.Body.Values.QuickInsert,
+				PrivatePreviews:      requestDto.Body.Values.PrivatePreviews,
+				RoutineNudges:        requestDto.Body.Values.RoutineNudges,
+				SyncNotifications:    requestDto.Body.Values.SyncNotifications,
+				QuietMode:            requestDto.Body.Values.QuietMode,
+				QuietModeStartMinute: requestDto.Body.Values.QuietModeStartMinute,
+				QuietModeEndMinute:   requestDto.Body.Values.QuietModeEndMinute,
 			},
 			SetNull: requestDto.Body.SetNull,
 		},

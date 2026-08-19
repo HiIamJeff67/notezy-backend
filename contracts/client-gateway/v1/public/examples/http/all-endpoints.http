@@ -497,9 +497,18 @@ X-CSRF-Token: {{csrfToken}}
 {
   "setNull": {},
   "values": {
-    "generalSettingCode": 1,
+    "density": "Balanced",
     "language": "English",
-    "privacySettingCode": 1
+    "lineWrap": true,
+    "privatePreviews": false,
+    "quietMode": true,
+    "quietModeEndMinute": 480,
+    "quietModeStartMinute": 1320,
+    "quickInsert": true,
+    "reduceMotion": false,
+    "routineNudges": true,
+    "startSurface": "Dashboard",
+    "syncNotifications": true
   }
 }
 

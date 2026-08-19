@@ -95,19 +95,16 @@ func (s *UserService) GetUserData(
 	}
 
 	return &apicontract.GetUserDataResponseDto{
-		PublicId:           userDataCache.PublicId,
-		Name:               userDataCache.Name,
-		DisplayName:        userDataCache.DisplayName,
-		Email:              userDataCache.Email,
-		Role:               userDataCache.Role.String(),
-		Plan:               userDataCache.Plan.String(),
-		Status:             userDataCache.Status.String(),
-		AvatarURL:          userDataCache.AvatarURL,
-		Language:           userDataCache.Language.String(),
-		GeneralSettingCode: userDataCache.GeneralSettingCode,
-		PrivacySettingCode: userDataCache.PrivacySettingCode,
-		CreatedAt:          userDataCache.CreatedAt,
-		UpdatedAt:          userDataCache.UpdatedAt,
+		PublicId:    userDataCache.PublicId,
+		Name:        userDataCache.Name,
+		DisplayName: userDataCache.DisplayName,
+		Email:       userDataCache.Email,
+		Role:        userDataCache.Role.String(),
+		Plan:        userDataCache.Plan.String(),
+		Status:      userDataCache.Status.String(),
+		AvatarURL:   userDataCache.AvatarURL,
+		CreatedAt:   userDataCache.CreatedAt,
+		UpdatedAt:   userDataCache.UpdatedAt,
 	}, nil
 }
 

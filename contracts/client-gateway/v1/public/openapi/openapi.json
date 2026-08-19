@@ -6218,9 +6218,13 @@
       },
       "GetMySettingResponseData": {
         "properties": {
-          "generalSettingCode": {
-            "format": "int64",
-            "type": "integer"
+          "density": {
+            "enum": [
+              "Comfortable",
+              "Balanced",
+              "Compact"
+            ],
+            "type": "string"
           },
           "language": {
             "enum": [
@@ -6232,15 +6236,56 @@
             ],
             "type": "string"
           },
-          "privacySettingCode": {
+          "lineWrap": {
+            "type": "boolean"
+          },
+          "privatePreviews": {
+            "type": "boolean"
+          },
+          "quietMode": {
+            "type": "boolean"
+          },
+          "quietModeEndMinute": {
             "format": "int64",
             "type": "integer"
+          },
+          "quietModeStartMinute": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "quickInsert": {
+            "type": "boolean"
+          },
+          "reduceMotion": {
+            "type": "boolean"
+          },
+          "routineNudges": {
+            "type": "boolean"
+          },
+          "startSurface": {
+            "enum": [
+              "Dashboard",
+              "Routines"
+            ],
+            "type": "string"
+          },
+          "syncNotifications": {
+            "type": "boolean"
           }
         },
         "required": [
           "language",
-          "generalSettingCode",
-          "privacySettingCode"
+          "density",
+          "startSurface",
+          "reduceMotion",
+          "lineWrap",
+          "quickInsert",
+          "privatePreviews",
+          "routineNudges",
+          "syncNotifications",
+          "quietMode",
+          "quietModeStartMinute",
+          "quietModeEndMinute"
         ],
         "type": "object"
       },
@@ -6875,22 +6920,11 @@
           "email": {
             "type": "string"
           },
-          "generalSettingCode": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "language": {
-            "type": "string"
-          },
           "name": {
             "type": "string"
           },
           "plan": {
             "type": "string"
-          },
-          "privacySettingCode": {
-            "format": "int64",
-            "type": "integer"
           },
           "publicId": {
             "format": "uuid",
@@ -6916,9 +6950,6 @@
           "plan",
           "status",
           "avatarURL",
-          "language",
-          "generalSettingCode",
-          "privacySettingCode",
           "createdAt",
           "updatedAt"
         ],
@@ -12809,10 +12840,14 @@
           },
           "values": {
             "properties": {
-              "generalSettingCode": {
-                "format": "int64",
+              "density": {
+                "enum": [
+                  "Comfortable",
+                  "Balanced",
+                  "Compact"
+                ],
                 "type": [
-                  "integer",
+                  "string",
                   "null"
                 ]
               },
@@ -12829,10 +12864,73 @@
                   "null"
                 ]
               },
-              "privacySettingCode": {
+              "lineWrap": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "privatePreviews": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "quietMode": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "quietModeEndMinute": {
                 "format": "int64",
+                "maximum": 1439,
+                "minimum": 0,
                 "type": [
                   "integer",
+                  "null"
+                ]
+              },
+              "quietModeStartMinute": {
+                "format": "int64",
+                "maximum": 1439,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "quickInsert": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "reduceMotion": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "routineNudges": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "startSurface": {
+                "enum": [
+                  "Dashboard",
+                  "Routines"
+                ],
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "syncNotifications": {
+                "type": [
+                  "boolean",
                   "null"
                 ]
               }
@@ -21759,9 +21857,18 @@
               "example": {
                 "setNull": {},
                 "values": {
-                  "generalSettingCode": 1,
+                  "density": "Balanced",
                   "language": "English",
-                  "privacySettingCode": 1
+                  "lineWrap": true,
+                  "privatePreviews": false,
+                  "quietMode": true,
+                  "quietModeEndMinute": 480,
+                  "quietModeStartMinute": 1320,
+                  "quickInsert": true,
+                  "reduceMotion": false,
+                  "routineNudges": true,
+                  "startSurface": "Dashboard",
+                  "syncNotifications": true
                 }
               },
               "schema": {

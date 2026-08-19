@@ -7,17 +7,14 @@ import (
 )
 
 type UpdateUserDataCacheInput struct {
-	DisplayName        *string
-	Email              *string
-	AccessToken        *string
-	CSRFToken          *string
-	Role               *enums.UserRole
-	Plan               *enums.UserPlan
-	Status             *enums.UserStatus
-	AvatarURL          *string
-	Language           *enums.Language
-	GeneralSettingCode *int64
-	PrivacySettingCode *int64
+	DisplayName *string
+	Email       *string
+	AccessToken *string
+	CSRFToken   *string
+	Role        *enums.UserRole
+	Plan        *enums.UserPlan
+	Status      *enums.UserStatus
+	AvatarURL   *string
 }
 
 type CheckAndUpdateUserQuotaInput struct {

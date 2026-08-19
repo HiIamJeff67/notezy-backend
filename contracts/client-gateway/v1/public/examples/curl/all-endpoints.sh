@@ -485,7 +485,7 @@ updateMySetting() {
     -H "User-Agent: $user_agent" \
     -H "Content-Type: application/json" \
     -H "X-CSRF-Token: $csrf_token" \
-    --data '{"setNull":{},"values":{"generalSettingCode":1,"language":"English","privacySettingCode":1}}' \
+    --data '{"setNull":{},"values":{"density":"Balanced","language":"English","lineWrap":true,"privatePreviews":false,"quietMode":true,"quietModeEndMinute":480,"quietModeStartMinute":1320,"quickInsert":true,"reduceMotion":false,"routineNudges":true,"startSurface":"Dashboard","syncNotifications":true}}' \
     "$gateway_base_url/me/settings"
 }
 

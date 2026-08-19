@@ -408,22 +408,19 @@ func (s *AuthService) Register(
 	exception = s.userDataCacheClient.Set(
 		newUser.Name,
 		userdata.UserDataCache{
-			Id:                 *newUserId,
-			PublicId:           newUser.PublicId,
-			Name:               newUser.Name,
-			DisplayName:        newUser.DisplayName,
-			Email:              newUser.Email,
-			AccessToken:        *newAccessToken,
-			CSRFToken:          *newCSRFToken,
-			Role:               newUser.Role,
-			Plan:               newUser.Plan,
-			Status:             newUser.Status,
-			AvatarURL:          "",
-			Language:           enums.Language_English,
-			GeneralSettingCode: 0,
-			PrivacySettingCode: 0,
-			CreatedAt:          newUser.CreatedAt,
-			UpdatedAt:          newUser.UpdatedAt,
+			Id:          *newUserId,
+			PublicId:    newUser.PublicId,
+			Name:        newUser.Name,
+			DisplayName: newUser.DisplayName,
+			Email:       newUser.Email,
+			AccessToken: *newAccessToken,
+			CSRFToken:   *newCSRFToken,
+			Role:        newUser.Role,
+			Plan:        newUser.Plan,
+			Status:      newUser.Status,
+			AvatarURL:   "",
+			CreatedAt:   newUser.CreatedAt,
+			UpdatedAt:   newUser.UpdatedAt,
 		},
 	)
 	if exception != nil {
@@ -643,22 +640,19 @@ func (s *AuthService) RegisterViaGoogle(
 	exception = s.userDataCacheClient.Set(
 		newUser.Name,
 		userdata.UserDataCache{
-			Id:                 *newUserId,
-			PublicId:           newUser.PublicId,
-			Name:               newUser.Name,
-			DisplayName:        newUser.DisplayName,
-			Email:              newUser.Email,
-			AccessToken:        *newAccessToken,
-			CSRFToken:          *newCSRFToken,
-			Role:               newUser.Role,
-			Plan:               newUser.Plan,
-			Status:             newUser.Status,
-			AvatarURL:          "",
-			Language:           enums.Language_English,
-			GeneralSettingCode: 0,
-			PrivacySettingCode: 0,
-			CreatedAt:          newUser.CreatedAt,
-			UpdatedAt:          newUser.UpdatedAt,
+			Id:          *newUserId,
+			PublicId:    newUser.PublicId,
+			Name:        newUser.Name,
+			DisplayName: newUser.DisplayName,
+			Email:       newUser.Email,
+			AccessToken: *newAccessToken,
+			CSRFToken:   *newCSRFToken,
+			Role:        newUser.Role,
+			Plan:        newUser.Plan,
+			Status:      newUser.Status,
+			AvatarURL:   "",
+			CreatedAt:   newUser.CreatedAt,
+			UpdatedAt:   newUser.UpdatedAt,
 		},
 	)
 	if exception != nil {
@@ -825,20 +819,17 @@ func (s *AuthService) Login(
 		// we done this by one custom sql so it's not that slow...
 		// once we have the required data, we set it as the user data cache
 		output := struct {
-			Id                 uuid.UUID        `gorm:"id"`
-			PublicId           uuid.UUID        `gorm:"public_id"`
-			Name               string           `gorm:"name"`
-			DisplayName        string           `gorm:"display_name"`
-			Email              string           `gorm:"email"`
-			Role               enums.UserRole   `gorm:"role"`
-			Plan               enums.UserPlan   `gorm:"plan"`
-			Status             enums.UserStatus `gorm:"status"`
-			AvatarURL          *string          `gorm:"avatar_url"`
-			Language           enums.Language   `gorm:"language"`
-			GeneralSettingCode int64            `gorm:"general_setting_code"`
-			PrivacySettingCode int64            `gorm:"privacy_setting_code"`
-			CreatedAt          time.Time        `gorm:"created_at"`
-			UpdatedAt          time.Time        `gorm:"updated_at"`
+			Id          uuid.UUID        `gorm:"id"`
+			PublicId    uuid.UUID        `gorm:"public_id"`
+			Name        string           `gorm:"name"`
+			DisplayName string           `gorm:"display_name"`
+			Email       string           `gorm:"email"`
+			Role        enums.UserRole   `gorm:"role"`
+			Plan        enums.UserPlan   `gorm:"plan"`
+			Status      enums.UserStatus `gorm:"status"`
+			AvatarURL   *string          `gorm:"avatar_url"`
+			CreatedAt   time.Time        `gorm:"created_at"`
+			UpdatedAt   time.Time        `gorm:"updated_at"`
 		}{}
 		err := tx.Raw(usersql.GetUserDataCacheByIdSQL, user.Id).
 			Row().
@@ -852,9 +843,6 @@ func (s *AuthService) Login(
 				&output.Plan,
 				&output.Status,
 				&output.AvatarURL,
-				&output.Language,
-				&output.GeneralSettingCode,
-				&output.PrivacySettingCode,
 				&output.CreatedAt,
 				&output.UpdatedAt,
 			)
@@ -864,22 +852,19 @@ func (s *AuthService) Login(
 		}
 
 		newUserDataCache := userdata.UserDataCache{
-			Id:                 user.Id,
-			PublicId:           output.PublicId,
-			Name:               output.Name,
-			DisplayName:        output.DisplayName,
-			Email:              output.Email,
-			AccessToken:        *newAccessToken,
-			CSRFToken:          *newCSRFToken,
-			Role:               output.Role,
-			Plan:               output.Plan,
-			Status:             output.Status,
-			AvatarURL:          "",
-			Language:           output.Language,
-			GeneralSettingCode: output.GeneralSettingCode,
-			PrivacySettingCode: output.PrivacySettingCode,
-			CreatedAt:          output.CreatedAt,
-			UpdatedAt:          output.UpdatedAt,
+			Id:          user.Id,
+			PublicId:    output.PublicId,
+			Name:        output.Name,
+			DisplayName: output.DisplayName,
+			Email:       output.Email,
+			AccessToken: *newAccessToken,
+			CSRFToken:   *newCSRFToken,
+			Role:        output.Role,
+			Plan:        output.Plan,
+			Status:      output.Status,
+			AvatarURL:   "",
+			CreatedAt:   output.CreatedAt,
+			UpdatedAt:   output.UpdatedAt,
 		}
 		if output.AvatarURL != nil {
 			newUserDataCache.AvatarURL = *output.AvatarURL
@@ -1059,20 +1044,17 @@ func (s *AuthService) loginViaGoogleUser(
 		// we done this by one custom sql so it's not that slow...
 		// once we have the required data, we set it as the user data cache
 		output := struct {
-			Id                 uuid.UUID        `gorm:"id"`
-			PublicId           uuid.UUID        `gorm:"public_id"`
-			Name               string           `gorm:"name"`
-			DisplayName        string           `gorm:"display_name"`
-			Email              string           `gorm:"email"`
-			Role               enums.UserRole   `gorm:"role"`
-			Plan               enums.UserPlan   `gorm:"plan"`
-			Status             enums.UserStatus `gorm:"status"`
-			AvatarURL          *string          `gorm:"avatar_url"`
-			Language           enums.Language   `gorm:"language"`
-			GeneralSettingCode int64            `gorm:"general_setting_code"`
-			PrivacySettingCode int64            `gorm:"privacy_setting_code"`
-			CreatedAt          time.Time        `gorm:"created_at"`
-			UpdatedAt          time.Time        `gorm:"updated_at"`
+			Id          uuid.UUID        `gorm:"id"`
+			PublicId    uuid.UUID        `gorm:"public_id"`
+			Name        string           `gorm:"name"`
+			DisplayName string           `gorm:"display_name"`
+			Email       string           `gorm:"email"`
+			Role        enums.UserRole   `gorm:"role"`
+			Plan        enums.UserPlan   `gorm:"plan"`
+			Status      enums.UserStatus `gorm:"status"`
+			AvatarURL   *string          `gorm:"avatar_url"`
+			CreatedAt   time.Time        `gorm:"created_at"`
+			UpdatedAt   time.Time        `gorm:"updated_at"`
 		}{}
 		err := tx.Raw(usersql.GetUserDataCacheByIdSQL, user.Id).
 			Row().
@@ -1086,9 +1068,6 @@ func (s *AuthService) loginViaGoogleUser(
 				&output.Plan,
 				&output.Status,
 				&output.AvatarURL,
-				&output.Language,
-				&output.GeneralSettingCode,
-				&output.PrivacySettingCode,
 				&output.CreatedAt,
 				&output.UpdatedAt,
 			)
@@ -1098,22 +1077,19 @@ func (s *AuthService) loginViaGoogleUser(
 		}
 
 		newUserDataCache := userdata.UserDataCache{
-			Id:                 user.Id,
-			PublicId:           output.PublicId,
-			Name:               output.Name,
-			DisplayName:        output.DisplayName,
-			Email:              output.Email,
-			AccessToken:        *newAccessToken,
-			CSRFToken:          *newCSRFToken,
-			Role:               output.Role,
-			Plan:               output.Plan,
-			Status:             output.Status,
-			AvatarURL:          "",
-			Language:           output.Language,
-			GeneralSettingCode: output.GeneralSettingCode,
-			PrivacySettingCode: output.PrivacySettingCode,
-			CreatedAt:          output.CreatedAt,
-			UpdatedAt:          output.UpdatedAt,
+			Id:          user.Id,
+			PublicId:    output.PublicId,
+			Name:        output.Name,
+			DisplayName: output.DisplayName,
+			Email:       output.Email,
+			AccessToken: *newAccessToken,
+			CSRFToken:   *newCSRFToken,
+			Role:        output.Role,
+			Plan:        output.Plan,
+			Status:      output.Status,
+			AvatarURL:   "",
+			CreatedAt:   output.CreatedAt,
+			UpdatedAt:   output.UpdatedAt,
 		}
 		if output.AvatarURL != nil {
 			newUserDataCache.AvatarURL = *output.AvatarURL
@@ -1428,22 +1404,19 @@ func (s *AuthService) ForgetPassword(
 		_ = logs.NotegicLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
 		// and also try to set the new user cache data
 		exception = s.userDataCacheClient.Set(user.Name, userdata.UserDataCache{
-			Id:                 user.Id,
-			PublicId:           user.PublicId,
-			Name:               user.Name,
-			DisplayName:        user.DisplayName,
-			Email:              user.Email,
-			AccessToken:        *newAccessToken,
-			CSRFToken:          *newCSRFToken,
-			Role:               user.Role,
-			Plan:               user.Plan,
-			Status:             user.Status,
-			AvatarURL:          *user.UserInfo.AvatarURL,
-			Language:           user.UserSetting.Language,
-			GeneralSettingCode: user.UserSetting.GeneralSettingCode,
-			PrivacySettingCode: user.UserSetting.PrivacySettingCode,
-			CreatedAt:          user.CreatedAt,
-			UpdatedAt:          user.UpdatedAt,
+			Id:          user.Id,
+			PublicId:    user.PublicId,
+			Name:        user.Name,
+			DisplayName: user.DisplayName,
+			Email:       user.Email,
+			AccessToken: *newAccessToken,
+			CSRFToken:   *newCSRFToken,
+			Role:        user.Role,
+			Plan:        user.Plan,
+			Status:      user.Status,
+			AvatarURL:   *user.UserInfo.AvatarURL,
+			CreatedAt:   user.CreatedAt,
+			UpdatedAt:   user.UpdatedAt,
 		})
 		if exception != nil {
 			_ = logs.NotegicLogger.JSON(ctx, slog.LevelError, exception.String(), exception)

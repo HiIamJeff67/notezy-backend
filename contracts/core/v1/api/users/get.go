@@ -20,19 +20,16 @@ type GetUserDataRequestDto struct {
 }
 
 type GetUserDataResponseDto struct {
-	PublicId           uuid.UUID `json:"publicId"`
-	Name               string    `json:"name"`
-	DisplayName        string    `json:"displayName"`
-	Email              string    `json:"email"`
-	Role               string    `json:"role"`
-	Plan               string    `json:"plan"`
-	Status             string    `json:"status"`
-	AvatarURL          string    `json:"avatarURL"`
-	Language           string    `json:"language"`
-	GeneralSettingCode int64     `json:"generalSettingCode"`
-	PrivacySettingCode int64     `json:"privacySettingCode"`
-	CreatedAt          time.Time `json:"createdAt"`
-	UpdatedAt          time.Time `json:"updatedAt"`
+	PublicId    uuid.UUID `json:"publicId"`
+	Name        string    `json:"name"`
+	DisplayName string    `json:"displayName"`
+	Email       string    `json:"email"`
+	Role        string    `json:"role"`
+	Plan        string    `json:"plan"`
+	Status      string    `json:"status"`
+	AvatarURL   string    `json:"avatarURL"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 type GetMeRequestDto struct {

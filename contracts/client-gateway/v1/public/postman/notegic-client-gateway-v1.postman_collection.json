@@ -7857,7 +7857,7 @@
                   "language": "json"
                 }
               },
-              "raw": "{\n  \"setNull\": {},\n  \"values\": {\n    \"generalSettingCode\": 1,\n    \"language\": \"English\",\n    \"privacySettingCode\": 1\n  }\n}"
+              "raw": "{\n  \"setNull\": {},\n  \"values\": {\n    \"density\": \"Balanced\",\n    \"language\": \"English\",\n    \"lineWrap\": true,\n    \"privatePreviews\": false,\n    \"quietMode\": true,\n    \"quietModeEndMinute\": 480,\n    \"quietModeStartMinute\": 1320,\n    \"quickInsert\": true,\n    \"reduceMotion\": false,\n    \"routineNudges\": true,\n    \"startSurface\": \"Dashboard\",\n    \"syncNotifications\": true\n  }\n}"
             },
             "description": "Update My Setting. Go DTO: `UpdateMySettingRequestDto`; response DTO: `UpdateMySettingResponseDto`.",
             "header": [

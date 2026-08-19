@@ -12,6 +12,8 @@ var MigratingEnums = map[string][]string{
 	new(Country).Name():                    AllCountryStrings,
 	new(ItemType).Name():                   AllItemTypeStrings,
 	new(Language).Name():                   AllLanguageStrings,
+	new(UserSettingDensity).Name():         AllUserSettingDensityStrings,
+	new(UserSettingStartSurface).Name():    AllUserSettingStartSurfaceStrings,
 	new(MaterialContentType).Name():        AllMaterialContentTypeStrings,
 	new(RoutinePeriod).Name():              AllRoutinePeriodStrings,
 	new(RoutineStatus).Name():              AllRoutineStatusStrings,

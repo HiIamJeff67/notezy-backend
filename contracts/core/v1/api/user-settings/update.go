@@ -14,9 +14,18 @@ type UpdateMySettingRequestDto struct {
 		},
 		struct {
 			Values struct {
-				Language           *enumcontract.Language `json:"language" validate:"omitnil,islanguage"`
-				GeneralSettingCode *int64                 `json:"generalSettingCode" validate:"omitnil,min=0,max=999999999"`
-				PrivacySettingCode *int64                 `json:"privacySettingCode" validate:"omitnil,min=0,max=999999999"`
+				Language             *enumcontract.Language                `json:"language" validate:"omitnil,islanguage"`
+				Density              *enumcontract.UserSettingDensity      `json:"density" validate:"omitnil,oneof=Comfortable Balanced Compact"`
+				StartSurface         *enumcontract.UserSettingStartSurface `json:"startSurface" validate:"omitnil,oneof=Dashboard Routines"`
+				ReduceMotion         *bool                                 `json:"reduceMotion"`
+				LineWrap             *bool                                 `json:"lineWrap"`
+				QuickInsert          *bool                                 `json:"quickInsert"`
+				PrivatePreviews      *bool                                 `json:"privatePreviews"`
+				RoutineNudges        *bool                                 `json:"routineNudges"`
+				SyncNotifications    *bool                                 `json:"syncNotifications"`
+				QuietMode            *bool                                 `json:"quietMode"`
+				QuietModeStartMinute *int64                                `json:"quietModeStartMinute" validate:"omitnil,min=0,max=1439"`
+				QuietModeEndMinute   *int64                                `json:"quietModeEndMinute" validate:"omitnil,min=0,max=1439"`
 			} `json:"values"`
 			SetNull *map[string]bool `json:"setNull,omitempty"`
 		},
