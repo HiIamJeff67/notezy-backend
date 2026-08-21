@@ -28,6 +28,7 @@ import {
   parseYjsDocumentState,
   parseYjsUpdateSequence,
 } from "../../types/yjs_document_state.js";
+import { Logger } from "../../util/logger.js";
 import {
   CoreCommandDispatcher,
   CoreCommandError,
@@ -44,17 +45,20 @@ export class RealtimeGateway {
   private readonly pendingPersistenceBatches = new Map<string, string>();
   private readonly yjsDebouncer: YjsDebouncer;
   private readonly telemetry: Telemetry;
+  private readonly logger: Logger;
 
   constructor(
     roomRegistry: RoomRegistry,
     yjsCompactionService: YjsCompactionService,
     coreCommandDispatcher: CoreCommandDispatcher,
-    telemetry: Telemetry
+    telemetry: Telemetry,
+    logger = new Logger()
   ) {
     this.roomRegistry = roomRegistry;
     this.blockPackProjector = new BlockPackProjector();
     this.yjsCompactionService = yjsCompactionService;
     this.coreCommandDispatcher = coreCommandDispatcher;
+    this.logger = logger;
     this.yjsDebouncer = new YjsDebouncer(
       telemetry,
       this.resyncRoom.bind(this),
@@ -318,7 +322,7 @@ export class RealtimeGateway {
 
   private resyncRoom(room: Room, blockPackId: string): void {
     const resyncError = new Error("Yjs room resync requested");
-    console.error("[YjsWorker] room resync requested", {
+    this.logger.error("[YjsWorker] room resync requested", {
       blockPackId,
       lastUpdateSequence: room.lastUpdateSequence,
       compactedUntilSequence: room.compactedUntilSequence,
@@ -404,7 +408,7 @@ export class RealtimeGateway {
     persistenceBatchId?: string
   ): void {
     const commandError = error instanceof CoreCommandError ? error : null;
-    console.error("[YjsWorker] Core command failed", {
+    this.logger.error("[YjsWorker] Core command failed", {
       blockPackId,
       commandId: commandError?.commandId ?? commandId,
       commandType,
@@ -467,7 +471,7 @@ export class RealtimeGateway {
           })
         );
       } catch (error) {
-        console.error("failed to project Yjs document", {
+        this.logger.error("failed to project Yjs document", {
           blockPackId,
           error,
         });
@@ -1107,7 +1111,7 @@ export class RealtimeGateway {
           return;
         }
         default:
-          console.warn(
+          this.logger.warn(
             "received internal frame before its handler is enabled",
             {
               type: frame.type,

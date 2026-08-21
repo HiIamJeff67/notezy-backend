@@ -2,9 +2,11 @@ import { SeverityNumber } from "@opentelemetry/api-logs";
 
 import { YjsWorkerServer } from "./server.js";
 import { Telemetry } from "./telemetry.js";
+import { Logger } from "./util/logger.js";
 
-const telemetry = Telemetry.initialize();
-const yjsWorkerServer = new YjsWorkerServer(telemetry);
+const logger = new Logger();
+const telemetry = Telemetry.initialize(logger);
+const yjsWorkerServer = new YjsWorkerServer(telemetry, logger);
 let isShuttingDown = false;
 
 async function shutdown(signal: string): Promise<void> {

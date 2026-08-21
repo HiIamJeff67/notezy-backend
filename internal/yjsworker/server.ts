@@ -17,6 +17,7 @@ import { configureRealtimeRouter } from "./transports/realtime/realtime_router.j
 import { RoomRegistry } from "./transports/realtime/room_registry.js";
 import { configureHealthRouter } from "./transports/status/health_router.js";
 import { configureStartedRouter } from "./transports/status/started_router.js";
+import { Logger } from "./util/logger.js";
 
 export class YjsWorkerServer {
   private readonly server: ReturnType<typeof serve>;
@@ -27,7 +28,7 @@ export class YjsWorkerServer {
   private healthy = false;
   private ready = false;
 
-  constructor(telemetry: Telemetry) {
+  constructor(telemetry: Telemetry, logger = new Logger()) {
     const app = new Hono();
     const blockPackProjector = new BlockPackProjector();
     const yjsCompactionService = new YjsCompactionService(telemetry);
@@ -38,7 +39,7 @@ export class YjsWorkerServer {
       telemetry
     );
     const roomRegistry = new RoomRegistry(telemetry);
-    this.coreCommandDispatcher = new CoreCommandDispatcher();
+    this.coreCommandDispatcher = new CoreCommandDispatcher(logger);
     this.yjsMaintenanceConsumer = new YjsMaintenanceConsumer(
       this.coreCommandDispatcher,
       yjsCompactionService,
@@ -49,7 +50,8 @@ export class YjsWorkerServer {
       roomRegistry,
       yjsCompactionService,
       this.coreCommandDispatcher,
-      telemetry
+      telemetry,
+      logger
     );
     void this.yjsMaintenanceConsumer
       .start()

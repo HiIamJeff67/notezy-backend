@@ -1,10 +1,12 @@
 import { randomUUID } from "node:crypto";
+import { createRequire } from "node:module";
 import { type Consumer, Kafka, logLevel, type Producer } from "kafkajs";
 
 import {
   CoreYjsWorkerReplyTopic,
   YjsWorkerCoreCommandTopic,
 } from "../../../../../contracts/yjs-worker/v1/yjsworker_contract.js";
+import { Logger } from "../../../util/logger.js";
 
 export {
   CoreYjsWorkerReplyTopic,
@@ -97,6 +99,13 @@ type CoreCommand = {
   event: EventEnvelope;
 };
 
+const require = createRequire(import.meta.url);
+const kafkajs = require("kafkajs") as typeof import("kafkajs");
+
+kafkajs.CompressionCodecs[
+  kafkajs.CompressionTypes.Snappy
+] = require("kafkajs-snappy");
+
 function newKafka(): Kafka {
   const brokers = (process.env.KAFKA_BROKERS ?? "127.0.0.1:9094")
     .split(",")
@@ -179,14 +188,42 @@ export class CoreCommandProducer {
 
 export class CoreReplyConsumer {
   private readonly consumer: Consumer;
+  private readonly logger: Logger;
+  private readonly groupId: string;
   private readonly pendingReplies = new Map<string, PendingReply>();
   private startPromise: Promise<void> | null = null;
   private started = false;
 
-  constructor(kafka: Kafka) {
+  constructor(kafka: Kafka, logger = new Logger()) {
     const instanceId = process.env.HOSTNAME ?? randomUUID();
-    this.consumer = kafka.consumer({
-      groupId: `notegic-yjsworker-replies-${instanceId}`,
+    this.groupId = `notegic-yjsworker-replies-${instanceId}`;
+    this.logger = logger;
+    this.consumer = kafka.consumer({ groupId: this.groupId });
+    this.consumer.on(this.consumer.events.CONNECT, () => {
+      this.logger.debug("[YjsWorker] Core reply consumer connected", {
+        groupId: this.groupId,
+        topic: CoreYjsWorkerReplyTopic,
+      });
+    });
+    this.consumer.on(this.consumer.events.GROUP_JOIN, event => {
+      this.logger.debug("[YjsWorker] Core reply consumer joined group", {
+        groupId: this.groupId,
+        memberId: event.payload.memberId,
+        topics: Object.keys(event.payload.memberAssignment),
+      });
+    });
+    this.consumer.on(this.consumer.events.DISCONNECT, () => {
+      this.logger.warn("[YjsWorker] Core reply consumer disconnected", {
+        groupId: this.groupId,
+      });
+    });
+    this.consumer.on(this.consumer.events.CRASH, event => {
+      this.logger.error("[YjsWorker] Core reply consumer crashed", {
+        groupId: this.groupId,
+        restart: event.payload.restart,
+        error: event.payload.error.message,
+        stack: event.payload.error.stack,
+      });
     });
   }
 
@@ -208,6 +245,10 @@ export class CoreReplyConsumer {
   }
 
   private async startConsumer(): Promise<void> {
+    this.logger.debug("[YjsWorker] Starting Core reply consumer", {
+      groupId: this.groupId,
+      topic: CoreYjsWorkerReplyTopic,
+    });
     await this.consumer.connect();
     await this.consumer.subscribe({
       topic: CoreYjsWorkerReplyTopic,
@@ -245,10 +286,21 @@ export class CoreReplyConsumer {
         }
 
         const pendingReply = this.pendingReplies.get(reply.commandId);
-        if (pendingReply === undefined) return;
+        if (pendingReply === undefined) {
+          this.logger.debug("[YjsWorker] Ignored unmatched Core reply", {
+            commandId: reply.commandId,
+            commandType: reply.commandType,
+          });
+          return;
+        }
 
         this.pendingReplies.delete(reply.commandId);
         clearTimeout(pendingReply.timeout);
+        this.logger.debug("[YjsWorker] Received Core reply", {
+          commandId: reply.commandId,
+          commandType: reply.commandType,
+          hasError: reply.error !== undefined,
+        });
         if (reply.error !== undefined) {
           pendingReply.reject(
             new CoreCommandError(
@@ -325,10 +377,10 @@ export class CoreCommandDispatcher {
   private readonly producer: CoreCommandProducer;
   private readonly replyConsumer: CoreReplyConsumer;
 
-  constructor() {
+  constructor(logger = new Logger()) {
     const kafka = newKafka();
     this.producer = new CoreCommandProducer(kafka);
-    this.replyConsumer = new CoreReplyConsumer(kafka);
+    this.replyConsumer = new CoreReplyConsumer(kafka, logger);
   }
 
   async dispatch<D, R>(

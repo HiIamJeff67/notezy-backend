@@ -22,6 +22,7 @@ import {
   ATTR_SERVICE_VERSION,
 } from "@opentelemetry/semantic-conventions";
 import { config } from "./configs/config.js";
+import { Logger } from "./util/logger.js";
 
 type RoomState = {
   activeRooms: number;
@@ -40,14 +41,16 @@ export class Telemetry {
   private readonly payloadBytes;
   private readonly sdk: NodeSDK;
   private readonly tracer;
+  private readonly consoleLogger: Logger;
   private roomStateProvider: () => RoomState = () => ({
     activeRooms: 0,
     activeSubscribers: 0,
     internalSockets: 0,
   });
 
-  private constructor(sdk: NodeSDK) {
+  private constructor(sdk: NodeSDK, consoleLogger: Logger) {
     this.sdk = sdk;
+    this.consoleLogger = consoleLogger;
 
     const meter = metrics.getMeter("notegic.yjs-worker");
     this.logger = logs.getLogger("notegic.yjs-worker");
@@ -126,7 +129,7 @@ export class Telemetry {
     this.gcObserver.observe({ entryTypes: ["gc"] });
   }
 
-  static initialize(): Telemetry {
+  static initialize(logger = new Logger()): Telemetry {
     const resource = resourceFromAttributes({
       [ATTR_SERVICE_NAME]: config.telemetry.serviceName,
       [ATTR_SERVICE_VERSION]: config.telemetry.serviceVersion,
@@ -153,7 +156,7 @@ export class Telemetry {
 
     sdk.start();
 
-    return new Telemetry(sdk);
+    return new Telemetry(sdk, logger);
   }
 
   log(
@@ -180,7 +183,7 @@ export class Telemetry {
         : {}),
     };
 
-    console[level](JSON.stringify(record));
+    this.consoleLogger.log(level, JSON.stringify(record));
     this.logger.emit({
       context: context.active(),
       severityNumber,
@@ -246,7 +249,7 @@ export class Telemetry {
     try {
       await this.sdk.shutdown();
     } catch (error) {
-      console.warn(
+      this.consoleLogger.warn(
         JSON.stringify({
           level: "warn",
           event: "telemetry.shutdown_failed",
