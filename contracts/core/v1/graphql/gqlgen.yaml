@@ -197,6 +197,12 @@ models:
         value: "github.com/HiIamJeff67/notegic-backend/contracts/types/enums.BlockType_Table"
       BlockType_CodeBlock:
         value: "github.com/HiIamJeff67/notegic-backend/contracts/types/enums.BlockType_CodeBlock"
+      BlockType_MathBlock:
+        value: "github.com/HiIamJeff67/notegic-backend/contracts/types/enums.BlockType_MathBlock"
+      BlockType_Diagram:
+        value: "github.com/HiIamJeff67/notegic-backend/contracts/types/enums.BlockType_Diagram"
+      BlockType_Calendar:
+        value: "github.com/HiIamJeff67/notegic-backend/contracts/types/enums.BlockType_Calendar"
   CountryCode:
     model: "github.com/HiIamJeff67/notegic-backend/contracts/types/enums.CountryCode"
     enum_values:
