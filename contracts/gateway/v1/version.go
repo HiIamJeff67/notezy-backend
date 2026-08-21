@@ -4,10 +4,10 @@ const (
 	Version = "v1"
 
 	DevelopmentVersion = "v1"
-	ProductionVersion  = "v1"
-	TestVersion        = "v1"
+	ProductionVersion  = "v0-beta"
+	TestVersion        = "v0-beta"
 
-	DevelopmentCompleteVersion = "1.0.0"
-	ProductionCompleteVersion  = "1.0.0"
-	TestCompleteVersion        = "1.0.0"
+	DevelopmentCompleteVersion string = "0.1.0-beta.3"
+	ProductionCompleteVersion  string = "0.1.0-beta.3"
+	TestCompleteVersion        string = "0.1.0-beta.3"
 )

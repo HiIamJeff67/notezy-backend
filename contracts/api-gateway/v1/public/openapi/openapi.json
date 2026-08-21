@@ -11967,7 +11967,7 @@
   "info": {
     "description": "Complete machine-readable contract for routes exposed by APIGateway v1. Authenticated requests use user-owned API keys.",
     "title": "Notegic APIGateway API",
-    "version": "1.0.0"
+    "version": "0.1.0-beta.3"
   },
   "openapi": "3.1.0",
   "paths": {

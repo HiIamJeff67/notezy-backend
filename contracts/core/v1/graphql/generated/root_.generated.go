@@ -2641,6 +2641,9 @@ var sources = []*ast.Source{
 	BlockType_File, # file
 	BlockType_Table, # table
 	BlockType_CodeBlock, # codeBlock
+	BlockType_MathBlock, # mathBlock
+	BlockType_Diagram, # diagram
+	BlockType_Calendar # calendar
 }`, BuiltIn: false},
 	{Name: "../schemas/enums/country_code_enum.graphql", Input: `enum CountryCode {
   COUNTRY_CODE_886 # Taiwan

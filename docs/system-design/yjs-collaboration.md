@@ -34,7 +34,7 @@ Go constants: `YjsBlockPackRoomPrefix`、`YjsBlockPackFragmentName`、`YjsBlockP
 
 schema version `1` 的 block type manifest 與目前後端 `BlockType` 對齊：
 
-`paragraph`、`heading`、`quote`、`bulletListItem`、`numberedListItem`、`checkListItem`、`toggleListItem`、`image`、`video`、`audio`、`file`、`table`、`codeBlock`。
+`paragraph`、`heading`、`quote`、`bulletListItem`、`numberedListItem`、`checkListItem`、`toggleListItem`、`image`、`video`、`audio`、`file`、`table`、`codeBlock`、`mathBlock`、`diagram`、`calendar`。
 
 所有 editor runtime 必須以單一 `BlockNoteSchema` factory 建立 editor、Yjs import/export 與 server-side projector 使用的 schema。Node worker 使用相同的 block/inline/style manifest；Go 不解析 Yjs tree，也不自行重建 BlockNote document。
 
@@ -54,7 +54,7 @@ Node projector 使用 `@blocknote/core/yjs` 的 `yXmlFragmentToBlocks`，並明�
 | 不相容變更 | 建立新 version，Node worker 對完整 Y.Doc migration，產出新 snapshot 後才切換。 |
 | 投影 | projector 的 schema version 必須與 source document version 相同。 |
 
-目前所有 document 都使用 `YjsBlockPackSchemaVersion = 1`。第一個需要同時支援多個 document schema version 的 migration，才新增 per-document `SchemaVersion`；在那之前不得預先擴充 `Block` schema。
+目前所有 document 都使用 `YjsBlockPackSchemaVersion = 1`。未來若需要同時支援多個 document schema version，才新增 per-document `SchemaVersion`。
 
 ## Persistence And Sequence
 

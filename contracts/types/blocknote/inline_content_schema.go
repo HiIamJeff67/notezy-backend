@@ -27,6 +27,7 @@ type InlineContentType string
 
 const InlineContentType_StyledText InlineContentType = "text"
 const InlineContentType_Link InlineContentType = "link"
+const InlineContentType_Math InlineContentType = "math"
 
 /* ============================== StyledText ============================== */
 
@@ -52,6 +53,22 @@ type Link struct {
 	Type    InlineContentType `json:"type" validate:"required,eq=link"`
 	Href    string            `json:"href" validate:"required,url"`
 	Content []StyledText      `json:"content" validate:"omitempty,dive"` // use dive to validate recursively
+}
+
+/* ============================== Math ============================== */
+
+type Math struct {
+	Type    InlineContentType `json:"type" validate:"required,eq=math"`
+	Content string            `json:"content" validate:"max=4096"`
+}
+
+func (*Math) isInlineContent() bool { return true }
+
+func NewMath(content string) *Math {
+	return &Math{
+		Type:    InlineContentType_Math,
+		Content: content,
+	}
 }
 
 func (*Link) isInlineContent() bool { return true }
@@ -118,6 +135,12 @@ func (ic *InlineContent) UnmarshalJSON(b []byte) error {
 			return err
 		}
 		ic.InlineContentUnion = &v
+	case InlineContentType_Math:
+		var v Math
+		if err := json.Unmarshal(b, &v); err != nil {
+			return err
+		}
+		ic.InlineContentUnion = &v
 		// case InlineContentType_CustomInlineContent:
 		// 	var v CustomInlineContent
 		// 	if err := json.Unmarshal(b, &v); err != nil {
@@ -133,6 +156,8 @@ func (ic *InlineContent) MarshalJSON() ([]byte, error) {
 	case *StyledText:
 		return json.Marshal(v)
 	case *Link:
+		return json.Marshal(v)
+	case *Math:
 		return json.Marshal(v)
 	// case *CustomInlineContent:
 	// 	return json.Marshal(v)

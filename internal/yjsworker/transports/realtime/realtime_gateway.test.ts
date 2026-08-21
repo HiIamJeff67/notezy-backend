@@ -3,7 +3,6 @@ import { EventEmitter } from "node:events";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-import type { Block } from "@blocknote/core";
 import { blocksToYXmlFragment } from "@blocknote/core/yjs";
 import { WebSocket } from "ws";
 import {
@@ -15,7 +14,10 @@ import * as Y from "yjs";
 import { BlockPackProjector } from "../../services/block_pack_projector.js";
 import { YjsCompactionService } from "../../services/yjs_compaction_service.js";
 import { Telemetry } from "../../telemetry.js";
-import { notegicBlockNoteEditor } from "../../types/blocknote_schema.js";
+import {
+  type NotegicBlock,
+  notegicBlockNoteEditor,
+} from "../../types/blocknote_schema.js";
 import {
   createInternalFrame,
   parseInternalFrame,
@@ -202,7 +204,7 @@ test("RealtimeGateway rejects an entire update before it exceeds the BlockPack q
       new URL("../../../../tmp/temp_wide_block_contents.json", import.meta.url),
       "utf8"
     )
-  ) as Block[];
+  ) as NotegicBlock[];
   const sourceDocument = new Y.Doc();
   blocksToYXmlFragment(
     notegicBlockNoteEditor,

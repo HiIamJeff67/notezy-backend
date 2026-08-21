@@ -2,15 +2,16 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-import type { Block } from "@blocknote/core";
 import { blocksToYXmlFragment } from "@blocknote/core/yjs";
 import * as Y from "yjs";
-
+import { Telemetry } from "../telemetry.js";
+import {
+  type NotegicBlock,
+  notegicBlockNoteEditor,
+} from "../types/blocknote_schema.js";
+import { convertUUIDStringToBytes } from "../util/uuid.js";
 import { BlockPackProjector } from "./block_pack_projector.js";
 import { YjsProjectionService } from "./yjs_projection_service.js";
-import { Telemetry } from "../telemetry.js";
-import { notegicBlockNoteEditor } from "../types/blocknote_schema.js";
-import { convertUUIDStringToBytes } from "../util/uuid.js";
 
 const telemetry = Telemetry.initialize();
 
@@ -24,7 +25,7 @@ test("YjsProjectionService projects a snapshot without a durable update tail", a
       new URL("../../../tmp/temp_wide_block_contents.json", import.meta.url),
       "utf8"
     )
-  ) as Block[];
+  ) as NotegicBlock[];
   const sourceDocument = new Y.Doc();
   blocksToYXmlFragment(
     notegicBlockNoteEditor,
@@ -74,7 +75,7 @@ test("YjsProjectionService projects a snapshot without a durable update tail", a
     schemaId: string;
     schemaVersion: number;
     projectedSequence: number;
-    blocks: Block[];
+    blocks: NotegicBlock[];
   };
   assert.equal(projection.schemaId, "notegic.blocknote");
   assert.equal(projection.schemaVersion, 1);

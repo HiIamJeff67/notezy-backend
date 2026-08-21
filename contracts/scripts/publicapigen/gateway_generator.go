@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 	"unicode"
+
+	gatewaycontract "github.com/HiIamJeff67/notegic-backend/contracts/gateway/v1"
 )
 
 func writeGatewayArtifacts(root string, endpoints []endpoint) {
@@ -150,7 +152,7 @@ func writeGatewayArtifacts(root string, endpoints []endpoint) {
 	openAPI := map[string]any{
 		"openapi": "3.1.0",
 		"info": map[string]any{
-			"title": "Notegic APIGateway API", "version": "1.0.0",
+			"title": "Notegic APIGateway API", "version": gatewaycontract.DevelopmentCompleteVersion,
 			"description": "Complete machine-readable contract for routes exposed by APIGateway v1. Authenticated requests use user-owned API keys.",
 		},
 		"servers": []any{

@@ -105,9 +105,9 @@ Each daily file contains:
 - `Changed areas`: top-level repository areas touched by those commits.
 - `Regeneration`: the command and hook behavior.
 
-`make devlog` writes today's snapshot and refreshes the root
-[`DEVLOG.md`](../../DEVLOG.md) index. It is deterministic and uses local Git
-history; it does not generate an AI summary or call GitHub.
+`make devlog` writes today's snapshot and refreshes the generated Development
+log section at the bottom of [`README.md`](../../README.md). It is deterministic
+and uses local Git history; it does not generate an AI summary or call GitHub.
 
 ## Git hooks
 

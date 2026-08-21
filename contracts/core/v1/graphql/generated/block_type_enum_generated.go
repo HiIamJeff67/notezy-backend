@@ -72,6 +72,9 @@ var (
 		"BlockType_File":             enums.BlockType_File,
 		"BlockType_Table":            enums.BlockType_Table,
 		"BlockType_CodeBlock":        enums.BlockType_CodeBlock,
+		"BlockType_MathBlock":        enums.BlockType_MathBlock,
+		"BlockType_Diagram":          enums.BlockType_Diagram,
+		"BlockType_Calendar":         enums.BlockType_Calendar,
 	}
 	marshalNBlockType2githubᚗcomᚋHiIamJeff67ᚋnotegicᚑbackendᚋcontractsᚋtypesᚋenumsᚐBlockType = map[enums.BlockType]string{
 		enums.BlockType_Paragraph:        "BlockType_Paragraph",
@@ -87,6 +90,9 @@ var (
 		enums.BlockType_File:             "BlockType_File",
 		enums.BlockType_Table:            "BlockType_Table",
 		enums.BlockType_CodeBlock:        "BlockType_CodeBlock",
+		enums.BlockType_MathBlock:        "BlockType_MathBlock",
+		enums.BlockType_Diagram:          "BlockType_Diagram",
+		enums.BlockType_Calendar:         "BlockType_Calendar",
 	}
 )
 

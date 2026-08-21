@@ -16,8 +16,10 @@ EOF
 	exit 1
 fi
 
+cp "$root/README.md" "$temporary_dir/README.md"
+
 DEVLOG_ARCHIVE_DIR="$temporary_dir/devlogs" \
-DEVLOG_INDEX_FILE="$temporary_dir/DEVLOG.md" \
+DEVLOG_README_FILE="$temporary_dir/README.md" \
 	"$root/scripts/devlog.sh" >/dev/null
 
 git -C "$root" show ":$relative_path" > "$temporary_dir/staged.md"

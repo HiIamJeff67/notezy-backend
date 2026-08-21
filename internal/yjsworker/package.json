@@ -25,7 +25,7 @@
   },
   "type": "module",
   "dependencies": {
-    "@blocknote/core": "0.51.3",
+    "@blocknote/core": "0.54.0",
     "@hono/node-server": "^2.0.8",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/api-logs": "^0.220.0",
@@ -39,6 +39,7 @@
     "@opentelemetry/semantic-conventions": "^1.43.0",
     "hono": "^4.12.30",
     "kafkajs": "^2.2.4",
+    "kafkajs-snappy": "1.1.0",
     "lib0": "0.2.117",
     "ws": "^8.18.3",
     "y-protocols": "1.0.7",

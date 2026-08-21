@@ -46,6 +46,9 @@ const (
 
 	BlockType_Table     BlockType = BlockType(enumcontract.BlockType_Table)
 	BlockType_CodeBlock BlockType = BlockType(enumcontract.BlockType_CodeBlock)
+	BlockType_MathBlock BlockType = BlockType(enumcontract.BlockType_MathBlock)
+	BlockType_Diagram   BlockType = BlockType(enumcontract.BlockType_Diagram)
+	BlockType_Calendar  BlockType = BlockType(enumcontract.BlockType_Calendar)
 )
 
 var AllBlockTypes = []BlockType{
@@ -62,6 +65,9 @@ var AllBlockTypes = []BlockType{
 	BlockType_File,
 	BlockType_Table,
 	BlockType_CodeBlock,
+	BlockType_MathBlock,
+	BlockType_Diagram,
+	BlockType_Calendar,
 }
 
 var AllBlockTypeStrings = []string{
@@ -78,6 +84,9 @@ var AllBlockTypeStrings = []string{
 	string(BlockType_File),
 	string(BlockType_Table),
 	string(BlockType_CodeBlock),
+	string(BlockType_MathBlock),
+	string(BlockType_Diagram),
+	string(BlockType_Calendar),
 }
 
 func (bt BlockType) Name() string {

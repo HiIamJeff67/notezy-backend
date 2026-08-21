@@ -56,8 +56,14 @@ func (block *ArborizedEditableBlock) UnmarshalJSON(data []byte) error {
 			return err
 		}
 		block.Content = &tableContent
+	case '"':
+		var plainContent PlainContent
+		if err := json.Unmarshal(content, &plainContent); err != nil {
+			return err
+		}
+		block.Content = plainContent
 	default:
-		return errors.New("invalid content format: must be array or object")
+		return errors.New("invalid content format: must be array, object, or string")
 	}
 
 	return nil

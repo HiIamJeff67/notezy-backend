@@ -1,6 +1,8 @@
-import type { Block } from "@blocknote/core";
-
-import { convertBytesToUUIDString, convertUUIDStringToBytes } from "../util/uuid.js";
+import {
+  convertBytesToUUIDString,
+  convertUUIDStringToBytes,
+} from "../util/uuid.js";
+import type { NotegicBlock } from "./blocknote_schema.js";
 import {
   parseYjsDocumentState,
   type YjsDocumentState,
@@ -38,7 +40,7 @@ export type YjsProjectionBatchResult = {
   schemaId: "notegic.blocknote";
   schemaVersion: 1;
   projectedSequence: number;
-  blocks: Block[];
+  blocks: NotegicBlock[];
 };
 
 export function createYjsProjectionBatchResult(

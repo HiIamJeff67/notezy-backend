@@ -238,3 +238,17 @@ Project code is distributed under the Notegic proprietary license:
 - `LICENSE(tw).md` — Traditional Chinese
 
 Third-party notices and license texts are preserved under `LICENSES/`.
+
+<!-- DEVLOG:START -->
+## Development log
+
+This section is automatically maintained from recent Git history. Detailed intent belongs in commit messages and design documents.
+
+### Recent snapshots
+
+- [2026-08/2026-08-22](docs/devlogs/2026-08/2026-08-22.md)
+- [2026-08/2026-08-21](docs/devlogs/2026-08/2026-08-21.md)
+- [2026-08/2026-08-19](docs/devlogs/2026-08/2026-08-19.md)
+- [2026-08/2026-08-17](docs/devlogs/2026-08/2026-08-17.md)
+- [2026-08/2026-08-16](docs/devlogs/2026-08/2026-08-16.md)
+<!-- DEVLOG:END -->

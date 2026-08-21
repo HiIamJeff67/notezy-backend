@@ -60,6 +60,6 @@
     本協議構成雙方就軟體之完整合意，並取代一切先前或同期之約定。倘有任何條款被認定無效或不可執行，應於必要最小範圍內調整，其餘條款仍然有效。任何一方未行使或遲延行使權利不構成放棄。若本協議之不同語言版本有歧異，以英文版本為準。
 
 16. 聯絡
-    若需超出本協議之授權或取得書面同意，請聯絡：[theNotegic@gmail.com](mailto:theNotegic@gmail.com)。
+    若需超出本協議之授權或取得書面同意，請聯絡：[notegic@gmail.com](mailto:notegic@gmail.com)。
 
 © 2025 Notegic. All rights reserved.

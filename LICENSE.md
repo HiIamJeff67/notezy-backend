@@ -60,6 +60,6 @@ Important: By installing, accessing, copying, or using the Software, you agree t
     This EULA constitutes the entire agreement regarding the Software and supersedes all prior agreements. If any provision is held unenforceable, it will be modified to the minimum extent necessary to be enforceable, and the remainder will remain in effect. Failure to enforce any provision is not a waiver. In any translation, the English version controls in case of conflict.
 
 16. Contact
-    For permissions beyond this EULA, contact: [theNotegic@gmail.com](mailto:theNotegic@gmail.com).
+    For permissions beyond this EULA, contact: [notegic@gmail.com](mailto:notegic@gmail.com).
 
 © 2025 Notegic. All rights reserved.

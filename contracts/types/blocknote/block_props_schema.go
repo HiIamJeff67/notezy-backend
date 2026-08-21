@@ -100,6 +100,18 @@ type TableProps struct {
 
 func (tp *TableProps) IsBlockProps() bool { return true }
 
+/* ============================== CalendarBlockProps ============================== */
+
+type CalendarBlockProps struct {
+	BaseProps
+	CalendarId string `json:"calendarId,omitempty"`
+	AnchorDate string `json:"anchorDate,omitempty"`
+	Timezone   string `json:"timezone,omitempty"`
+	View       string `json:"view,omitempty" validate:"omitempty,eq=month"`
+}
+
+func (cbp *CalendarBlockProps) IsBlockProps() bool { return true }
+
 func ParseProps(blockType string, rawJSON []byte) (BlockProps, error) {
 	if len(rawJSON) == 0 || string(rawJSON) == "null" {
 		rawJSON = []byte("{}")
@@ -126,6 +138,8 @@ func ParseProps(blockType string, rawJSON []byte) (BlockProps, error) {
 		props = &TableProps{}
 	case "tableCell":
 		props = &TableCellProps{}
+	case "calendar":
+		props = &CalendarBlockProps{}
 	case "paragraph", "bulletListItem", "numberedListItem":
 		props = &BaseProps{}
 	default:

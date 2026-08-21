@@ -22,6 +22,9 @@ make install-hooks
 
 Before committing, the pre-commit hook verifies that today's devlog is staged and exactly matches a fresh temporary generation. It never overwrites the working tree and removes its temporary files when it exits.
 
+The recent snapshot index is maintained in the generated Development log
+section at the bottom of the repository [README](../../README.md).
+
 Recommended workflow:
 
 ```bash

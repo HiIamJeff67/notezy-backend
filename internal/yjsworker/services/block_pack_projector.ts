@@ -1,15 +1,17 @@
-import type { Block } from "@blocknote/core";
 import { yXmlFragmentToBlocks } from "@blocknote/core/yjs";
 import type * as Y from "yjs";
 import { YjsBlockPackFragmentName } from "../../../contracts/yjs-worker/v1/yjsworker_contract.js";
-import { notegicBlockNoteEditor } from "../types/blocknote_schema.js";
+import {
+  type NotegicBlock,
+  notegicBlockNoteEditor,
+} from "../types/blocknote_schema.js";
 
 export class BlockPackProjector {
-  projectYjsDocument(document: Y.Doc): Block[] {
+  projectYjsDocument(document: Y.Doc): NotegicBlock[] {
     return yXmlFragmentToBlocks(
       notegicBlockNoteEditor,
       document.getXmlFragment(YjsBlockPackFragmentName)
-    );
+    ) as NotegicBlock[];
   }
 
   countYjsDocumentBlocks(document: Y.Doc): number {

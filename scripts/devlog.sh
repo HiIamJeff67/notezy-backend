@@ -8,7 +8,7 @@ archive_dir="$root/docs/devlogs"
 month="${today%-??}"
 archive_dir="${DEVLOG_ARCHIVE_DIR:-$archive_dir}"
 archive_file="$archive_dir/$month/$today.md"
-index_file="${DEVLOG_INDEX_FILE:-$root/DEVLOG.md}"
+readme_file="${DEVLOG_README_FILE:-$root/README.md}"
 temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/notegic-devlog.XXXXXX")"
 trap 'rm -rf "$temporary_dir"' EXIT INT TERM
 
@@ -46,16 +46,16 @@ EOF
 } > "$temporary_file"
 mv "$temporary_file" "$archive_file"
 
-root_temporary_file="$temporary_dir/index.md"
+section_file="$temporary_dir/section.md"
 recent_snapshots="$(find "$archive_dir" -maxdepth 2 -type f -name '20??-??-??.md' -print \
 	| awk -F/ '{key=$NF; sub(/\\.md$/, "", key); print key "\t" $0}' \
 	| sort -r \
 	| head -n 5 \
 	| cut -f2-)"
 {
-	printf '# Development Log\n\n'
-	printf 'This file is an automatically maintained index of recent snapshots.\n\n'
-	printf '## Recent snapshots\n\n'
+	printf '## Development log\n\n'
+	printf 'This section is automatically maintained from recent Git history. Detailed intent belongs in commit messages and design documents.\n\n'
+	printf '### Recent snapshots\n\n'
 	while IFS= read -r file; do
 		[[ -z "$file" ]] && continue
 		relative="${file#$root/}"
@@ -63,7 +63,40 @@ recent_snapshots="$(find "$archive_dir" -maxdepth 2 -type f -name '20??-??-??.md
 		name="${name%.md}"
 		printf -- '- [%s](%s)\n' "$name" "$relative"
 	done <<< "$recent_snapshots"
-} > "$root_temporary_file"
-mv "$root_temporary_file" "$index_file"
+} > "$section_file"
 
-printf 'Generated %s and refreshed DEVLOG.md\n' "${archive_file#$root/}"
+readme_temporary_file="$temporary_dir/README.md"
+awk \
+    -v start_marker='<!-- DEVLOG:START -->' \
+    -v end_marker='<!-- DEVLOG:END -->' \
+    -v section_file="$section_file" '
+    $0 == start_marker {
+        print
+        while ((getline section_line < section_file) > 0) {
+            print section_line
+        }
+        close(section_file)
+        inside_devlog = 1
+        found_start = 1
+        next
+    }
+    $0 == end_marker {
+        inside_devlog = 0
+        print
+        found_end = 1
+        next
+    }
+    !inside_devlog { print }
+    END {
+        if (!found_start || !found_end) {
+            exit 1
+        }
+    }
+' "$readme_file" > "$readme_temporary_file" || {
+    echo "README.md is missing DEVLOG markers" >&2
+    echo "Add <!-- DEVLOG:START --> and <!-- DEVLOG:END --> around the generated section" >&2
+    exit 1
+}
+mv "$readme_temporary_file" "$readme_file"
+
+printf 'Generated %s and refreshed %s\n' "${archive_file#$root/}" "${readme_file#$root/}"

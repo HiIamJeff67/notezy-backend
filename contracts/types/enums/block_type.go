@@ -19,4 +19,7 @@ const (
 
 	BlockType_Table     BlockType = "table"
 	BlockType_CodeBlock BlockType = "codeBlock"
+	BlockType_MathBlock BlockType = "mathBlock"
+	BlockType_Diagram   BlockType = "diagram"
+	BlockType_Calendar  BlockType = "calendar"
 )
