@@ -42,7 +42,7 @@ func TestAuthenticationMiddlewareValidatesForwardedAccessToken(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	router.Use(coremiddlewares.DelegationAuthenticatedMiddleware(""), coremiddlewares.AuthMiddleware(nil))
+	router.Use(coremiddlewares.DelegationAuthenticatedMiddleware(""), coremiddlewares.AuthMiddleware(nil, nil))
 	router.POST("/", func(ctx *gin.Context) {
 		ctx.Status(http.StatusNoContent)
 	})

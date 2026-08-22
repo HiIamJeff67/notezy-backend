@@ -17,7 +17,6 @@ import (
 
 	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
 	userdata "github.com/HiIamJeff67/notegic-backend/internal/core/data/cache/userdata"
-	cacheinputs "github.com/HiIamJeff67/notegic-backend/internal/core/data/cache/userdata/inputs"
 )
 
 func CSRFMiddleware(userDataCacheClient *userdata.UserDataCacheClient) gin.HandlerFunc {
@@ -56,7 +55,22 @@ func CSRFMiddleware(userDataCacheClient *userdata.UserDataCacheClient) gin.Handl
 			})
 			return
 		}
-		claims, err := sharedtokens.ValidateCSRFToken(csrfToken, userDataCache.CSRFToken)
+		expectedToken := userDataCache.CSRFToken
+		isPreviousToken := userDataCache.PreviousCSRFToken != "" && csrfToken == userDataCache.PreviousCSRFToken
+		if csrfToken != userDataCache.CSRFToken && !isPreviousToken {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
+				Version:   gatewaycontract.Version,
+				Metadata:  gatewaycontract.ResponseMetadata{RequestId: ctx.GetHeader("X-Request-Id"), RespondedAt: time.Now()},
+				Data:      struct{}{},
+				Exception: exceptions.New("InvalidCSRFToken", "Token", "ValidateCSRFToken", "the CSRF token is invalid", http.StatusUnauthorized),
+			})
+			return
+		}
+		if isPreviousToken {
+			expectedToken = userDataCache.PreviousCSRFToken
+		}
+
+		claims, err := sharedtokens.ValidateCSRFToken(csrfToken, expectedToken)
 		if err != nil {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
 				Version:   gatewaycontract.Version,
@@ -66,7 +80,10 @@ func CSRFMiddleware(userDataCacheClient *userdata.UserDataCacheClient) gin.Handl
 			})
 			return
 		}
-		if sharedtokens.IsCSRFTokenExpiringSoon(claims) {
+		if isPreviousToken {
+			ctx.Set(sharedcontexts.ContextFieldName_IsNewTokens.String(), true)
+			ctx.Set(sharedcontexts.ContextFieldName_CSRFToken.String(), userDataCache.CSRFToken)
+		} else if sharedtokens.IsCSRFTokenExpiringSoon(claims) {
 			newCSRFToken, err := sharedtokens.GenerateCSRFToken(sharedtokens.CSRFTokenClaims{})
 			if err != nil {
 				ctx.AbortWithStatusJSON(http.StatusInternalServerError, gatewaycontract.Response[struct{}]{
@@ -77,7 +94,12 @@ func CSRFMiddleware(userDataCacheClient *userdata.UserDataCacheClient) gin.Handl
 				})
 				return
 			}
-			if exception := userDataCacheClient.Update(actorUserName, cacheinputs.UpdateUserDataCacheInput{CSRFToken: newCSRFToken}); exception != nil {
+			currentCSRFToken, _, exception := userDataCacheClient.RotateCSRFToken(
+				actorUserName,
+				userDataCache.CSRFToken,
+				*newCSRFToken,
+			)
+			if exception != nil {
 				ctx.AbortWithStatusJSON(exception.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
 					Version:   gatewaycontract.Version,
 					Metadata:  gatewaycontract.ResponseMetadata{RequestId: ctx.GetHeader("X-Request-Id"), RespondedAt: time.Now()},
@@ -90,7 +112,7 @@ func CSRFMiddleware(userDataCacheClient *userdata.UserDataCacheClient) gin.Handl
 			if strings.TrimSpace(request.Tokens.AccessToken) != "" {
 				ctx.Set(sharedcontexts.ContextFieldName_AccessToken.String(), request.Tokens.AccessToken)
 			}
-			ctx.Set(sharedcontexts.ContextFieldName_CSRFToken.String(), *newCSRFToken)
+			ctx.Set(sharedcontexts.ContextFieldName_CSRFToken.String(), currentCSRFToken)
 		}
 
 		ctx.Next()

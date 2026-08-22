@@ -16,12 +16,16 @@ import (
 	exceptions "github.com/HiIamJeff67/notegic-backend/contracts/types/exceptions"
 
 	contexts "github.com/HiIamJeff67/notegic-backend/internal/core/contexts"
+	userdata "github.com/HiIamJeff67/notegic-backend/internal/core/data/cache/userdata"
 	data "github.com/HiIamJeff67/notegic-backend/internal/core/data/database"
 	options "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/options"
 	repositories "github.com/HiIamJeff67/notegic-backend/internal/core/data/database/repositories"
 )
 
-func AuthMiddleware(userRepository repositories.UserRepositoryInterface) gin.HandlerFunc {
+func AuthMiddleware(
+	userRepository repositories.UserRepositoryInterface,
+	userDataCacheClient *userdata.UserDataCacheClient,
+) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		userPublicId, exception := contexts.GetActorUserPublicId(ctx.Request.Context())
 		if exception != nil {
@@ -157,7 +161,32 @@ func AuthMiddleware(userRepository repositories.UserRepositoryInterface) gin.Han
 			})
 			return
 		}
-		newCSRFToken, err := sharedtokens.GenerateCSRFToken(sharedtokens.CSRFTokenClaims{})
+		var newCSRFToken *string
+		if userDataCacheClient == nil {
+			newCSRFToken, err = sharedtokens.GenerateCSRFToken(sharedtokens.CSRFTokenClaims{})
+		} else {
+			userDataCache, exception := userDataCacheClient.Get(user.Name)
+			if exception != nil {
+				err = exception
+			} else if request.Tokens.CSRFToken != "" && request.Tokens.CSRFToken != userDataCache.CSRFToken {
+				newCSRFToken = &userDataCache.CSRFToken
+			} else {
+				newCSRFToken, err = sharedtokens.GenerateCSRFToken(sharedtokens.CSRFTokenClaims{})
+				if err == nil {
+					var currentCSRFToken string
+					currentCSRFToken, _, exception = userDataCacheClient.RotateCSRFToken(
+						user.Name,
+						userDataCache.CSRFToken,
+						*newCSRFToken,
+					)
+					if exception != nil {
+						err = exception
+					} else {
+						newCSRFToken = &currentCSRFToken
+					}
+				}
+			}
+		}
 		if err != nil {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gatewaycontract.Response[struct{}]{
 				Version: gatewaycontract.Version,
@@ -167,10 +196,10 @@ func AuthMiddleware(userRepository repositories.UserRepositoryInterface) gin.Han
 				},
 				Data: struct{}{},
 				Exception: exceptions.New(
-					"GenerationFailed",
+					"RefreshFailed",
 					"Core",
 					"AuthenticateRequest",
-					"failed to generate a new CSRF token",
+					"failed to refresh the CSRF token",
 					http.StatusInternalServerError,
 					true,
 				).WithOrigin(err),

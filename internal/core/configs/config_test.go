@@ -28,6 +28,7 @@ func TestLoadConfig(t *testing.T) {
 	t.Setenv("CORE_QUOTA_CYCLE_WORKER_INTERVAL", "24h")
 	t.Setenv("STORAGE_KEY_SALT", "salt")
 	t.Setenv("CORE_USER_DATA_CACHE_EXPIRES_IN", "1h")
+	t.Setenv("CORE_USER_DATA_CACHE_MAX_ROTATION_RETRIES", "5")
 	t.Setenv("YJS_DOCUMENT_INITIALIZATION_WORKER_URL", "http://notegic-yjs-worker:8787/core/yjs-document-initialization/v1")
 	t.Setenv("YJS_DOCUMENT_INITIALIZATION_WORKER_TIMEOUT", "30s")
 

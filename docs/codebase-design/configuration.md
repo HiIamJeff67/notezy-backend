@@ -45,6 +45,7 @@ such as `_SECONDS`, `_MILLISECONDS`, or `_HOURS`.
 KAFKA_DIAL_TIMEOUT=3s
 CORE_CLIENT_TIMEOUT=10s
 CORE_USER_DATA_CACHE_EXPIRES_IN=1h
+CORE_USER_DATA_CACHE_MAX_ROTATION_RETRIES=5
 YJS_DOCUMENT_INITIALIZATION_WORKER_TIMEOUT=30s
 KAFKA_CONSUMER_INITIAL_RETRY_BACKOFF=250ms
 KAFKA_CONSUMER_MAXIMUM_RETRY_BACKOFF=5s
@@ -85,6 +86,7 @@ Redis topology is runtime-owned. Each runtime composition root creates an
 immutable `shared/platform/redis.ClientSet` and injects it into its cache stores
 and clients. Cache clients may select a private shard by hashing a key, but no
 server number or cross-runtime Redis registry is part of their configuration.
-Core currently reads only `CORE_USER_DATA_CACHE_EXPIRES_IN`; Gateway and
+Core currently reads `CORE_USER_DATA_CACHE_EXPIRES_IN` and
+`CORE_USER_DATA_CACHE_MAX_ROTATION_RETRIES`; Gateway and
 RealtimeGateway keep their rate-limit policies in
 `internal/<runtime>/configs/rate_limit.go`.

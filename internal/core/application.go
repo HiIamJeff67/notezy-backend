@@ -275,7 +275,7 @@ func (a *Application) buildRouter(
 	badgeService := otherservices.NewBadgeService(data.DB)
 	apiKeyRepository := repositories.NewAPIKeyRepository()
 	apiKeyService := apikeyservices.NewAPIKeyService(validator, data.DB, apiKeyRepository, apiKeyCacheClient)
-	authMiddleware := coremiddlewares.AuthMiddleware(userRepository)
+	authMiddleware := coremiddlewares.AuthMiddleware(userRepository, userDataCacheClient)
 	apiKeyMiddleware := coremiddlewares.APIKeyMiddleware(
 		apiKeyRepository,
 		userRepository,

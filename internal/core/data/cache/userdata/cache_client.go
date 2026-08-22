@@ -23,25 +23,27 @@ import (
 )
 
 type UserDataCache struct {
-	Id          uuid.UUID        `json:"id"`
-	PublicId    uuid.UUID        `json:"publicId"`
-	Name        string           `json:"name"`
-	DisplayName string           `json:"displayName"`
-	Email       string           `json:"email"`
-	AccessToken string           `json:"accessToken"`
-	CSRFToken   string           `json:"csrfToken"`
-	Role        enums.UserRole   `json:"role"`
-	Plan        enums.UserPlan   `json:"plan"`
-	Status      enums.UserStatus `json:"status"`
-	AvatarURL   string           `json:"avatarURL"`
-	CreatedAt   time.Time        `json:"createdAt"`
-	UpdatedAt   time.Time        `json:"updatedAt"`
+	Id                uuid.UUID        `json:"id"`
+	PublicId          uuid.UUID        `json:"publicId"`
+	Name              string           `json:"name"`
+	DisplayName       string           `json:"displayName"`
+	Email             string           `json:"email"`
+	AccessToken       string           `json:"accessToken"`
+	CSRFToken         string           `json:"csrfToken"`
+	PreviousCSRFToken string           `json:"previousCSRFToken,omitempty"`
+	Role              enums.UserRole   `json:"role"`
+	Plan              enums.UserPlan   `json:"plan"`
+	Status            enums.UserStatus `json:"status"`
+	AvatarURL         string           `json:"avatarURL"`
+	CreatedAt         time.Time        `json:"createdAt"`
+	UpdatedAt         time.Time        `json:"updatedAt"`
 }
 
 type UserDataCacheClient struct {
 	cacheStore *UserDataCacheStore
 
 	cacheExpiresIn                                       time.Duration
+	maxRotationRetries                                   int
 	batchCheckAndUpdateQuotasByFormattedKeysArgvPerKey   int
 	batchCheckAndUpdateQuotasByFormattedKeyBaseNumOfArgv int
 }
@@ -52,7 +54,8 @@ func NewUserDataCacheClient(config coreconfig.UserDataCacheConfig, cacheStore *U
 	return &UserDataCacheClient{
 		cacheStore: cacheStore,
 
-		cacheExpiresIn: config.CacheExpiresIn,
+		cacheExpiresIn:     config.CacheExpiresIn,
+		maxRotationRetries: config.MaxRotationRetries,
 		batchCheckAndUpdateQuotasByFormattedKeysArgvPerKey:   4,
 		batchCheckAndUpdateQuotasByFormattedKeyBaseNumOfArgv: 4,
 	}
@@ -392,6 +395,94 @@ func (s *UserDataCacheClient) Update(identifier string, input cacheinputs.Update
 
 	logs.NotegicLogger.Debug(context.Background(), fmt.Sprintf("Successfully updated cached user data in server %d", serverNumber))
 	return nil
+}
+
+// RotateCSRFToken atomically replaces the current token only when it still
+// matches expectedToken. The returned token is always the cache's current
+// token, so concurrent requests can converge on the winner's value.
+func (s *UserDataCacheClient) RotateCSRFToken(
+	identifier string,
+	expectedToken string,
+	replacementToken string,
+) (string, bool, *exceptions.Exception) {
+	if strings.TrimSpace(identifier) == "" ||
+		strings.TrimSpace(expectedToken) == "" ||
+		strings.TrimSpace(replacementToken) == "" {
+		return "", false, exceptions.New(
+			"InvalidInput",
+			"Cache",
+			"RotateCSRFToken",
+			"CSRF token rotation requires an identifier and both token values",
+			http.StatusInternalServerError,
+		)
+	}
+
+	redisClient, _, exception := s.getRedisClient(identifier)
+	if exception != nil {
+		return "", false, exception
+	}
+
+	key := s.formatUserDataKey(identifier)
+	for attempt := 0; attempt < s.maxRotationRetries; attempt++ {
+		currentToken := ""
+		rotated := false
+		err := redisClient.Watch(func(tx *redis.Tx) error {
+			cacheString, err := tx.Get(key).Result()
+			if err != nil {
+				return err
+			}
+
+			var userDataCache UserDataCache
+			if err := json.Unmarshal([]byte(cacheString), &userDataCache); err != nil {
+				return err
+			}
+			currentToken = userDataCache.CSRFToken
+			if currentToken != expectedToken {
+				return nil
+			}
+
+			userDataCache.PreviousCSRFToken = currentToken
+			userDataCache.CSRFToken = replacementToken
+			userDataCache.UpdatedAt = time.Now()
+			value, err := json.Marshal(userDataCache)
+			if err != nil {
+				return err
+			}
+
+			if _, err := tx.TxPipelined(func(pipe redis.Pipeliner) error {
+				pipe.Set(key, string(value), s.cacheExpiresIn)
+				return nil
+			}); err != nil {
+				return err
+			}
+			rotated = true
+			return nil
+		}, key)
+
+		if err == redis.TxFailedErr {
+			continue
+		}
+		if err != nil {
+			return "", false, exceptions.New(
+				"FailedToRotate",
+				"Cache",
+				"RotateCSRFToken",
+				"Failed to rotate the cached CSRF token",
+				http.StatusInternalServerError,
+				true,
+			).WithOrigin(err)
+		}
+		if rotated {
+			return replacementToken, true, nil
+		}
+		return currentToken, false, nil
+	}
+
+	userDataCache, exception := s.Get(identifier)
+	if exception != nil {
+		return "", false, exception
+	}
+	return userDataCache.CSRFToken, false, nil
 }
 
 func (s *UserDataCacheClient) Delete(identifier string) *exceptions.Exception {
